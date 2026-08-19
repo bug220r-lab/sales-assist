@@ -1,0 +1,1136 @@
+{
+  "schema_version": "synthetic-doi-reason-registry/v1.0.1",
+  "source_lineage": {
+    "baseline_reason_count": 115,
+    "approved_r01_additions": 23,
+    "effective_reason_count": 138
+  },
+  "rules": [
+    "Reason IDs and labels are immutable within this proof-of-concept version.",
+    "Unknown IDs, aliases, free-text substitutes, and silent fallback codes are forbidden.",
+    "A reason never proves an intervention occurred unless the required intervention/evidence object exists.",
+    "The synthetic implementation must preserve exact business meaning while using only fictional inputs."
+  ],
+  "reasons": [
+    {
+      "reason_id": "RC-001",
+      "label": "SOURCE_TAB_CONFIRMATION_REQUIRED",
+      "class": "BLOCK",
+      "owner": "user action",
+      "description": "Monday/Wednesday/Friday tab was not explicitly confirmed. Do not import or read OA.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-002",
+      "label": "SOURCE_SCHEMA_UNRECOGNIZED",
+      "class": "BLOCK",
+      "owner": "DOISourceImportAttempt/DOIRun",
+      "description": "Versioned mapping cannot deterministically identify Order Number or Assigned Rep. Fail the current source-import attempt with zero portal reads. The parent run remains IN_PROGRESS; it terminalizes FAILED only if an authorized human explicitly accepts `FINALIZE_FAILED_SOURCE_IMPORT_NO_RETRY` under TR-004 branch A.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-003",
+      "label": "SOURCE_ROW_INVALID_ORDER_NUMBER",
+      "class": "BLOCK",
+      "owner": "compatibility-reserved",
+      "description": "Reserved for a separately governed future schema that explicitly permits row-local invalidity; it is never emitted by `synthetic-doi-queue-v0.1`. In the locked schema, any populated-record A failure emits RC-002 + RC-090, fails run/import, creates no batch/work/case/evaluation, and performs zero OA reads.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-004",
+      "label": "SOURCE_ROW_UNRECOGNIZED_ASSIGNEE",
+      "class": "BLOCK",
+      "owner": "DOISourceImportAttempt aggregate",
+      "description": "Scalar assignee is blank/unrecognized under the exact normalizer. Do not guess; persist no row/order identity and do not read OA for it.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-005",
+      "label": "SOURCE_ROW_OUT_OF_SCOPE",
+      "class": "OBSERVATION",
+      "owner": "DOISourceImportAttempt aggregate",
+      "description": "Scalar assignee deterministically does not equal TARGET_REP. Count only; persist no row/order identity and do not read OA for it.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-006",
+      "label": "SOURCE_DUPLICATE_ROW_MERGED",
+      "class": "AUDIT",
+      "owner": "DOIStagedOrder",
+      "description": "Compatible TARGET_REP rows have the same exact Order Number. Merge to one staged order and preserve all TARGET_REP source refs.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-007",
+      "label": "SOURCE_ROW_CONFLICT",
+      "class": "BLOCK",
+      "owner": "compatibility-reserved future DOIRejectedSourceRecord",
+      "description": "Unreachable under `synthetic-doi-queue-v0.1` because A/B contains no conflict-capable metadata and E:O is outside the row model; duplicate TARGET_REP rows always merge with RC-006. A future mapping must version and govern explicit row metadata before RC-007 can become reachable.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-008",
+      "label": "SOURCE_ASSIGNEE_CONFLICT",
+      "class": "BLOCK",
+      "owner": "DOIRejectedSourceRecord / source rejected outcome",
+      "description": "Same valid Order Number is assigned to TARGET_REP and a nonblank non-TARGET_REP scalar assignee in the coherent import. TR-103 appends one run-local rejected record, no staged order/work/case, and zero OA reads for that number.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-009",
+      "label": "SOURCE_CHANGED_DURING_IMPORT",
+      "class": "BLOCK",
+      "owner": "DOISourceImportAttempt/DOIRun",
+      "description": "Defensive version/readback evidence proves the selected synthetic source changed during import. Fail the current attempt; no executable batch/work proceeds from it. The parent run remains IN_PROGRESS; it terminalizes FAILED only through the explicit accepted no-retry command under TR-004 branch A.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-010",
+      "label": "SOURCE_ABSENT_RECHECK_REQUIRED",
+      "class": "BLOCK",
+      "owner": "DOIOrderCase",
+      "description": "Previously active TARGET_REP case is absent from the new batch. Absence never closes; perform one read-only disappearance verification.",
+      "source_section": "2. Source ingestion"
+    },
+    {
+      "reason_id": "RC-011",
+      "label": "EXTRACTION_REQUIRED_IDENTITY_MISSING",
+      "class": "BLOCK",
+      "owner": "DOIExtractionAttempt",
+      "description": "Exact requested Order Number cannot be proved on the read surface. Create no snapshot/evaluation.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-012",
+      "label": "EXTRACTION_WHOLE_ORDER_UNPROVEN",
+      "class": "BLOCK",
+      "owner": "DOIExtractionAttempt",
+      "description": "Proof that every relevant line was captured is absent or inconsistent. Create no snapshot/evaluation.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-013",
+      "label": "EXTRACTION_REQUIRED_DATA_UNREADABLE",
+      "class": "BLOCK",
+      "owner": "DOIExtractionAttempt",
+      "description": "Required source data is missing/unreadable rather than successfully observed. It is not UNKNOWN; create no snapshot/evaluation.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-014",
+      "label": "EXTRACTION_FAILED",
+      "class": "BLOCK",
+      "owner": "DOIExtractionAttempt",
+      "description": "Umbrella failure code paired with at least one specific extraction reason. Set RECHECK_REQUIRED.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-015",
+      "label": "RECHECK_REQUIRED",
+      "class": "BLOCK",
+      "owner": "DOIOrderCase",
+      "description": "A failed/incomplete extraction or unresolved verification requires a new explicit read-only recheck.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-016",
+      "label": "UNKNOWN_LINE_AVAILABILITY",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "Availability was successfully observed but cannot be safely normalized. Exclude the line from available-to-ship value and contain uncertainty.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-017",
+      "label": "UNKNOWN_LINE_DS_STATE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "DS value was successfully observed but cannot be safely normalized. Do not infer DS/non-DS for that line.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-018",
+      "label": "LINE_CONTINUITY_UNVERIFIED",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation line",
+      "description": "Cross-snapshot lineage is not deterministic. Row position is insufficient; block lineage-dependent conclusions.",
+      "source_section": "3. Extraction, normalization, and continuity"
+    },
+    {
+      "reason_id": "RC-019",
+      "label": "FULL_DS",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "At least one relevant active merchandise line exists and every such line is explicitly DS. DOI state is DOI_EXCLUDED; no purge begins solely from this evaluation.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-020",
+      "label": "MIXED_DS",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "At least one active DS and one active non-DS line exist. Preserve non-DS analysis and emit DS_SEPARATION_REQUIRED.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-021",
+      "label": "SHIPPED",
+      "class": "CLOSURE",
+      "owner": "DOIOrderCase",
+      "description": "Complete OA snapshot verifies fully shipped. DOI_EXCLUDED; hard-close and schedule 90-day purge.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-022",
+      "label": "CANCELED",
+      "class": "CLOSURE",
+      "owner": "DOIOrderCase",
+      "description": "Complete OA snapshot verifies fully canceled. DOI_EXCLUDED; hard-close and schedule 90-day purge.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-023",
+      "label": "REP_TRANSFERRED",
+      "class": "CLOSURE",
+      "owner": "DOIOrderCase",
+      "description": "Complete OA snapshot verifies order assigned away from TARGET_REP. Reversible close and schedule purge.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-024",
+      "label": "DEDUPE_CONFIRMED",
+      "class": "CLOSURE",
+      "owner": "DOIOrderCase",
+      "description": "Read-only OA recheck verifies DEDUPE note. Reversible close and schedule purge.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-025",
+      "label": "HUMAN_OUT_OF_SCOPE_CLOSED",
+      "class": "CLOSURE",
+      "owner": "DOIOrderCase",
+      "description": "Authorized human explicitly closes as out of scope. Reversible close and schedule purge.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-026",
+      "label": "PAYMENT_ISSUE_OUT_OF_SCOPE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "Payment is the sole non-progression reason. DOI_EXCLUDED; no purge begins solely from this evaluation.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-027",
+      "label": "PAYMENT_ISSUE_PRESENT_OUT_OF_SCOPE",
+      "class": "HANDLING",
+      "owner": "DOIEvaluation",
+      "description": "Payment issue coexists with a product-side opportunity. Preserve the opportunity and surface payment before action.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-028",
+      "label": "ORDER_PROGRESS_REVIEW",
+      "class": "HANDLING",
+      "owner": "DOIEvaluation",
+      "description": "Active unshipped order has all relevant active non-DS lines explicitly IN_STOCK/FULL. DOI_MANUAL_REVIEW without a release recommendation.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-029",
+      "label": "NO_ACTION_REQUIRED",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "Human review finds normal or out-of-scope progression with no current useful intervention. DOI_MONITOR.",
+      "source_section": "4. Evaluation, exclusion, and closure"
+    },
+    {
+      "reason_id": "RC-030",
+      "label": "DS_SEPARATION_REQUIRED",
+      "class": "OPPORTUNITY",
+      "owner": "DOIOpportunity",
+      "description": "MIXED_DS is proved. Recommend human DS separation; never perform it.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-031",
+      "label": "FULFILLMENT_SPLIT_CANDIDATE",
+      "class": "OPPORTUNITY",
+      "owner": "DOIOpportunity",
+      "description": "At least one active non-DS IN_STOCK/FULL line and one active non-DS DELAYED line. No minimum value/duration.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-032",
+      "label": "PARTIAL_QTY_INTERVENTION_REVIEW",
+      "class": "HANDLING",
+      "owner": "DOIEvaluation line",
+      "description": "Exact 0 < available quantity < active quantity. Calculate partial value when possible; never auto-recommend partial split.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-033",
+      "label": "EXACT_SKU_RECHECK",
+      "class": "OPPORTUNITY",
+      "owner": "DOIOpportunity",
+      "description": "Same ordered ES has a plausible current availability/lead improvement. It is not an alternate; OA confirmation is required.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-034",
+      "label": "EXACT_MFG_ALTERNATE",
+      "class": "OPPORTUNITY",
+      "owner": "DOIOpportunity",
+      "description": "Different ES, identical canonical MFG/OE, better current availability/lead, and valid relationship evidence. Customer approval required.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-035",
+      "label": "MFG_CROSS_REFERENCE",
+      "class": "OPPORTUNITY",
+      "owner": "DOIOpportunity",
+      "description": "Different ES/MFG with explicit cross-reference evidence. Customer approval and any required compatibility review apply.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-036",
+      "label": "MFG_SUPERSESSION",
+      "class": "OPPORTUNITY",
+      "owner": "DOIOpportunity",
+      "description": "Different ES/MFG with explicit supersession evidence. Preserve provenance; customer approval and any required compatibility review apply.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-037",
+      "label": "FUNCTIONAL_ALTERNATE",
+      "class": "OPPORTUNITY",
+      "owner": "DOIOpportunity",
+      "description": "Different product may perform the function but is not exact/cross-reference/supersession. Fresh compatibility review and approval required.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-038",
+      "label": "NO_EXACT_MFG_ALTERNATE_FOUND",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "Completed research found no verified different-ES identical-MFG candidate. Does not prove no other alternate exists.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-039",
+      "label": "NO_VERIFIED_ALTERNATE_FOUND",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "Completed supported research found no verified safe alternate. Does not itself prove DEDUPE eligibility.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-040",
+      "label": "MANUAL_IDENTIFICATION_REQUIRED",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation line",
+      "description": "Ordered product/application cannot be identified strongly enough. Human review required; DEDUPE blocked.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-041",
+      "label": "NO_VIABLE_ALTERNATE_HUMAN_CONFIRMED",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "Human completed review and explicitly confirmed no viable alternate. Does not itself close or write DEDUPE.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-042",
+      "label": "CUSTOMER_APPROVAL_REQUIRED",
+      "class": "HANDLING",
+      "owner": "DOIOpportunity",
+      "description": "Every substitution requires customer approval before manual OA execution.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-043",
+      "label": "HUMAN_COMPATIBILITY_REVIEW_REQUIRED",
+      "class": "HANDLING",
+      "owner": "DOIOpportunity",
+      "description": "Functional alternate, or non-deterministic cross-reference/supersession, requires human application/fitment review.",
+      "source_section": "5. Opportunities and alternate research"
+    },
+    {
+      "reason_id": "RC-044",
+      "label": "ALTERNATE_OBSERVATION_REQUIRED",
+      "class": "BLOCK",
+      "owner": "DOIOpportunity",
+      "description": "A durable relationship exists but no new current-action observation exists. Research may surface; contact/substitution gate remains closed.",
+      "source_section": "6. Alternate knowledge lifecycle"
+    },
+    {
+      "reason_id": "RC-045",
+      "label": "ALTERNATE_OBSERVATION_STALE",
+      "class": "BLOCK",
+      "owner": "DOIAlternateObservation",
+      "description": "Observation remains stored or was found in history but is not from the current explicit action context. Never treat as current.",
+      "source_section": "6. Alternate knowledge lifecycle"
+    },
+    {
+      "reason_id": "RC-046",
+      "label": "ALTERNATE_RELATIONSHIP_SUPERSEDED",
+      "class": "AUDIT",
+      "owner": "DOIAlternateRelationship",
+      "description": "Explicit source-grounded evidence identifies a successor relationship. ACTIVE → SUPERSEDED.",
+      "source_section": "6. Alternate knowledge lifecycle"
+    },
+    {
+      "reason_id": "RC-047",
+      "label": "ALTERNATE_RELATIONSHIP_INVALIDATED",
+      "class": "AUDIT",
+      "owner": "DOIAlternateRelationship",
+      "description": "Explicit contradictory evidence invalidates the relationship. ACTIVE → INVALIDATED.",
+      "source_section": "6. Alternate knowledge lifecycle"
+    },
+    {
+      "reason_id": "RC-048",
+      "label": "FUNCTIONAL_ALTERNATE_REVALIDATION_REQUIRED",
+      "class": "HANDLING",
+      "owner": "DOIOpportunity",
+      "description": "Prior functional knowledge is reused for a new order/application. Re-review compatibility before action.",
+      "source_section": "6. Alternate knowledge lifecycle"
+    },
+    {
+      "reason_id": "RC-049",
+      "label": "AK_HI_SHIPPING_REVIEW",
+      "class": "HANDLING",
+      "owner": "DOIEvaluation",
+      "description": "Geography is Alaska/Hawaii class. Human review required before split; customer contact case-by-case.",
+      "source_section": "7. Geography and human handling"
+    },
+    {
+      "reason_id": "RC-050",
+      "label": "INTERNATIONAL_ORDER_REVIEW",
+      "class": "HANDLING",
+      "owner": "DOIEvaluation",
+      "description": "Geography is outside the 50-state operational class, including territories, APO/FPO, and Washington D.C. Human review required.",
+      "source_section": "7. Geography and human handling"
+    },
+    {
+      "reason_id": "RC-051",
+      "label": "CUSTOMER_CONTACT_REQUIRED_BEFORE_SPLIT",
+      "class": "HANDLING",
+      "owner": "DOIOpportunity",
+      "description": "International split handling requires customer contact before manual split.",
+      "source_section": "7. Geography and human handling"
+    },
+    {
+      "reason_id": "RC-052",
+      "label": "HUMAN_DECISION_REQUIRED",
+      "class": "HANDLING",
+      "owner": "DOIEvaluation/opportunity",
+      "description": "Locked rule delegates commercial or non-routine choice to an authorized human; it is not proof of action.",
+      "source_section": "7. Geography and human handling"
+    },
+    {
+      "reason_id": "RC-053",
+      "label": "WWC_ACTIVE_SELF",
+      "class": "COORDINATION",
+      "owner": "DOIEvaluation",
+      "description": "Latest qualifying WWC is by TARGET_REP. Ongoing work may continue; suppress new outreach only.",
+      "source_section": "8. WWC coordination"
+    },
+    {
+      "reason_id": "RC-054",
+      "label": "WWC_ACTIVE_OTHER_REP",
+      "class": "COORDINATION",
+      "owner": "DOIEvaluation",
+      "description": "Latest qualifying WWC is another rep and the next-business-date eligibility boundary has not arrived. Analysis continues; TARGET_REP contact/work and DEDUPE are blocked.",
+      "source_section": "8. WWC coordination"
+    },
+    {
+      "reason_id": "RC-055",
+      "label": "WWC_AUTHOR_UNCERTAIN",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation",
+      "description": "WWC author cannot be safely classified. Never guess; require coordination review.",
+      "source_section": "8. WWC coordination"
+    },
+    {
+      "reason_id": "RC-056",
+      "label": "TIMING_UNCERTAIN",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation",
+      "description": "WWC timestamp/calendar result cannot be safely established. Never assume protection expired.",
+      "source_section": "8. WWC coordination"
+    },
+    {
+      "reason_id": "RC-057",
+      "label": "HUMAN_COORDINATION_REVIEW_REQUIRED",
+      "class": "COORDINATION",
+      "owner": "DOIEvaluation",
+      "description": "WWC author/timing ambiguity needs human resolution. Preserve known opportunities.",
+      "source_section": "8. WWC coordination"
+    },
+    {
+      "reason_id": "RC-058",
+      "label": "DEDUPE_CANDIDATE",
+      "class": "HANDLING",
+      "owner": "DOIEvaluation",
+      "description": "Complete one-pass analysis finds no unresolved/actionable DOI solution. Human decision required; system never writes OA note.",
+      "source_section": "9. DEDUPE"
+    },
+    {
+      "reason_id": "RC-059",
+      "label": "DEDUPE_BLOCKED_INCOMPLETE_ANALYSIS",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation",
+      "description": "Any opportunity, partial quantity, unknown-concealed opportunity, manual identification, active other-rep WWC, or incomplete research remains.",
+      "source_section": "9. DEDUPE"
+    },
+    {
+      "reason_id": "RC-060",
+      "label": "INTERVENTION_VERIFICATION_REQUIRED",
+      "class": "BLOCK",
+      "owner": "DOIOrderCase",
+      "description": "A change is detected but action identity/causation is not proved. Create no intervention or realized credit.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-061",
+      "label": "INTERVENTION_ACTION_SYSTEM_VERIFIED",
+      "class": "AUDIT",
+      "owner": "DOIIntervention",
+      "description": "Deterministic source evidence proves actual human action. Create/reuse intervention with SYSTEM_VERIFIED provenance.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-062",
+      "label": "INTERVENTION_ACTION_HUMAN_VERIFIED",
+      "class": "AUDIT",
+      "owner": "DOIIntervention",
+      "description": "Authorized human exactly attests actual completed action with structured evidence. Create/reuse intervention with HUMAN_VERIFIED provenance.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-063",
+      "label": "INTERVENTION_VALUE_UNVERIFIED",
+      "class": "BLOCK",
+      "owner": "DOIIntervention",
+      "description": "A verified credit-bearing split/substitution action has no exact accepted realized value, so value is UNVERIFIED and realized money is zero. It is mandatory even when an independent date/currency gate also fails, and forbidden for DS_SEPARATION/NOT_APPLICABLE.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-064",
+      "label": "INTERVENTION_VALUE_SYSTEM_VERIFIED",
+      "class": "AUDIT",
+      "owner": "verification event",
+      "description": "System-grounded evidence proves exact realized value. Use for current KPI.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-065",
+      "label": "INTERVENTION_VALUE_HUMAN_VERIFIED",
+      "class": "AUDIT",
+      "owner": "verification event",
+      "description": "Human provides exact known realized value. Count unless later authoritative system evidence conflicts.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-066",
+      "label": "INTERVENTION_VALUE_CONFLICT_SYSTEM_AUTHORITATIVE",
+      "class": "AUDIT",
+      "owner": "verification event",
+      "description": "While the detailed case remains retained, later system value conflicts with human value. Preserve both; system value controls current KPI.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-067",
+      "label": "HUMAN_VALUE_NOT_EXACT",
+      "class": "BLOCK",
+      "owner": "user action",
+      "description": "Human-provided amount is estimated, rounded, ranged, or otherwise not exact. Reject verification; KPI remains zero.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-068",
+      "label": "INTERVENTION_PARTIALLY_REVERSED",
+      "class": "AUDIT",
+      "owner": "DOIIntervention",
+      "description": "Verified reversal is greater than zero and less than original realized value.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-069",
+      "label": "INTERVENTION_REVERSED",
+      "class": "AUDIT",
+      "owner": "DOIIntervention",
+      "description": "Verified reversal equals original realized value; net is zero.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-070",
+      "label": "RESULTING_ORDER_AUTO_LINKED",
+      "class": "AUDIT",
+      "owner": "DOIResultingOrderLink",
+      "description": "Deterministic allowed evidence proves child order relationship.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-071",
+      "label": "RESULTING_ORDER_HUMAN_CONFIRMED",
+      "class": "AUDIT",
+      "owner": "DOIResultingOrderLink",
+      "description": "Authorized human verifies child relationship with structured evidence.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-072",
+      "label": "RESULTING_ORDER_LINK_REVIEW",
+      "class": "BLOCK",
+      "owner": "DOIResultingOrderLinkSearch or exact DOIResultingOrderLink",
+      "description": "A candidate search is ambiguous, or an existing exact link has unresolved mapping conflict. Keep search and exact-link streams distinct; human/exact resolution is required and disputed split credit is unverified.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-073",
+      "label": "RESULTING_ORDER_NOT_FOUND",
+      "class": "BLOCK",
+      "owner": "DOIResultingOrderLinkSearch",
+      "description": "A complete search finds no exact resulting order. Append only search-state NOT_FOUND; do not create an exact link, child identity, mapping, or realized split credit.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-074",
+      "label": "SPLIT_CREDIT_REP_UNVERIFIED",
+      "class": "BLOCK",
+      "owner": "DOIIntervention",
+      "description": "Resulting order-level TARGET_REP rep is missing/different/ambiguous. Realized split credit is zero until resolved.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-075",
+      "label": "SWAP_CREDIT_REP_UNVERIFIED",
+      "class": "BLOCK",
+      "owner": "DOIIntervention",
+      "description": "Replacement line-level TARGET_REP rep is missing/different/ambiguous. Order-level rep cannot substitute; realized swap credit is zero.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-076",
+      "label": "CREDIT_DUPLICATE_SUPPRESSED",
+      "class": "AUDIT",
+      "owner": "aggregate calculation",
+      "description": "Same verified action-evidence fingerprint or credit unit was encountered again. Reuse original intervention; add no credit.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-077",
+      "label": "REVERSAL_VERIFICATION_REQUIRED",
+      "class": "BLOCK",
+      "owner": "DOIIntervention",
+      "description": "Potential removal/cancellation of credited merchandise is detected but exact reversal is not proved. Preserve prior verified totals pending verification.",
+      "source_section": "10. Intervention, credit, and resulting-order verification"
+    },
+    {
+      "reason_id": "RC-078",
+      "label": "CASE_REOPENED",
+      "class": "AUDIT",
+      "owner": "DOIOrderCase",
+      "description": "Before purge, explicit recheck provides source-grounded eligibility after reversible closure. Reuse the retained case and cancel purge.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-079",
+      "label": "PURGE_SCHEDULED",
+      "class": "AUDIT",
+      "owner": "DOIOrderCase",
+      "description": "Verified terminal transition schedules detailed-data purge at exact `calendar90(terminal_closed_at)`; persist UTC plus retention-policy/timezone-database versions.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-080",
+      "label": "PURGE_CANCELED_ON_REOPEN",
+      "class": "AUDIT",
+      "owner": "DOIOrderCase",
+      "description": "A reversible closure reopens before purge only after `CaseReopenPayloadV2` and `PURGE_CANCELED` each carry the complete explicit `PriorClosureRetentionBindingV1` copied byte-for-byte from the locked pre-event closure/retention projection. The canceled deadline must equal that binding's `prior_purge_eligible_at`; then clear the deadline on the same retained case.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-081",
+      "label": "STATE_TRANSITION_NOT_ALLOWED",
+      "class": "BLOCK",
+      "owner": "any projection",
+      "description": "Requested/derived transition is unlisted or violates its guard. Attention examples include wrong/inactive cause key, wrong SET reference, incomplete resolver group, illegal reason/null partition, or conflicting CLEAR identity. Reject and preserve last valid projection.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-082",
+      "label": "OA_WRITE_PROHIBITED",
+      "class": "SAFETY",
+      "owner": "system boundary",
+      "description": "Requested capability or operation could mutate OA. It must not exist or execute.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-083",
+      "label": "UNSAFE_ACTION_REJECTED",
+      "class": "SAFETY",
+      "owner": "user/API action",
+      "description": "A DOI request attempts an OA mutation, generic click/request, background poll, or unallowlisted side-effectful read path. Reject with no OA request.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-084",
+      "label": "RULE_VERSION_UNAVAILABLE",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation and DOIRun pre-extraction systemic rules gate",
+      "description": "The exact requested current or historical rules binding cannot be loaded. At the evaluation gate, create no evaluation under a substitute version and follow the governed evaluation-level route. At the run pre-extraction gate, when a valid run already exists and the exact rules binding becomes unavailable before extraction reservation, TR-004 branch B terminalizes the run FAILED with exact {RC-084}, appends no evaluation, performs zero portal reads, and records zero order dispositions.",
+      "source_section": "11. Lifecycle, retention, rules, and safety",
+      "emission_sites": [
+        {
+          "site": "DOIEvaluation rules-version gate",
+          "transitions": [
+            "TR-027",
+            "TR-037"
+          ]
+        },
+        {
+          "site": "DOIRun pre-extraction systemic rules gate",
+          "transitions": [
+            "TR-004"
+          ],
+          "transition_branch": "PRE_EXTRACTION_RULES_UNAVAILABLE"
+        }
+      ]
+    },
+    {
+      "reason_id": "RC-085",
+      "label": "VALUE_CALCULATION_UNAVAILABLE",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation",
+      "description": "Required exact quantity/value/classification inputs are unavailable. Return UNAVAILABLE, never an inferred or silently zero value.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-086",
+      "label": "CASE_IDENTITY_NOT_RETAINED",
+      "class": "BLOCK",
+      "owner": "user/API action",
+      "description": "A requested case-linked correction, reversal, or reconciliation targets no retained case/intervention identity, including after purge. Reject without reconstruction, tombstone/hash lookup, aggregate change, or a persistent order-specific rejection record.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-087",
+      "label": "POTENTIAL_OVERLAP_UNRESOLVED",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation/aggregate",
+      "description": "Potential opportunities address overlapping/mutually exclusive merchandise scopes and no explicit scenario selection exists. Keep opportunity values separate and overall potential UNAVAILABLE.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-088",
+      "label": "AGGREGATE_KPI_FINALIZED",
+      "class": "AUDIT",
+      "owner": "aggregate calculation",
+      "description": "At purge, atomically transfer the case's then-current exact contribution into non-identifying finalized aggregate history before deleting its entire per-order graph. Retain no per-case delta or linkage.",
+      "source_section": "11. Lifecycle, retention, rules, and safety"
+    },
+    {
+      "reason_id": "RC-089",
+      "label": "SOURCE_UNREADABLE_OR_INACCESSIBLE",
+      "class": "BLOCK",
+      "owner": "DOISourceImportAttempt/DOIRun",
+      "description": "The confirmed synthetic source or a required read cannot be accessed. The current attempt fails with no batch/work/case and zero portal reads. The parent run remains IN_PROGRESS; it terminalizes FAILED only through the explicit accepted no-retry command under TR-004 branch A.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-090",
+      "label": "SOURCE_IMPORT_ATTEMPT_FAILED",
+      "class": "BLOCK",
+      "owner": "DOISourceImportAttempt",
+      "description": "Umbrella required on each failed import with at least one exact specific source reason; never replaces the specific code.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-091",
+      "label": "SOURCE_BATCH_IDENTITY_INTEGRITY_CONFLICT",
+      "class": "SAFETY",
+      "owner": "source-batch binding",
+      "description": "The same digest maps to different canonical identity material or an incompatible payload. Fail the current attempt before any portal read; do not overwrite, reuse, or create a conflicting batch. The parent run remains IN_PROGRESS; it terminalizes FAILED only through the explicit accepted no-retry command under TR-004 branch A.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-092",
+      "label": "SOURCE_REJECTED_IDENTITY_RETENTION_SCHEDULED",
+      "class": "AUDIT",
+      "owner": "DOIRejectedSourceRecord",
+      "description": "Run terminalized; schedule exact no-case identity deletion at `calendar90(run.completed_at)` without extension by batch reuse.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-093",
+      "label": "SOURCE_REJECTED_IDENTITY_PURGED",
+      "class": "AUDIT",
+      "owner": "TR-105 transaction-local deletion assertion",
+      "description": "At eligibility the exact rejected identity and joinable detail are deleted atomically. RC-093 exists only inside the deleting transaction and no rejection reason, dimension, event, receipt, hash, record/order/source reference, or separate rejection aggregate survives commit.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-094",
+      "label": "CURRENCY_CODE_INVALID",
+      "class": "BLOCK",
+      "owner": "monetary fact/calculation",
+      "description": "A supplied code/scale/representation/registry binding is invalid. Create no Money/row/bucket; infer no USD/FX. A merely absent pre-value currency is not RC-094.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-095",
+      "label": "MIXED_CURRENCY_AGGREGATION_PROHIBITED",
+      "class": "BLOCK",
+      "owner": "calculation/KPI",
+      "description": "A scalar would combine currencies. Return segmented results and no combined value or FX inference.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-096",
+      "label": "RETENTION_CLOCK_CALCULATION_FAILED",
+      "class": "BLOCK",
+      "owner": "retention scheduler",
+      "description": "Policy/timezone binding or DST resolution cannot produce exact UTC. Schedule no approximate/earlier purge.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-097",
+      "label": "OPPORTUNITY_SCOPE_UNPROVEN",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation candidate",
+      "description": "Required immutable line identity/quantity/continuity is unproved. Create no candidate opportunity or potential/credit.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-098",
+      "label": "SCENARIO_OPTION_SELECTION_CONFLICT",
+      "class": "BLOCK",
+      "owner": "potential calculation",
+      "description": "Multiple options selected for one overlap key or option is outside the group/evaluation. Reject selection; emit no group/combined total.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-099",
+      "label": "KPI_ACTION_DATE_UNVERIFIED",
+      "class": "BLOCK",
+      "owner": "DOIIntervention",
+      "description": "Credit-bearing verified action lacks exact business occurrence instant/local attribution date. Evidence/review/ingestion/record time cannot substitute; retain operational evidence but create no contribution/date bucket.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-100",
+      "label": "KPI_BUCKET_IDENTITY_CONFLICT",
+      "class": "BLOCK",
+      "owner": "KPI persistence",
+      "description": "Derived daily date/bounds/currency/class conflicts with stored identity. Roll back; do not move or duplicate money.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-101",
+      "label": "KPI_FINALIZATION_CONFLICT",
+      "class": "BLOCK",
+      "owner": "purge transaction",
+      "description": "Ledger/bucket projection fails pre-finalization reconciliation. Roll back both KPI transfer and case deletion.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-102",
+      "label": "EVIDENCE_NATURAL_KEY_CONFLICT",
+      "class": "BLOCK",
+      "owner": "action/value/reversal verification ledger",
+      "description": "Same ACTION/original-value/reversal logical key has a different material effect without legal correction. Preserve last valid projection; apply no disputed effect. Exact parent/type/child mapping conflict is excluded and uses RC-104 + RC-072.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-103",
+      "label": "EVIDENCE_FINGERPRINT_INTEGRITY_FAILURE",
+      "class": "SAFETY",
+      "owner": "persistence boundary",
+      "description": "One SHA-256 value maps to different canonical bytes for a key/evidence/mapping payload. Roll back the affected transaction. At a registered pre-OA source/integrity gate this may terminalize the run FAILED with RC-090; after any OA work began it is an order exception and a coherent run terminalizes COMPLETED_WITH_EXCEPTIONS, never FAILED solely for this post-OA collision.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-104",
+      "label": "RESULTING_ORDER_LINK_EVIDENCE_CONFLICT",
+      "class": "BLOCK",
+      "owner": "DOIResultingOrderLink",
+      "description": "Same parent/type/child natural link has contradictory moved-line/quantity mapping. Set review/ambiguous; add RC-072; disputed split credit zero.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-105",
+      "label": "EVALUATION_PROVENANCE_INCOMPLETE",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation",
+      "description": "Required snapshot/rules/calendar/relationship-revision/observation/human-fact binding absent, wrong-scope, or unresolved. Append no evaluation.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-106",
+      "label": "EVALUATION_PROVENANCE_HASH_MISMATCH",
+      "class": "BLOCK",
+      "owner": "DOIEvaluation",
+      "description": "Bound version/ID resolves but canonical digest differs. Append no evaluation; never substitute another version.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-107",
+      "label": "ALTERNATE_RELATIONSHIP_CREATED",
+      "class": "AUDIT",
+      "owner": "DOIAlternateRelationshipRevision",
+      "description": "Valid product-only evidence creates one stable relationship and immutable revision 1.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-108",
+      "label": "ALTERNATE_RELATIONSHIP_REVISION_APPENDED",
+      "class": "AUDIT",
+      "owner": "DOIAlternateRelationshipRevision",
+      "description": "Accepted explicit product-only change appends exactly revision n+1; prior revisions unchanged.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-109",
+      "label": "ALTERNATE_RELATIONSHIP_REVISION_CONFLICT",
+      "class": "BLOCK",
+      "owner": "DOIAlternateRelationshipRevision",
+      "description": "With an otherwise valid current envelope, semantic content is illegal: identity-field mutation inside a revision, event-type/state mismatch, unsupported product content, or terminal relationship reactivation. Reject append and retain projection. Sequence, revision-number, predecessor, full-event-hash, stream-ID, and event-identity conflicts use RC-111 exclusively.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-110",
+      "label": "ACTION_CONTEXT_BINDING_INVALID",
+      "class": "BLOCK",
+      "owner": "DOIActionContext",
+      "description": "Context absent/closed/wrong case-evaluation-opportunity-kind, or fact is not explicitly linked. It cannot satisfy readiness.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-111",
+      "label": "EVENT_STREAM_SEQUENCE_CONFLICT",
+      "class": "SAFETY",
+      "owner": "any typed immutable history",
+      "description": "Proposed append has stale sequence/predecessor/digest or reuses event identity with different canonical bytes. Reject; retain projection; RC-103 also applies to a detected digest collision.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-112",
+      "label": "HUMAN_FACT_PROVENANCE_INCOMPLETE",
+      "class": "BLOCK",
+      "owner": "DOIHumanFactEvent",
+      "description": "Actor/scope/fingerprint/provenance is incomplete, or a DEDUPE review/verification binding, fact-to-state-event mapping, current-decision guard, or legal correction predecessor is missing/conflicting. Reject fact/atomic DEDUPE bundle; do not evaluate from it.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-113",
+      "label": "LIFECYCLE_EVENT_SCHEMA_INVALID",
+      "class": "SAFETY",
+      "owner": "lifecycle serialization boundary",
+      "description": "Unknown lifecycle kind/version/payload type; missing/extra field; wrong required/null/absent partition; illegal enum/alias/domain; actor/provenance or typed-event binding mismatch; incorrect natural-key, payload, projection, or full-event hash. For reopen/purge cancellation this includes an omitted, hash-only, inferred, or non-byte-equal `PriorClosureRetentionBindingV1`, any mismatched binding member, and any canceled deadline different from the locked prior deadline. Block and reject before append; preserve the prior closure, deadline, and projection. Stream predecessor/revision faults remain RC-111; proven digest collisions remain RC-103; unlisted state edges remain RC-081.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-114",
+      "label": "SOURCE_IMPORT_ATTEMPT_PURGED",
+      "class": "AUDIT",
+      "owner": "TR-114 transaction-local DOISourceImportAttemptRetentionEventV1",
+      "description": "At TR-114 eligibility, emit/assert RC-114 only inside the deletion transaction, then atomically delete one terminal source-import-attempt graph, its attempt-owned run/source links, attempt-owned batch/reference edges, indexes/caches/logs/temp artifacts, and the transient purge event/reason itself. Delete the run identity graph only when its own deadline is due and the closed last-reference predicate is true. Only `DOISourceImportAggregateV2` month, outcome class, and count may survive; it retains no reason code, tombstone, hash, or reversible lookup.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-115",
+      "label": "UNKNOWN_LINE_ETA_STATE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The ETA field was successfully observed, but its raw value could not be safely normalized into the closed ETA tagged-value model. Preserve the line's other independently known source facts and block only conclusions whose complete basis depends on ETA. Do not infer a date, lead time, terminal state, availability state, or DS state, and never reuse a stale ETA. A narrowly bounded, field-allowlisted, non-sensitive raw ETA hint may be retained only under the existing UNKNOWN/raw-hint privacy contract. Missing, unreadable, inaccessible, or unobserved required ETA data is extraction failure. RC-115 does not substitute for RC-016, RC-017, or RC-085 and authorizes no OA action or write.",
+      "source_section": "12. Carried-forward source, retention, currency, KPI, provenance, and history additions"
+    },
+    {
+      "reason_id": "RC-116",
+      "label": "UNKNOWN_ORDER_STATE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.order_state was successfully observed but cannot be normalized. Preserve independent facts and block only ORDER_STATE_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-117",
+      "label": "UNKNOWN_CURRENT_REP_VALUE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.current_rep_value was successfully observed but cannot be normalized. Preserve independent facts and block only REP_VALUE_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-118",
+      "label": "UNKNOWN_CURRENT_REP_RELATION",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.current_rep_relation was successfully observed but cannot be normalized. Preserve independent facts and block only REP_RELATION_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-119",
+      "label": "UNKNOWN_GEOGRAPHY_CLASS",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.geography_class was successfully observed but cannot be normalized. Preserve independent facts and block only GEOGRAPHY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-120",
+      "label": "UNKNOWN_PAYMENT_CONDITION",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.payment_condition was successfully observed but cannot be normalized. Preserve independent facts and block only PAYMENT_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-121",
+      "label": "UNKNOWN_ORDER_TOTAL",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.order_total was successfully observed but cannot be normalized. Preserve independent facts and block only ORDER_TOTAL_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-122",
+      "label": "UNKNOWN_WWC_PRESENCE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.wwc_finding.presence was successfully observed but cannot be normalized. Preserve independent facts and block only WWC_PRESENCE_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-123",
+      "label": "UNKNOWN_DEDUPE_PRESENCE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation",
+      "description": "The exact field DOIOrderSnapshot.dedupe_finding.presence was successfully observed but cannot be normalized. Preserve independent facts and block only DEDUPE_PRESENCE_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-124",
+      "label": "UNKNOWN_STABLE_SOURCE_LINE_ID",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.stable_source_line_id was successfully observed but cannot be normalized. Preserve independent facts and block only CONTINUITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-125",
+      "label": "UNKNOWN_LINE_ACTIVITY",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.activity was successfully observed but cannot be normalized. Preserve independent facts and block only LINE_ACTIVITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-126",
+      "label": "UNKNOWN_LINE_ES_NUMBER",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.es_number was successfully observed but cannot be normalized. Preserve independent facts and block only ES_IDENTITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-127",
+      "label": "UNKNOWN_LINE_MFG_NUMBER",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.mfg_number was successfully observed but cannot be normalized. Preserve independent facts and block only MFG_IDENTITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-128",
+      "label": "UNKNOWN_ORDERED_QUANTITY",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.ordered_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only ORDERED_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-129",
+      "label": "UNKNOWN_ACTIVE_QUANTITY",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.active_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only ACTIVE_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-130",
+      "label": "UNKNOWN_CANCELED_QUANTITY",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.canceled_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only CANCELED_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-131",
+      "label": "UNKNOWN_EXPLICITLY_AVAILABLE_QUANTITY",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.explicitly_available_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only AVAILABLE_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-132",
+      "label": "UNKNOWN_QUANTITY_AVAILABILITY",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.quantity_availability was successfully observed but cannot be normalized. Preserve independent facts and block only QUANTITY_CLASS_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-133",
+      "label": "UNKNOWN_LINE_UNIT_VALUE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.unit_value was successfully observed but cannot be normalized. Preserve independent facts and block only UNIT_VALUE_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-134",
+      "label": "UNKNOWN_ACTIVE_LINE_VALUE",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.active_line_value was successfully observed but cannot be normalized. Preserve independent facts and block only ACTIVE_LINE_VALUE_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-135",
+      "label": "UNKNOWN_LINE_SALES_REP",
+      "class": "OBSERVATION",
+      "owner": "DOIEvaluation line",
+      "description": "The exact field DOILineItemSnapshot.line_sales_rep was successfully observed but cannot be normalized. Preserve independent facts and block only LINE_REP_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-136",
+      "label": "UNKNOWN_ALTERNATE_PRICE",
+      "class": "OBSERVATION",
+      "owner": "DOIAlternateObservation/DOIEvaluation",
+      "description": "The exact field DOIAlternateObservation.observed_price was successfully observed but cannot be normalized. Preserve independent facts and block only ALTERNATE_PRICE_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-137",
+      "label": "UNKNOWN_ALTERNATE_AVAILABILITY",
+      "class": "OBSERVATION",
+      "owner": "DOIAlternateObservation/DOIEvaluation",
+      "description": "The exact field DOIAlternateObservation.observed_availability was successfully observed but cannot be normalized. Preserve independent facts and block only ALTERNATE_AVAILABILITY_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    },
+    {
+      "reason_id": "RC-138",
+      "label": "UNKNOWN_ALTERNATE_ETA",
+      "class": "OBSERVATION",
+      "owner": "DOIAlternateObservation/DOIEvaluation",
+      "description": "The exact field DOIAlternateObservation.observed_eta was successfully observed but cannot be normalized. Preserve independent facts and block only ALTERNATE_ETA_ONLY. Missing or unreadable input remains extraction failure.",
+      "source_section": "R01 observed-field UNKNOWN normalization additions"
+    }
+  ]
+}

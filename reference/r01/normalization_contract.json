@@ -1,0 +1,185 @@
+{
+  "ESNumber": {
+    "canonical_bytes": "{\"canonical_identifier_hash_domain\":\"doi-es-number/r01-v1\",\"canonical_name\":\"ESNumber\",\"canonicalization\":\"Remove leading zeros from the digit core and retain the digit core only.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"maximum_input_utf8_bytes_before_canonicalization\":64,\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-es-number-normalization/r01-v1\",\"optional_prefixes\":[\"ES#\",\"ES\"],\"policy_literal\":\"ES_NUMERIC_CORE\",\"post_prefix_grammar\":\"one or more ASCII digits\",\"prefix_comparison\":\"ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte\",\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"zero/all-zero\",\"empty\",\"prefix-only\",\"internal whitespace\",\"other punctuation\",\"sign\",\"exponent\",\"Unicode digit\",\"non-ASCII\",\"control byte\",\"provider numeric cell\",\"input longer than 64 UTF-8 bytes\"],\"source_preservation\":\"Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"}",
+    "canonical_identifier_hash_domain": "doi-es-number/r01-v1",
+    "canonical_name": "ESNumber",
+    "canonicalization": "Remove leading zeros from the digit core and retain the digit core only.",
+    "edge_trim_content_sha256": "94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e",
+    "edge_trim_version": "doi-ascii-four-edge-trim/r01-v1",
+    "maximum_input_utf8_bytes_before_canonicalization": 64,
+    "normalization_content_sha256": "794961d7287e97547882d8b89d5578a28b72b360ca2b164b02e00fcda2b32cc1",
+    "normalization_schema_version": "doi-identifier-normalization-schema/r01-v1",
+    "normalization_version": "doi-es-number-normalization/r01-v1",
+    "optional_prefixes": [
+      "ES#",
+      "ES"
+    ],
+    "policy_literal": "ES_NUMERIC_CORE",
+    "post_prefix_grammar": "one or more ASCII digits",
+    "prefix_comparison": "ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte",
+    "readable_invalid_source_route": "Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.",
+    "reject": [
+      "zero/all-zero",
+      "empty",
+      "prefix-only",
+      "internal whitespace",
+      "other punctuation",
+      "sign",
+      "exponent",
+      "Unicode digit",
+      "non-ASCII",
+      "control byte",
+      "provider numeric cell",
+      "input longer than 64 UTF-8 bytes"
+    ],
+    "source_preservation": "Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef."
+  },
+  "MFG_OE_Number": {
+    "canonical_bytes": "{\"canonical_identifier_hash_domain\":\"doi-mfg-oe-number/r01-v1\",\"canonical_name\":\"MFGNumber\",\"canonicalization\":\"Uppercase ASCII a-z only; preserve every other printable ASCII byte.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"forbidden\":[\"separator removal\",\"leading-zero removal\",\"component splitting\",\"fuzzy matching\",\"manufacturer inference\",\"manufacturer registry creation\"],\"maximum_input_utf8_bytes_before_canonicalization\":128,\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-mfg-oe-number-normalization/r01-v1\",\"policy_literal\":\"MFG_SEPARATOR_PRESERVING_UPPER\",\"policy_section_name\":\"MFG_OE_Number\",\"post_trim_grammar\":\"1..128 bytes, every byte printable ASCII 0x20..0x7e\",\"preserved\":[\"internal ASCII whitespace\",\"hyphen\",\"period\",\"underscore\",\"slash\",\"repeated spaces\",\"leading zeros\",\"an opaque compound source value\"],\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"empty/trim-only\",\"Unicode\",\"control byte\",\"provider numeric cell\",\"input longer than 128 UTF-8 bytes\"],\"source_preservation\":\"Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"}",
+    "canonical_identifier_hash_domain": "doi-mfg-oe-number/r01-v1",
+    "canonical_name": "MFGNumber",
+    "canonicalization": "Uppercase ASCII a-z only; preserve every other printable ASCII byte.",
+    "edge_trim_content_sha256": "94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e",
+    "edge_trim_version": "doi-ascii-four-edge-trim/r01-v1",
+    "forbidden": [
+      "separator removal",
+      "leading-zero removal",
+      "component splitting",
+      "fuzzy matching",
+      "manufacturer inference",
+      "manufacturer registry creation"
+    ],
+    "maximum_input_utf8_bytes_before_canonicalization": 128,
+    "normalization_content_sha256": "ce3bfb100ab3b94d0a28e6679bdfe9af52d7db0171f0aeaa1e78a625d301309b",
+    "normalization_schema_version": "doi-identifier-normalization-schema/r01-v1",
+    "normalization_version": "doi-mfg-oe-number-normalization/r01-v1",
+    "policy_literal": "MFG_SEPARATOR_PRESERVING_UPPER",
+    "policy_section_name": "MFG_OE_Number",
+    "post_trim_grammar": "1..128 bytes, every byte printable ASCII 0x20..0x7e",
+    "preserved": [
+      "internal ASCII whitespace",
+      "hyphen",
+      "period",
+      "underscore",
+      "slash",
+      "repeated spaces",
+      "leading zeros",
+      "an opaque compound source value"
+    ],
+    "readable_invalid_source_route": "Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.",
+    "reject": [
+      "empty/trim-only",
+      "Unicode",
+      "control byte",
+      "provider numeric cell",
+      "input longer than 128 UTF-8 bytes"
+    ],
+    "source_preservation": "Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef."
+  },
+  "OrderNumber": {
+    "canonical_bytes": "{\"canonical_identifier_hash_domain\":\"doi-order-number/r01-v1\",\"canonical_name\":\"OrderNumber\",\"canonicalization\":\"Remove leading zeros; output [1-9][0-9]*.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"input_rule\":\"After ASCII_FOUR, require positive ASCII digits; exact proven provider integers are admitted only with no binary-float ambiguity.\",\"invalid_behavior\":\"Fail before import, command allocation, work creation, persistence, or Synthetic Order Portal access.\",\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-order-number-normalization/r01-v1\",\"reject\":[\"zero\",\"negative\",\"sign\",\"fraction\",\"exponent\",\"boolean\",\"date/error\",\"non-ASCII digit\",\"precision-ambiguous numeric\",\"internal whitespace\"]}",
+    "canonical_identifier_hash_domain": "doi-order-number/r01-v1",
+    "canonical_name": "OrderNumber",
+    "canonicalization": "Remove leading zeros; output [1-9][0-9]*.",
+    "edge_trim_content_sha256": "94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e",
+    "edge_trim_version": "doi-ascii-four-edge-trim/r01-v1",
+    "input_rule": "After ASCII_FOUR, require positive ASCII digits; exact proven provider integers are admitted only with no binary-float ambiguity.",
+    "invalid_behavior": "Fail before import, command allocation, work creation, persistence, or Synthetic Order Portal access.",
+    "normalization_content_sha256": "51564a60007e474a3fd5327ee3275d8c08f4d401c2bf9724fee467a672da53c4",
+    "normalization_schema_version": "doi-identifier-normalization-schema/r01-v1",
+    "normalization_version": "doi-order-number-normalization/r01-v1",
+    "reject": [
+      "zero",
+      "negative",
+      "sign",
+      "fraction",
+      "exponent",
+      "boolean",
+      "date/error",
+      "non-ASCII digit",
+      "precision-ambiguous numeric",
+      "internal whitespace"
+    ]
+  },
+  "SharedEdgeTrim": {
+    "algorithm": "Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.",
+    "canonical_bytes": "{\"algorithm\":\"Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.\",\"edge_trim_bytes_hex\":[\"09\",\"0a\",\"0d\",\"20\"],\"edge_trim_codepoints\":[\"U+0009\",\"U+000A\",\"U+000D\",\"U+0020\"],\"forbidden_operations\":[\"Unicode normalization\",\"Unicode casefold\",\"locale behavior\",\"Unicode whitespace lookup\",\"internal whitespace removal\"],\"input_encoding\":\"UTF-8 text\",\"policy_literal\":\"ASCII_FOUR\",\"surviving_byte_rule\":\"Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.\",\"trim_schema_version\":\"doi-edge-trim-schema/r01-v1\",\"trim_version\":\"doi-ascii-four-edge-trim/r01-v1\"}",
+    "edge_trim_bytes_hex": [
+      "09",
+      "0a",
+      "0d",
+      "20"
+    ],
+    "edge_trim_codepoints": [
+      "U+0009",
+      "U+000A",
+      "U+000D",
+      "U+0020"
+    ],
+    "forbidden_operations": [
+      "Unicode normalization",
+      "Unicode casefold",
+      "locale behavior",
+      "Unicode whitespace lookup",
+      "internal whitespace removal"
+    ],
+    "input_encoding": "UTF-8 text",
+    "policy_literal": "ASCII_FOUR",
+    "surviving_byte_rule": "Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.",
+    "trim_content_sha256": "94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e",
+    "trim_schema_version": "doi-edge-trim-schema/r01-v1",
+    "trim_version": "doi-ascii-four-edge-trim/r01-v1"
+  },
+  "canonical_bytes": "{\"ESNumber\":{\"canonical_bytes\":\"{\\\"canonical_identifier_hash_domain\\\":\\\"doi-es-number/r01-v1\\\",\\\"canonical_name\\\":\\\"ESNumber\\\",\\\"canonicalization\\\":\\\"Remove leading zeros from the digit core and retain the digit core only.\\\",\\\"edge_trim_content_sha256\\\":\\\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\\\",\\\"edge_trim_version\\\":\\\"doi-ascii-four-edge-trim/r01-v1\\\",\\\"maximum_input_utf8_bytes_before_canonicalization\\\":64,\\\"normalization_schema_version\\\":\\\"doi-identifier-normalization-schema/r01-v1\\\",\\\"normalization_version\\\":\\\"doi-es-number-normalization/r01-v1\\\",\\\"optional_prefixes\\\":[\\\"ES#\\\",\\\"ES\\\"],\\\"policy_literal\\\":\\\"ES_NUMERIC_CORE\\\",\\\"post_prefix_grammar\\\":\\\"one or more ASCII digits\\\",\\\"prefix_comparison\\\":\\\"ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte\\\",\\\"readable_invalid_source_route\\\":\\\"Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\\\",\\\"reject\\\":[\\\"zero/all-zero\\\",\\\"empty\\\",\\\"prefix-only\\\",\\\"internal whitespace\\\",\\\"other punctuation\\\",\\\"sign\\\",\\\"exponent\\\",\\\"Unicode digit\\\",\\\"non-ASCII\\\",\\\"control byte\\\",\\\"provider numeric cell\\\",\\\"input longer than 64 UTF-8 bytes\\\"],\\\"source_preservation\\\":\\\"Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\\\"}\",\"canonical_identifier_hash_domain\":\"doi-es-number/r01-v1\",\"canonical_name\":\"ESNumber\",\"canonicalization\":\"Remove leading zeros from the digit core and retain the digit core only.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"maximum_input_utf8_bytes_before_canonicalization\":64,\"normalization_content_sha256\":\"794961d7287e97547882d8b89d5578a28b72b360ca2b164b02e00fcda2b32cc1\",\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-es-number-normalization/r01-v1\",\"optional_prefixes\":[\"ES#\",\"ES\"],\"policy_literal\":\"ES_NUMERIC_CORE\",\"post_prefix_grammar\":\"one or more ASCII digits\",\"prefix_comparison\":\"ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte\",\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"zero/all-zero\",\"empty\",\"prefix-only\",\"internal whitespace\",\"other punctuation\",\"sign\",\"exponent\",\"Unicode digit\",\"non-ASCII\",\"control byte\",\"provider numeric cell\",\"input longer than 64 UTF-8 bytes\"],\"source_preservation\":\"Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"},\"MFG_OE_Number\":{\"canonical_bytes\":\"{\\\"canonical_identifier_hash_domain\\\":\\\"doi-mfg-oe-number/r01-v1\\\",\\\"canonical_name\\\":\\\"MFGNumber\\\",\\\"canonicalization\\\":\\\"Uppercase ASCII a-z only; preserve every other printable ASCII byte.\\\",\\\"edge_trim_content_sha256\\\":\\\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\\\",\\\"edge_trim_version\\\":\\\"doi-ascii-four-edge-trim/r01-v1\\\",\\\"forbidden\\\":[\\\"separator removal\\\",\\\"leading-zero removal\\\",\\\"component splitting\\\",\\\"fuzzy matching\\\",\\\"manufacturer inference\\\",\\\"manufacturer registry creation\\\"],\\\"maximum_input_utf8_bytes_before_canonicalization\\\":128,\\\"normalization_schema_version\\\":\\\"doi-identifier-normalization-schema/r01-v1\\\",\\\"normalization_version\\\":\\\"doi-mfg-oe-number-normalization/r01-v1\\\",\\\"policy_literal\\\":\\\"MFG_SEPARATOR_PRESERVING_UPPER\\\",\\\"policy_section_name\\\":\\\"MFG_OE_Number\\\",\\\"post_trim_grammar\\\":\\\"1..128 bytes, every byte printable ASCII 0x20..0x7e\\\",\\\"preserved\\\":[\\\"internal ASCII whitespace\\\",\\\"hyphen\\\",\\\"period\\\",\\\"underscore\\\",\\\"slash\\\",\\\"repeated spaces\\\",\\\"leading zeros\\\",\\\"an opaque compound source value\\\"],\\\"readable_invalid_source_route\\\":\\\"Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\\\",\\\"reject\\\":[\\\"empty/trim-only\\\",\\\"Unicode\\\",\\\"control byte\\\",\\\"provider numeric cell\\\",\\\"input longer than 128 UTF-8 bytes\\\"],\\\"source_preservation\\\":\\\"Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\\\"}\",\"canonical_identifier_hash_domain\":\"doi-mfg-oe-number/r01-v1\",\"canonical_name\":\"MFGNumber\",\"canonicalization\":\"Uppercase ASCII a-z only; preserve every other printable ASCII byte.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"forbidden\":[\"separator removal\",\"leading-zero removal\",\"component splitting\",\"fuzzy matching\",\"manufacturer inference\",\"manufacturer registry creation\"],\"maximum_input_utf8_bytes_before_canonicalization\":128,\"normalization_content_sha256\":\"ce3bfb100ab3b94d0a28e6679bdfe9af52d7db0171f0aeaa1e78a625d301309b\",\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-mfg-oe-number-normalization/r01-v1\",\"policy_literal\":\"MFG_SEPARATOR_PRESERVING_UPPER\",\"policy_section_name\":\"MFG_OE_Number\",\"post_trim_grammar\":\"1..128 bytes, every byte printable ASCII 0x20..0x7e\",\"preserved\":[\"internal ASCII whitespace\",\"hyphen\",\"period\",\"underscore\",\"slash\",\"repeated spaces\",\"leading zeros\",\"an opaque compound source value\"],\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"empty/trim-only\",\"Unicode\",\"control byte\",\"provider numeric cell\",\"input longer than 128 UTF-8 bytes\"],\"source_preservation\":\"Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"},\"OrderNumber\":{\"canonical_bytes\":\"{\\\"canonical_identifier_hash_domain\\\":\\\"doi-order-number/r01-v1\\\",\\\"canonical_name\\\":\\\"OrderNumber\\\",\\\"canonicalization\\\":\\\"Remove leading zeros; output [1-9][0-9]*.\\\",\\\"edge_trim_content_sha256\\\":\\\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\\\",\\\"edge_trim_version\\\":\\\"doi-ascii-four-edge-trim/r01-v1\\\",\\\"input_rule\\\":\\\"After ASCII_FOUR, require positive ASCII digits; exact proven provider integers are admitted only with no binary-float ambiguity.\\\",\\\"invalid_behavior\\\":\\\"Fail before import, command allocation, work creation, persistence, or Synthetic Order Portal access.\\\",\\\"normalization_schema_version\\\":\\\"doi-identifier-normalization-schema/r01-v1\\\",\\\"normalization_version\\\":\\\"doi-order-number-normalization/r01-v1\\\",\\\"reject\\\":[\\\"zero\\\",\\\"negative\\\",\\\"sign\\\",\\\"fraction\\\",\\\"exponent\\\",\\\"boolean\\\",\\\"date/error\\\",\\\"non-ASCII digit\\\",\\\"precision-ambiguous numeric\\\",\\\"internal whitespace\\\"]}\",\"canonical_identifier_hash_domain\":\"doi-order-number/r01-v1\",\"canonical_name\":\"OrderNumber\",\"canonicalization\":\"Remove leading zeros; output [1-9][0-9]*.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"input_rule\":\"After ASCII_FOUR, require positive ASCII digits; exact proven provider integers are admitted only with no binary-float ambiguity.\",\"invalid_behavior\":\"Fail before import, command allocation, work creation, persistence, or Synthetic Order Portal access.\",\"normalization_content_sha256\":\"51564a60007e474a3fd5327ee3275d8c08f4d401c2bf9724fee467a672da53c4\",\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-order-number-normalization/r01-v1\",\"reject\":[\"zero\",\"negative\",\"sign\",\"fraction\",\"exponent\",\"boolean\",\"date/error\",\"non-ASCII digit\",\"precision-ambiguous numeric\",\"internal whitespace\"]},\"SharedEdgeTrim\":{\"algorithm\":\"Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.\",\"canonical_bytes\":\"{\\\"algorithm\\\":\\\"Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.\\\",\\\"edge_trim_bytes_hex\\\":[\\\"09\\\",\\\"0a\\\",\\\"0d\\\",\\\"20\\\"],\\\"edge_trim_codepoints\\\":[\\\"U+0009\\\",\\\"U+000A\\\",\\\"U+000D\\\",\\\"U+0020\\\"],\\\"forbidden_operations\\\":[\\\"Unicode normalization\\\",\\\"Unicode casefold\\\",\\\"locale behavior\\\",\\\"Unicode whitespace lookup\\\",\\\"internal whitespace removal\\\"],\\\"input_encoding\\\":\\\"UTF-8 text\\\",\\\"policy_literal\\\":\\\"ASCII_FOUR\\\",\\\"surviving_byte_rule\\\":\\\"Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.\\\",\\\"trim_schema_version\\\":\\\"doi-edge-trim-schema/r01-v1\\\",\\\"trim_version\\\":\\\"doi-ascii-four-edge-trim/r01-v1\\\"}\",\"edge_trim_bytes_hex\":[\"09\",\"0a\",\"0d\",\"20\"],\"edge_trim_codepoints\":[\"U+0009\",\"U+000A\",\"U+000D\",\"U+0020\"],\"forbidden_operations\":[\"Unicode normalization\",\"Unicode casefold\",\"locale behavior\",\"Unicode whitespace lookup\",\"internal whitespace removal\"],\"input_encoding\":\"UTF-8 text\",\"policy_literal\":\"ASCII_FOUR\",\"surviving_byte_rule\":\"Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.\",\"trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"trim_schema_version\":\"doi-edge-trim-schema/r01-v1\",\"trim_version\":\"doi-ascii-four-edge-trim/r01-v1\"},\"canonical_identifier_hashes\":{\"ESNumber\":\"SHA256(UTF8(\\\"doi-es-number/r01-v1\\\") || 0x0A || UTF8(canonical ESNumber))\",\"MFG_OE_Number\":\"SHA256(UTF8(\\\"doi-mfg-oe-number/r01-v1\\\") || 0x0A || UTF8(canonical MFG/OE number))\",\"OrderNumber\":\"SHA256(UTF8(\\\"doi-order-number/r01-v1\\\") || 0x0A || UTF8(canonical OrderNumber))\",\"collision_rule\":\"Exact canonical UTF-8 equality controls; same hash with different bytes is an integrity collision and rejects.\"},\"contract_schema_version\":\"doi-normalization-contract-schema/r01-v1\",\"contract_version\":\"doi-normalization-contract/r01-v1\",\"cross_package_digest\":\"DEFERRED_TO_R01_R02_INTEGRATION\",\"evolution\":\"A semantic normalization change creates a new exact version/hash; retained records preserve their original binding.\",\"manufacturer_registry_created\":false,\"r02_trim_dependency\":{\"parity\":\"BYTE_IDENTICAL_EDGE_TRIM_SET\",\"r02_algorithm_version\":\"doi-TARGET_REP-normalization-algorithm/v1\",\"r02_contract_file_sha256\":\"788c2e80bcbb6b780e8e44b74a174aef0c2237819f735a4451ed834e29be20ba\",\"r02_descriptor_sha256\":\"657f304462a6ca8674322562bc378eee8392abdb59061a4b7f5659932dffd8af\",\"scope\":\"Only the edge-trim bytes/operation are shared; R02 TARGET_REP classification and R01 identifier grammars remain distinct.\",\"shared_edge_trim_bytes_hex\":[\"09\",\"0a\",\"0d\",\"20\"]},\"rejected_predecessor_alternatives\":[\"ASCII_SPACE_ONLY\",\"UNICODE_WHITE_SPACE_15_1\",\"ES_PREFIXED\",\"ES_SOURCE_EXACT\",\"MFG_EXACT_CASE_SENSITIVE\",\"MFG_COMMON_SEPARATOR_INSENSITIVE\",\"MFG_ZERO_AND_SEPARATOR_INSENSITIVE\",\"MFG_MANUFACTURER_SCOPED\"],\"relationship_comparison\":\"EXACT_ES and EXACT_MFG compare exact canonical bytes under this exact contract binding. Relationship identity binds kind, both canonical identifiers, normalization contract version, and content SHA-256; fuzzy or cross-version equality is forbidden.\",\"runtime_binding\":{\"exact_members\":[\"normalization_contract_version\",\"normalization_contract_content_sha256\"],\"failure_behavior\":\"Unknown/unavailable version, stale binding, hash mismatch, or same version with different bytes rejects before relationship/evaluation append and persists no derived result.\",\"hash_preimage\":\"RFC8785(the complete contract object excluding canonical_bytes and contract_content_sha256)\",\"version\":\"doi-normalization-contract/r01-v1\"},\"selected_policies\":{\"R01_ES_NORMALIZATION_POLICY\":\"ES_NUMERIC_CORE\",\"R01_IDENTIFIER_TRIM_POLICY\":\"ASCII_FOUR\",\"R01_MFG_OE_NORMALIZATION_POLICY\":\"MFG_SEPARATOR_PRESERVING_UPPER\"},\"status\":\"FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT\"}",
+  "canonical_identifier_hashes": {
+    "ESNumber": "SHA256(UTF8(\"doi-es-number/r01-v1\") || 0x0A || UTF8(canonical ESNumber))",
+    "MFG_OE_Number": "SHA256(UTF8(\"doi-mfg-oe-number/r01-v1\") || 0x0A || UTF8(canonical MFG/OE number))",
+    "OrderNumber": "SHA256(UTF8(\"doi-order-number/r01-v1\") || 0x0A || UTF8(canonical OrderNumber))",
+    "collision_rule": "Exact canonical UTF-8 equality controls; same hash with different bytes is an integrity collision and rejects."
+  },
+  "contract_content_sha256": "d6db114b3fcfb326509609f2d2d570935765a9adb7d279248bc35ae6a61ae7d1",
+  "contract_schema_version": "doi-normalization-contract-schema/r01-v1",
+  "contract_version": "doi-normalization-contract/r01-v1",
+  "cross_package_digest": "DEFERRED_TO_R01_R02_INTEGRATION",
+  "evolution": "A semantic normalization change creates a new exact version/hash; retained records preserve their original binding.",
+  "manufacturer_registry_created": false,
+  "r02_trim_dependency": {
+    "parity": "BYTE_IDENTICAL_EDGE_TRIM_SET",
+    "r02_algorithm_version": "doi-TARGET_REP-normalization-algorithm/v1",
+    "r02_contract_file_sha256": "788c2e80bcbb6b780e8e44b74a174aef0c2237819f735a4451ed834e29be20ba",
+    "r02_descriptor_sha256": "657f304462a6ca8674322562bc378eee8392abdb59061a4b7f5659932dffd8af",
+    "scope": "Only the edge-trim bytes/operation are shared; R02 TARGET_REP classification and R01 identifier grammars remain distinct.",
+    "shared_edge_trim_bytes_hex": [
+      "09",
+      "0a",
+      "0d",
+      "20"
+    ]
+  },
+  "rejected_predecessor_alternatives": [
+    "ASCII_SPACE_ONLY",
+    "UNICODE_WHITE_SPACE_15_1",
+    "ES_PREFIXED",
+    "ES_SOURCE_EXACT",
+    "MFG_EXACT_CASE_SENSITIVE",
+    "MFG_COMMON_SEPARATOR_INSENSITIVE",
+    "MFG_ZERO_AND_SEPARATOR_INSENSITIVE",
+    "MFG_MANUFACTURER_SCOPED"
+  ],
+  "relationship_comparison": "EXACT_ES and EXACT_MFG compare exact canonical bytes under this exact contract binding. Relationship identity binds kind, both canonical identifiers, normalization contract version, and content SHA-256; fuzzy or cross-version equality is forbidden.",
+  "runtime_binding": {
+    "exact_members": [
+      "normalization_contract_version",
+      "normalization_contract_content_sha256"
+    ],
+    "failure_behavior": "Unknown/unavailable version, stale binding, hash mismatch, or same version with different bytes rejects before relationship/evaluation append and persists no derived result.",
+    "hash_preimage": "RFC8785(the complete contract object excluding canonical_bytes and contract_content_sha256)",
+    "version": "doi-normalization-contract/r01-v1"
+  },
+  "selected_policies": {
+    "R01_ES_NORMALIZATION_POLICY": "ES_NUMERIC_CORE",
+    "R01_IDENTIFIER_TRIM_POLICY": "ASCII_FOUR",
+    "R01_MFG_OE_NORMALIZATION_POLICY": "MFG_SEPARATOR_PRESERVING_UPPER"
+  },
+  "status": "FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT"
+}

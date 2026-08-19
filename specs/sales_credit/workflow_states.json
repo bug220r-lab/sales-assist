@@ -1,0 +1,96 @@
+{
+  "schema_version": "synthetic-sales-credit-workflow/v1",
+  "target_rep_literals": [
+    "target_rep",
+    "target_rep_web"
+  ],
+  "unassigned_web_literal": "unassigned_web",
+  "states": [
+    {
+      "state": "AWAITING_SOURCE_REVIEW",
+      "entry": "Usable interaction has not been checked.",
+      "exit": "Intentional review run."
+    },
+    {
+      "state": "CHECKED_NO_ORDER_WINDOW_ACTIVE",
+      "entry": "Complete searches found no qualifying order and the review window remains active.",
+      "exit": "Next eligible daily check, explicit force recheck, or window close."
+    },
+    {
+      "state": "REVIEW_WINDOW_CLOSED_NO_ORDER",
+      "entry": "No qualifying order by review-window end.",
+      "exit": "CLOSED."
+    },
+    {
+      "state": "CREDIT_CONFIRMED_TARGET_REP",
+      "entry": "Order-level rep is target_rep or target_rep_web and no blocking value issue exists.",
+      "exit": "Human outcome or closure."
+    },
+    {
+      "state": "EVIDENCE_NEEDED",
+      "entry": "Order-level rep is unassigned_web or another evidence-dependent state.",
+      "exit": "Evidence classification."
+    },
+    {
+      "state": "VERIFIED_PREORDER_EVIDENCE",
+      "entry": "Deterministic two-way or connected pre-order evidence.",
+      "exit": "Human outcome or closure."
+    },
+    {
+      "state": "OUTBOUND_EVIDENCE_HUMAN_REVIEW",
+      "entry": "Outbound-only evidence without a customer response.",
+      "exit": "Human decision."
+    },
+    {
+      "state": "INBOUND_EVIDENCE_HUMAN_REVIEW",
+      "entry": "Inbound-only, missed, or unanswered evidence.",
+      "exit": "Human decision."
+    },
+    {
+      "state": "TIMING_UNCERTAIN_HUMAN_REVIEW",
+      "entry": "Same-day evidence cannot be reliably ordered before/after the order.",
+      "exit": "Human decision."
+    },
+    {
+      "state": "OTHER_REP_HUMAN_REVIEW",
+      "entry": "Another known rep appears on the order.",
+      "exit": "Human decision."
+    },
+    {
+      "state": "ORDER_CHANGED_HUMAN_REVIEW",
+      "entry": "Material commercial change or placed-value uncertainty.",
+      "exit": "Human verification."
+    },
+    {
+      "state": "CANCELED_REPLACEMENT_WINDOW_ACTIVE",
+      "entry": "Qualifying order canceled and replacement window open.",
+      "exit": "Replacement found or window expires."
+    },
+    {
+      "state": "POSSIBLE_REPLACEMENT_HUMAN_REVIEW",
+      "entry": "Potential replacement needs non-deterministic continuity review.",
+      "exit": "Human decision."
+    },
+    {
+      "state": "CANCELED_NO_REPLACEMENT",
+      "entry": "Replacement window expired without relevant order.",
+      "exit": "CLOSED."
+    },
+    {
+      "state": "MANUAL_REVIEW_REQUIRED",
+      "entry": "Missing, invalid, unsupported, or contradictory facts.",
+      "exit": "Human resolution."
+    },
+    {
+      "state": "CLOSED",
+      "entry": "Human outcome or terminal no-order/no-replacement result recorded.",
+      "exit": "Minimize active data and begin retention clock."
+    }
+  ],
+  "invariants": [
+    "One active logical Sales Credit case per synthetic Order Number.",
+    "Multiple qualifying interactions attach to the same case without duplicating totals or outcomes.",
+    "System classification and human outcome are separate fields.",
+    "Ambiguity never becomes an automatic favorable credit decision."
+  ]
+}

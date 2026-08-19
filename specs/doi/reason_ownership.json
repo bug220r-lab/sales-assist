@@ -1,0 +1,1455 @@
+{
+  "schema_version": "synthetic-doi-reason-ownership/v1.0.1",
+  "reason_count": 138,
+  "global_rule": "Every reason must have at least one closed legal emission site and at least one real executable deterministic oracle before the corresponding milestone commits.",
+  "selector_warning": "Source-derived R01 selector references contain known phantom-selector defects. Codex must reconcile every oracle reference to an actual executable test; source selector strings are not accepted as proof merely because they are listed.",
+  "rows": [
+    {
+      "reason_code": "RC-001",
+      "canonical_label": "SOURCE_TAB_CONFIRMATION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-001",
+      "owning_deterministic_oracles": "SYN-SRC-001",
+      "owning_rule_service_area": "SOURCE_INGESTION/user action",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-001;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-001"
+    },
+    {
+      "reason_code": "RC-002",
+      "canonical_label": "SOURCE_SCHEMA_UNRECOGNIZED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-004,TR-100",
+      "owning_deterministic_oracles": "SYN-SRC-003",
+      "owning_rule_service_area": "SOURCE_INGESTION/DOISourceImportAttempt and final DOIRun",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-004,TR-100;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-003"
+    },
+    {
+      "reason_code": "RC-003",
+      "canonical_label": "SOURCE_ROW_INVALID_ORDER_NUMBER",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-SRC-006",
+      "owning_rule_service_area": "SOURCE_INGESTION/compatibility-reserved",
+      "ownership_mode": "ASSERTED_ONLY_UNREACHABLE",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:RULE_OR_BOUNDARY;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-006"
+    },
+    {
+      "reason_code": "RC-004",
+      "canonical_label": "SOURCE_ROW_UNRECOGNIZED_ASSIGNEE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-SRC-005",
+      "owning_rule_service_area": "SOURCE_INGESTION/DOISourceImportAttempt aggregate",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:RULE_OR_BOUNDARY;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-005"
+    },
+    {
+      "reason_code": "RC-005",
+      "canonical_label": "SOURCE_ROW_OUT_OF_SCOPE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-SRC-007",
+      "owning_rule_service_area": "SOURCE_INGESTION/DOISourceImportAttempt aggregate",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:RULE_OR_BOUNDARY;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-007"
+    },
+    {
+      "reason_code": "RC-006",
+      "canonical_label": "SOURCE_DUPLICATE_ROW_MERGED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-099",
+      "owning_deterministic_oracles": "SYN-SRC-008",
+      "owning_rule_service_area": "SOURCE_INGESTION/DOIStagedOrder",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-099;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-008"
+    },
+    {
+      "reason_code": "RC-007",
+      "canonical_label": "SOURCE_ROW_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-SRC-009",
+      "owning_rule_service_area": "SOURCE_INGESTION/compatibility-reserved future DOIRejectedSourceRecord",
+      "ownership_mode": "ASSERTED_ONLY_UNREACHABLE",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:RULE_OR_BOUNDARY;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-009"
+    },
+    {
+      "reason_code": "RC-008",
+      "canonical_label": "SOURCE_ASSIGNEE_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-103",
+      "owning_deterministic_oracles": "SYN-SRC-010",
+      "owning_rule_service_area": "SOURCE_INGESTION/DOIRejectedSourceRecord / source rejected outcome",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-103;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-010"
+    },
+    {
+      "reason_code": "RC-009",
+      "canonical_label": "SOURCE_CHANGED_DURING_IMPORT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-004,TR-100",
+      "owning_deterministic_oracles": "SYN-SRC-015",
+      "owning_rule_service_area": "SOURCE_INGESTION/DOISourceImportAttempt and final DOIRun",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-004,TR-100;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-015"
+    },
+    {
+      "reason_code": "RC-010",
+      "canonical_label": "SOURCE_ABSENT_RECHECK_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-021,TR-022",
+      "owning_deterministic_oracles": "SYN-SRC-018",
+      "owning_rule_service_area": "SOURCE_INGESTION/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-021,TR-022;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-018"
+    },
+    {
+      "reason_code": "RC-011",
+      "canonical_label": "EXTRACTION_REQUIRED_IDENTITY_MISSING",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-006,TR-020",
+      "owning_deterministic_oracles": "SYN-EXT-002",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIExtractionAttempt",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-006,TR-020;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-002"
+    },
+    {
+      "reason_code": "RC-012",
+      "canonical_label": "EXTRACTION_WHOLE_ORDER_UNPROVEN",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-006,TR-020",
+      "owning_deterministic_oracles": "SYN-EXT-003",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIExtractionAttempt",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-006,TR-020;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-003"
+    },
+    {
+      "reason_code": "RC-013",
+      "canonical_label": "EXTRACTION_REQUIRED_DATA_UNREADABLE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-006,TR-020",
+      "owning_deterministic_oracles": "SYN-EXT-004",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIExtractionAttempt",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-006,TR-020;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-004"
+    },
+    {
+      "reason_code": "RC-014",
+      "canonical_label": "EXTRACTION_FAILED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-006,TR-020",
+      "owning_deterministic_oracles": "SYN-EXT-002",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIExtractionAttempt",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-006,TR-020;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-002"
+    },
+    {
+      "reason_code": "RC-015",
+      "canonical_label": "RECHECK_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-006,TR-020",
+      "owning_deterministic_oracles": "SYN-EXT-002",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-006,TR-020;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-002"
+    },
+    {
+      "reason_code": "RC-016",
+      "canonical_label": "UNKNOWN_LINE_AVAILABILITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-EXT-005",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-005"
+    },
+    {
+      "reason_code": "RC-017",
+      "canonical_label": "UNKNOWN_LINE_DS_STATE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-EXT-006[DS_UNKNOWN]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-006[DS_UNKNOWN]"
+    },
+    {
+      "reason_code": "RC-018",
+      "canonical_label": "LINE_CONTINUITY_UNVERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-LINE-003",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-LINE-003"
+    },
+    {
+      "reason_code": "RC-019",
+      "canonical_label": "FULL_DS",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-031",
+      "owning_deterministic_oracles": "SYN-RULE-001",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-031;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-001"
+    },
+    {
+      "reason_code": "RC-020",
+      "canonical_label": "MIXED_DS",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-033",
+      "owning_deterministic_oracles": "SYN-RULE-002",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-033;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-002"
+    },
+    {
+      "reason_code": "RC-021",
+      "canonical_label": "SHIPPED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-009,TR-016,TR-029",
+      "owning_deterministic_oracles": "SYN-RET-002",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-009,TR-016,TR-029;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-002"
+    },
+    {
+      "reason_code": "RC-022",
+      "canonical_label": "CANCELED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-010,TR-017,TR-029",
+      "owning_deterministic_oracles": "SYN-RULE-012",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-010,TR-017,TR-029;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-012"
+    },
+    {
+      "reason_code": "RC-023",
+      "canonical_label": "REP_TRANSFERRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-011,TR-015,TR-030",
+      "owning_deterministic_oracles": "SYN-RULE-011",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-011,TR-015,TR-030;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-011"
+    },
+    {
+      "reason_code": "RC-024",
+      "canonical_label": "DEDUPE_CONFIRMED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-012,TR-015,TR-030,TR-063",
+      "owning_deterministic_oracles": "SYN-DED-002",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-012,TR-015,TR-030,TR-063;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-DED-002"
+    },
+    {
+      "reason_code": "RC-025",
+      "canonical_label": "HUMAN_OUT_OF_SCOPE_CLOSED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-013,TR-015,TR-030",
+      "owning_deterministic_oracles": "SYN-RET-003",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-013,TR-015,TR-030;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-003"
+    },
+    {
+      "reason_code": "RC-026",
+      "canonical_label": "PAYMENT_ISSUE_OUT_OF_SCOPE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-032",
+      "owning_deterministic_oracles": "SYN-RULE-009",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-032;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-009"
+    },
+    {
+      "reason_code": "RC-027",
+      "canonical_label": "PAYMENT_ISSUE_PRESENT_OUT_OF_SCOPE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-RULE-010",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:RULE_OR_BOUNDARY;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-010"
+    },
+    {
+      "reason_code": "RC-028",
+      "canonical_label": "ORDER_PROGRESS_REVIEW",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-036",
+      "owning_deterministic_oracles": "SYN-RULE-008",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-036;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-008"
+    },
+    {
+      "reason_code": "RC-029",
+      "canonical_label": "NO_ACTION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-039",
+      "owning_deterministic_oracles": "SYN-RULE-008",
+      "owning_rule_service_area": "EVALUATION_EXCLUSION_CLOSURE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-039;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-008"
+    },
+    {
+      "reason_code": "RC-030",
+      "canonical_label": "DS_SEPARATION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-033",
+      "owning_deterministic_oracles": "SYN-RULE-002",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-033;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-002"
+    },
+    {
+      "reason_code": "RC-031",
+      "canonical_label": "FULFILLMENT_SPLIT_CANDIDATE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-034",
+      "owning_deterministic_oracles": "SYN-RULE-003",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-034;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-003"
+    },
+    {
+      "reason_code": "RC-032",
+      "canonical_label": "PARTIAL_QTY_INTERVENTION_REVIEW",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-034",
+      "owning_deterministic_oracles": "SYN-RULE-006",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-034;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-006"
+    },
+    {
+      "reason_code": "RC-033",
+      "canonical_label": "EXACT_SKU_RECHECK",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035",
+      "owning_deterministic_oracles": "SYN-ALT-001",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-001"
+    },
+    {
+      "reason_code": "RC-034",
+      "canonical_label": "EXACT_MFG_ALTERNATE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035",
+      "owning_deterministic_oracles": "SYN-ALT-003",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-003"
+    },
+    {
+      "reason_code": "RC-035",
+      "canonical_label": "MFG_CROSS_REFERENCE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035",
+      "owning_deterministic_oracles": "SYN-ALT-004",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-004"
+    },
+    {
+      "reason_code": "RC-036",
+      "canonical_label": "MFG_SUPERSESSION",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035",
+      "owning_deterministic_oracles": "SYN-ALT-005",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-005"
+    },
+    {
+      "reason_code": "RC-037",
+      "canonical_label": "FUNCTIONAL_ALTERNATE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035",
+      "owning_deterministic_oracles": "SYN-ALT-006",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-006"
+    },
+    {
+      "reason_code": "RC-038",
+      "canonical_label": "NO_EXACT_MFG_ALTERNATE_FOUND",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027",
+      "owning_deterministic_oracles": "SYN-ALT-015[EXACT_MFG_SCOPE]",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-027;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-015[EXACT_MFG_SCOPE]"
+    },
+    {
+      "reason_code": "RC-039",
+      "canonical_label": "NO_VERIFIED_ALTERNATE_FOUND",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027",
+      "owning_deterministic_oracles": "SYN-ALT-015",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-027;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-015"
+    },
+    {
+      "reason_code": "RC-040",
+      "canonical_label": "MANUAL_IDENTIFICATION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-ALT-016",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-016"
+    },
+    {
+      "reason_code": "RC-041",
+      "canonical_label": "NO_VIABLE_ALTERNATE_HUMAN_CONFIRMED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-097",
+      "owning_deterministic_oracles": "SYN-ALT-017",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-097;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-017"
+    },
+    {
+      "reason_code": "RC-042",
+      "canonical_label": "CUSTOMER_APPROVAL_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035,TR-065",
+      "owning_deterministic_oracles": "SYN-ALT-007",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035,TR-065;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-007"
+    },
+    {
+      "reason_code": "RC-043",
+      "canonical_label": "HUMAN_COMPATIBILITY_REVIEW_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035",
+      "owning_deterministic_oracles": "SYN-ALT-006",
+      "owning_rule_service_area": "OPPORTUNITY_ALTERNATE_RESEARCH/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-006"
+    },
+    {
+      "reason_code": "RC-044",
+      "canonical_label": "ALTERNATE_OBSERVATION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035,TR-042,TR-085",
+      "owning_deterministic_oracles": "SYN-ALT-009",
+      "owning_rule_service_area": "ALTERNATE_KNOWLEDGE_LIFECYCLE/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035,TR-042,TR-085;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-009"
+    },
+    {
+      "reason_code": "RC-045",
+      "canonical_label": "ALTERNATE_OBSERVATION_STALE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035,TR-042,TR-085",
+      "owning_deterministic_oracles": "SYN-ALT-012",
+      "owning_rule_service_area": "ALTERNATE_KNOWLEDGE_LIFECYCLE/DOIAlternateObservation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035,TR-042,TR-085;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-012"
+    },
+    {
+      "reason_code": "RC-046",
+      "canonical_label": "ALTERNATE_RELATIONSHIP_SUPERSEDED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-040",
+      "owning_deterministic_oracles": "SYN-ALT-REV-005",
+      "owning_rule_service_area": "ALTERNATE_KNOWLEDGE_LIFECYCLE/DOIAlternateRelationship",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-040;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-REV-005"
+    },
+    {
+      "reason_code": "RC-047",
+      "canonical_label": "ALTERNATE_RELATIONSHIP_INVALIDATED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-041",
+      "owning_deterministic_oracles": "SYN-ALT-REV-006",
+      "owning_rule_service_area": "ALTERNATE_KNOWLEDGE_LIFECYCLE/DOIAlternateRelationship",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-041;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-REV-006"
+    },
+    {
+      "reason_code": "RC-048",
+      "canonical_label": "FUNCTIONAL_ALTERNATE_REVALIDATION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-035",
+      "owning_deterministic_oracles": "SYN-ALT-010",
+      "owning_rule_service_area": "ALTERNATE_KNOWLEDGE_LIFECYCLE/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-035;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-010"
+    },
+    {
+      "reason_code": "RC-049",
+      "canonical_label": "AK_HI_SHIPPING_REVIEW",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027",
+      "owning_deterministic_oracles": "SYN-GEO-002",
+      "owning_rule_service_area": "GEOGRAPHY_HUMAN_HANDLING/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-027;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-GEO-002"
+    },
+    {
+      "reason_code": "RC-050",
+      "canonical_label": "INTERNATIONAL_ORDER_REVIEW",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027",
+      "owning_deterministic_oracles": "SYN-GEO-003",
+      "owning_rule_service_area": "GEOGRAPHY_HUMAN_HANDLING/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-027;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-GEO-003"
+    },
+    {
+      "reason_code": "RC-051",
+      "canonical_label": "CUSTOMER_CONTACT_REQUIRED_BEFORE_SPLIT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-065",
+      "owning_deterministic_oracles": "SYN-GEO-003",
+      "owning_rule_service_area": "GEOGRAPHY_HUMAN_HANDLING/DOIOpportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-065;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-GEO-003"
+    },
+    {
+      "reason_code": "RC-052",
+      "canonical_label": "HUMAN_DECISION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-060",
+      "owning_deterministic_oracles": "SYN-GEO-001",
+      "owning_rule_service_area": "GEOGRAPHY_HUMAN_HANDLING/DOIEvaluation/opportunity",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-060;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-GEO-001"
+    },
+    {
+      "reason_code": "RC-053",
+      "canonical_label": "WWC_ACTIVE_SELF",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-075,TR-079,TR-095",
+      "owning_deterministic_oracles": "SYN-WWC-001",
+      "owning_rule_service_area": "WWC_COORDINATION/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-075,TR-079,TR-095;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-WWC-001"
+    },
+    {
+      "reason_code": "RC-054",
+      "canonical_label": "WWC_ACTIVE_OTHER_REP",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-076,TR-079,TR-095",
+      "owning_deterministic_oracles": "SYN-WWC-002",
+      "owning_rule_service_area": "WWC_COORDINATION/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-076,TR-079,TR-095;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-WWC-002"
+    },
+    {
+      "reason_code": "RC-055",
+      "canonical_label": "WWC_AUTHOR_UNCERTAIN",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037,TR-078,TR-079,TR-094",
+      "owning_deterministic_oracles": "SYN-WWC-003",
+      "owning_rule_service_area": "WWC_COORDINATION/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037,TR-078,TR-079,TR-094;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-WWC-003"
+    },
+    {
+      "reason_code": "RC-056",
+      "canonical_label": "TIMING_UNCERTAIN",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037,TR-078,TR-079,TR-094",
+      "owning_deterministic_oracles": "SYN-WWC-003",
+      "owning_rule_service_area": "WWC_COORDINATION/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037,TR-078,TR-079,TR-094;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-WWC-003"
+    },
+    {
+      "reason_code": "RC-057",
+      "canonical_label": "HUMAN_COORDINATION_REVIEW_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-078,TR-079,TR-094",
+      "owning_deterministic_oracles": "SYN-WWC-003",
+      "owning_rule_service_area": "WWC_COORDINATION/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-078,TR-079,TR-094;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-WWC-003"
+    },
+    {
+      "reason_code": "RC-058",
+      "canonical_label": "DEDUPE_CANDIDATE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-060",
+      "owning_deterministic_oracles": "SYN-DED-001",
+      "owning_rule_service_area": "DEDUPE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-060;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-DED-001"
+    },
+    {
+      "reason_code": "RC-059",
+      "canonical_label": "DEDUPE_BLOCKED_INCOMPLETE_ANALYSIS",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037,TR-096",
+      "owning_deterministic_oracles": "SYN-DED-005",
+      "owning_rule_service_area": "DEDUPE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037,TR-096;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-DED-005"
+    },
+    {
+      "reason_code": "RC-060",
+      "canonical_label": "INTERVENTION_VERIFICATION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-025",
+      "owning_deterministic_oracles": "SYN-INT-004",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-025;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-004"
+    },
+    {
+      "reason_code": "RC-061",
+      "canonical_label": "INTERVENTION_ACTION_SYSTEM_VERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-026,TR-044,TR-045A",
+      "owning_deterministic_oracles": "SYN-INT-003",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-026,TR-044,TR-045A;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-003"
+    },
+    {
+      "reason_code": "RC-062",
+      "canonical_label": "INTERVENTION_ACTION_HUMAN_VERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-026,TR-045,TR-045A",
+      "owning_deterministic_oracles": "SYN-INT-005",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-026,TR-045,TR-045A;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-005"
+    },
+    {
+      "reason_code": "RC-063",
+      "canonical_label": "INTERVENTION_VALUE_UNVERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-106",
+      "owning_deterministic_oracles": "SYN-KPI-015",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-106;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-KPI-015"
+    },
+    {
+      "reason_code": "RC-064",
+      "canonical_label": "INTERVENTION_VALUE_SYSTEM_VERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-046",
+      "owning_deterministic_oracles": "SYN-KPI-001",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/verification event",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-046;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-KPI-001"
+    },
+    {
+      "reason_code": "RC-065",
+      "canonical_label": "INTERVENTION_VALUE_HUMAN_VERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-047",
+      "owning_deterministic_oracles": "SYN-INT-007",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/verification event",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-047;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-007"
+    },
+    {
+      "reason_code": "RC-066",
+      "canonical_label": "INTERVENTION_VALUE_CONFLICT_SYSTEM_AUTHORITATIVE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-048,TR-053",
+      "owning_deterministic_oracles": "SYN-INT-009",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/verification event",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-048,TR-053;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-009"
+    },
+    {
+      "reason_code": "RC-067",
+      "canonical_label": "HUMAN_VALUE_NOT_EXACT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-047",
+      "owning_deterministic_oracles": "SYN-INT-007",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/user action",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-047;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-007"
+    },
+    {
+      "reason_code": "RC-068",
+      "canonical_label": "INTERVENTION_PARTIALLY_REVERSED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-050,TR-052,TR-109",
+      "owning_deterministic_oracles": "SYN-INT-011",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-050,TR-052,TR-109;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-011"
+    },
+    {
+      "reason_code": "RC-069",
+      "canonical_label": "INTERVENTION_REVERSED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-051,TR-052",
+      "owning_deterministic_oracles": "SYN-INT-012",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-051,TR-052;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-012"
+    },
+    {
+      "reason_code": "RC-070",
+      "canonical_label": "RESULTING_ORDER_AUTO_LINKED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-054,TR-056,TR-090,TR-091,TR-093,TR-110",
+      "owning_deterministic_oracles": "SYN-LINK-HIST-001",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIResultingOrderLink",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-054,TR-056,TR-090,TR-091,TR-093,TR-110;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-LINK-HIST-001"
+    },
+    {
+      "reason_code": "RC-071",
+      "canonical_label": "RESULTING_ORDER_HUMAN_CONFIRMED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-055,TR-057,TR-090,TR-093",
+      "owning_deterministic_oracles": "SYN-LINK-HIST-001",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIResultingOrderLink",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-055,TR-057,TR-090,TR-093;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-LINK-HIST-001"
+    },
+    {
+      "reason_code": "RC-072",
+      "canonical_label": "RESULTING_ORDER_LINK_REVIEW",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-058,TR-059,TR-089,TR-092,TR-111",
+      "owning_deterministic_oracles": "SYN-LINK-HIST-003",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIResultingOrderLinkSearch or exact DOIResultingOrderLink",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-058,TR-059,TR-089,TR-092,TR-111;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-LINK-HIST-003"
+    },
+    {
+      "reason_code": "RC-073",
+      "canonical_label": "RESULTING_ORDER_NOT_FOUND",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-088,TR-093",
+      "owning_deterministic_oracles": "SYN-LINK-HIST-002",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIResultingOrderLinkSearch",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-088,TR-093;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-LINK-HIST-002"
+    },
+    {
+      "reason_code": "RC-074",
+      "canonical_label": "SPLIT_CREDIT_REP_UNVERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-106",
+      "owning_deterministic_oracles": "SYN-INT-017,SYN-REASON-OWN-001,SYN-REASON-OWN-002",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "opportunity_kpi_contract.md:§3.3/§7.4;DOI_STATE_TRANSITION_MATRIX_v0.1.5.md:TR-106;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-017/SYN-REASON-OWN-001/002"
+    },
+    {
+      "reason_code": "RC-075",
+      "canonical_label": "SWAP_CREDIT_REP_UNVERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-106",
+      "owning_deterministic_oracles": "SYN-INT-018,SYN-REASON-OWN-003,SYN-REASON-OWN-004",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "opportunity_kpi_contract.md:§3.3/§7.4;DOI_STATE_TRANSITION_MATRIX_v0.1.5.md:TR-106;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-INT-018/SYN-REASON-OWN-003/004"
+    },
+    {
+      "reason_code": "RC-076",
+      "canonical_label": "CREDIT_DUPLICATE_SUPPRESSED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-050,TR-051,TR-109",
+      "owning_deterministic_oracles": "SYN-IDEM-009",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/aggregate calculation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-050,TR-051,TR-109;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-IDEM-009"
+    },
+    {
+      "reason_code": "RC-077",
+      "canonical_label": "REVERSAL_VERIFICATION_REQUIRED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-050,TR-051,TR-109",
+      "owning_deterministic_oracles": "SYN-IDEM-010",
+      "owning_rule_service_area": "INTERVENTION_CREDIT_RESULT_LINK/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-050,TR-051,TR-109;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-IDEM-010"
+    },
+    {
+      "reason_code": "RC-078",
+      "canonical_label": "CASE_REOPENED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-014,TR-064",
+      "owning_deterministic_oracles": "SYN-RET-004",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-014,TR-064;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-004"
+    },
+    {
+      "reason_code": "RC-079",
+      "canonical_label": "PURGE_SCHEDULED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-009,TR-010,TR-011,TR-012,TR-013,TR-016,TR-017,TR-063",
+      "owning_deterministic_oracles": "SYN-RET-002",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-009,TR-010,TR-011,TR-012,TR-013,TR-016,TR-017,TR-063;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-002"
+    },
+    {
+      "reason_code": "RC-080",
+      "canonical_label": "PURGE_CANCELED_ON_REOPEN",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-014,TR-064",
+      "owning_deterministic_oracles": "SYN-LIFE-PAYLOAD-004",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/DOIOrderCase",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-014,TR-064;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-LIFE-PAYLOAD-004"
+    },
+    {
+      "reason_code": "RC-081",
+      "canonical_label": "STATE_TRANSITION_NOT_ALLOWED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-020,TR-022,TR-106",
+      "owning_deterministic_oracles": "SYN-STATE-016",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/any projection",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-020,TR-022,TR-106;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-STATE-016"
+    },
+    {
+      "reason_code": "RC-082",
+      "canonical_label": "OA_WRITE_PROHIBITED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-OA-RO-003,SYN-OA-CAP-002,SYN-REASON-OWN-005,SYN-REASON-OWN-006",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/system boundary",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_OA_CAPABILITY_POLICY_v0.1.5.md:§6.2/§7;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-OA-RO-003/SYN-REASON-OWN-005/006"
+    },
+    {
+      "reason_code": "RC-083",
+      "canonical_label": "UNSAFE_ACTION_REJECTED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-OA-RO-001,SYN-OA-RO-005,SYN-REASON-OWN-007,SYN-REASON-OWN-008",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/user/API action",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_OA_CAPABILITY_POLICY_v0.1.5.md:§6.2/§7;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-OA-RO-001/005/SYN-REASON-OWN-007/008"
+    },
+    {
+      "reason_code": "RC-084",
+      "canonical_label": "RULE_VERSION_UNAVAILABLE",
+      "registry_version": "synthetic-doi-reason-registry/v1.0.1",
+      "owning_transitions": "TR-004,TR-027,TR-037",
+      "owning_deterministic_oracles": "SYN-EVAL-PROV-001[UNAVAILABLE_RULE_VERSION]",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/DOIEvaluation rules-version gate and DOIRun pre-extraction systemic rules gate",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "specs/doi/state_transitions.json:TR-004;specs/shared/idempotency_runs.md:Rules unavailable;specs/advisory/approved_product_decisions.md:Audit-authorized implementation clarifications",
+      "emission_sites": [
+        {
+          "site": "evaluation",
+          "persistence": "no substitute-version evaluation",
+          "transitions": [
+            "TR-027",
+            "TR-037"
+          ],
+          "required_oracle_semantics": "A collected executable test proves that unavailable required rules do not produce a substitute-version evaluation."
+        },
+        {
+          "site": "run_pre_extraction",
+          "persistence": "no evaluation; TR-004 branch PRE_EXTRACTION_RULES_UNAVAILABLE terminalizes the run FAILED; zero portal reads and zero order dispositions",
+          "transitions": [
+            "TR-004"
+          ],
+          "transition_branch": "PRE_EXTRACTION_RULES_UNAVAILABLE",
+          "required_oracle_semantics": "A collected executable test proves exact RC-084, no evaluation, zero portal reads/dispositions, and serialization against extraction reservation."
+        }
+      ],
+      "oracle_status": "BOTH_EMISSION_SITES_REQUIRE_REAL_COLLECTED_EXECUTABLE_TESTS"
+    },
+    {
+      "reason_code": "RC-085",
+      "canonical_label": "VALUE_CALCULATION_UNAVAILABLE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-RULE-007",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RULE-007"
+    },
+    {
+      "reason_code": "RC-086",
+      "canonical_label": "CASE_IDENTITY_NOT_RETAINED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-RET-012",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/user/API action",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:RULE_OR_BOUNDARY;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-012"
+    },
+    {
+      "reason_code": "RC-087",
+      "canonical_label": "POTENTIAL_OVERLAP_UNRESOLVED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-SCOPE-007",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/DOIEvaluation/aggregate",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SCOPE-007"
+    },
+    {
+      "reason_code": "RC-088",
+      "canonical_label": "AGGREGATE_KPI_FINALIZED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-018,TR-019,TR-112",
+      "owning_deterministic_oracles": "SYN-KPI-011",
+      "owning_rule_service_area": "LIFECYCLE_RETENTION_RULES_SAFETY/aggregate calculation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-018,TR-019,TR-112;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-KPI-011"
+    },
+    {
+      "reason_code": "RC-089",
+      "canonical_label": "SOURCE_UNREADABLE_OR_INACCESSIBLE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-004,TR-100",
+      "owning_deterministic_oracles": "SYN-SRC-017",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/DOISourceImportAttempt and final DOIRun",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-004,TR-100;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-017"
+    },
+    {
+      "reason_code": "RC-090",
+      "canonical_label": "SOURCE_IMPORT_ATTEMPT_FAILED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-003,TR-004,TR-100,TR-102",
+      "owning_deterministic_oracles": "SYN-SRC-017",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/DOISourceImportAttempt",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-003,TR-004,TR-100,TR-102;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-017"
+    },
+    {
+      "reason_code": "RC-091",
+      "canonical_label": "SOURCE_BATCH_IDENTITY_INTEGRITY_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-004,TR-100,TR-101,TR-102",
+      "owning_deterministic_oracles": "SYN-SRC-027",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/source-import attempt and source-batch binding",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-004,TR-100,TR-101,TR-102;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SRC-027"
+    },
+    {
+      "reason_code": "RC-092",
+      "canonical_label": "SOURCE_REJECTED_IDENTITY_RETENTION_SCHEDULED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-104",
+      "owning_deterministic_oracles": "SYN-RET-018",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/DOIRejectedSourceRecord",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-104;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-018"
+    },
+    {
+      "reason_code": "RC-093",
+      "canonical_label": "SOURCE_REJECTED_IDENTITY_PURGED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-105",
+      "owning_deterministic_oracles": "SYN-RET-018",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/TR-105 transaction-local deletion boundary",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "source_retention_contract.md:TR-105;source_retention_contract.md:SYN-RET-018;DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-105;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-018"
+    },
+    {
+      "reason_code": "RC-094",
+      "canonical_label": "CURRENCY_CODE_INVALID",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037,TR-046,TR-047,TR-048,TR-053,TR-106,TR-107",
+      "owning_deterministic_oracles": "SYN-KPI-017",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/monetary fact/calculation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037,TR-046,TR-047,TR-048,TR-053,TR-106,TR-107;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-KPI-017"
+    },
+    {
+      "reason_code": "RC-095",
+      "canonical_label": "MIXED_CURRENCY_AGGREGATION_PROHIBITED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-SCOPE-010",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/calculation/KPI",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SCOPE-010"
+    },
+    {
+      "reason_code": "RC-096",
+      "canonical_label": "RETENTION_CLOCK_CALCULATION_FAILED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-043,TR-104",
+      "owning_deterministic_oracles": "SYN-RET-017",
+      "owning_rule_service_area": "SOURCE_RETENTION_CURRENCY/retention scheduler",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-043,TR-104;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-RET-017"
+    },
+    {
+      "reason_code": "RC-097",
+      "canonical_label": "OPPORTUNITY_SCOPE_UNPROVEN",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-037",
+      "owning_deterministic_oracles": "SYN-SCOPE-006",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/DOIEvaluation candidate",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SCOPE-006"
+    },
+    {
+      "reason_code": "RC-098",
+      "canonical_label": "SCENARIO_OPTION_SELECTION_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "NONE_RULE_OR_BOUNDARY",
+      "owning_deterministic_oracles": "SYN-SCOPE-008",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/potential calculation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:RULE_OR_BOUNDARY;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-SCOPE-008"
+    },
+    {
+      "reason_code": "RC-099",
+      "canonical_label": "KPI_ACTION_DATE_UNVERIFIED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-106",
+      "owning_deterministic_oracles": "SYN-KPI-009",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/DOIIntervention",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-106;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-KPI-009"
+    },
+    {
+      "reason_code": "RC-100",
+      "canonical_label": "KPI_BUCKET_IDENTITY_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-018,TR-019,TR-107,TR-108,TR-112",
+      "owning_deterministic_oracles": "SYN-KPI-013",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/KPI persistence",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-018,TR-019,TR-107,TR-108,TR-112;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-KPI-013"
+    },
+    {
+      "reason_code": "RC-101",
+      "canonical_label": "KPI_FINALIZATION_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-018,TR-019,TR-112",
+      "owning_deterministic_oracles": "SYN-KPI-013",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/purge transaction",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-018,TR-019,TR-112;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-KPI-013"
+    },
+    {
+      "reason_code": "RC-102",
+      "canonical_label": "EVIDENCE_NATURAL_KEY_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-044,TR-045,TR-046,TR-047,TR-048,TR-052,TR-053,TR-058,TR-059,TR-107,TR-108,TR-109,TR-111",
+      "owning_deterministic_oracles": "SYN-IDEM-004",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/action/value/reversal verification ledger",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-044,TR-045,TR-046,TR-047,TR-048,TR-052,TR-053,TR-058,TR-059,TR-107,TR-108,TR-109,TR-111;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-IDEM-004"
+    },
+    {
+      "reason_code": "RC-103",
+      "canonical_label": "EVIDENCE_FINGERPRINT_INTEGRITY_FAILURE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-001,TR-002,TR-003,TR-004,TR-014,TR-040,TR-041,TR-044,TR-045,TR-046,TR-048,TR-052,TR-053,TR-054,TR-055,TR-056,TR-057,TR-058,TR-059,TR-061,TR-082,TR-083,TR-088,TR-097,TR-098,TR-099,TR-100,TR-103,TR-104,TR-106,TR-107,TR-108,TR-109,TR-110,TR-111,TR-113",
+      "owning_deterministic_oracles": "SYN-IDEM-005",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/persistence boundary",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-001,TR-002,TR-003,TR-004,TR-014,TR-040,TR-041,TR-044,TR-045,TR-046,TR-048,TR-052,TR-053,TR-054,TR-055,TR-056,TR-057,TR-058,TR-059,TR-061,TR-082,TR-083,TR-088,TR-097,TR-098,TR-099,TR-100,TR-103,TR-104,TR-106,TR-107,TR-108,TR-109,TR-110,TR-111,TR-113;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-IDEM-005"
+    },
+    {
+      "reason_code": "RC-104",
+      "canonical_label": "RESULTING_ORDER_LINK_EVIDENCE_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-058,TR-059,TR-092,TR-111",
+      "owning_deterministic_oracles": "SYN-IDEM-007",
+      "owning_rule_service_area": "SCOPE_KPI_EVIDENCE/DOIResultingOrderLink",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-058,TR-059,TR-092,TR-111;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-IDEM-007"
+    },
+    {
+      "reason_code": "RC-105",
+      "canonical_label": "EVALUATION_PROVENANCE_INCOMPLETE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028",
+      "owning_deterministic_oracles": "SYN-EVAL-PROV-003",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-027,TR-028;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EVAL-PROV-003"
+    },
+    {
+      "reason_code": "RC-106",
+      "canonical_label": "EVALUATION_PROVENANCE_HASH_MISMATCH",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028",
+      "owning_deterministic_oracles": "SYN-EVAL-PROV-002",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-027,TR-028;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EVAL-PROV-002"
+    },
+    {
+      "reason_code": "RC-107",
+      "canonical_label": "ALTERNATE_RELATIONSHIP_CREATED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-082",
+      "owning_deterministic_oracles": "SYN-ALT-REV-001",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/DOIAlternateRelationshipRevision",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-082;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-REV-001"
+    },
+    {
+      "reason_code": "RC-108",
+      "canonical_label": "ALTERNATE_RELATIONSHIP_REVISION_APPENDED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-040,TR-041,TR-083",
+      "owning_deterministic_oracles": "SYN-ALT-REV-002",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/DOIAlternateRelationshipRevision",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-040,TR-041,TR-083;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-REV-002"
+    },
+    {
+      "reason_code": "RC-109",
+      "canonical_label": "ALTERNATE_RELATIONSHIP_REVISION_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-040,TR-041,TR-082,TR-083",
+      "owning_deterministic_oracles": "SYN-ALT-REV-003",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/DOIAlternateRelationshipRevision",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-040,TR-041,TR-082,TR-083;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-ALT-REV-003"
+    },
+    {
+      "reason_code": "RC-110",
+      "canonical_label": "ACTION_CONTEXT_BINDING_INVALID",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-042,TR-080,TR-084,TR-085,TR-086,TR-087",
+      "owning_deterministic_oracles": "SYN-EVAL-PROV-006",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/DOIActionContext",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-042,TR-080,TR-084,TR-085,TR-086,TR-087;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EVAL-PROV-006"
+    },
+    {
+      "reason_code": "RC-111",
+      "canonical_label": "EVENT_STREAM_SEQUENCE_CONFLICT",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-001,TR-002,TR-003,TR-004,TR-014,TR-040,TR-041,TR-044,TR-045,TR-046,TR-048,TR-052,TR-053,TR-054,TR-055,TR-056,TR-057,TR-058,TR-059,TR-061,TR-082,TR-083,TR-088,TR-097,TR-098,TR-099,TR-100,TR-103,TR-104,TR-109,TR-110,TR-111,TR-113",
+      "owning_deterministic_oracles": "SYN-STATE-009",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/any typed immutable history",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-001,TR-002,TR-003,TR-004,TR-014,TR-040,TR-041,TR-044,TR-045,TR-046,TR-048,TR-052,TR-053,TR-054,TR-055,TR-056,TR-057,TR-058,TR-059,TR-061,TR-082,TR-083,TR-088,TR-097,TR-098,TR-099,TR-100,TR-103,TR-104,TR-109,TR-110,TR-111,TR-113;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-STATE-009"
+    },
+    {
+      "reason_code": "RC-112",
+      "canonical_label": "HUMAN_FACT_PROVENANCE_INCOMPLETE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-045,TR-047,TR-055,TR-057,TR-061,TR-062,TR-097",
+      "owning_deterministic_oracles": "SYN-EVAL-PROV-005",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/DOIHumanFactEvent",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-045,TR-047,TR-055,TR-057,TR-061,TR-062,TR-097;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EVAL-PROV-005"
+    },
+    {
+      "reason_code": "RC-113",
+      "canonical_label": "LIFECYCLE_EVENT_SCHEMA_INVALID",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-014",
+      "owning_deterministic_oracles": "SYN-LIFE-PAYLOAD-005",
+      "owning_rule_service_area": "PROVENANCE_HISTORY_LIFECYCLE/lifecycle serialization boundary",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-014;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-LIFE-PAYLOAD-005"
+    },
+    {
+      "reason_code": "RC-114",
+      "canonical_label": "SOURCE_IMPORT_ATTEMPT_PURGED",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-114",
+      "owning_deterministic_oracles": "SYN-IMPORT-RET-002,SYN-IMPORT-RET-004,SYN-IMPORT-RET-005,SYN-IMPORT-RET-006,SYN-IMPORT-RET-007,SYN-IMPORT-RET-008,SYN-IMPORT-RET-009,SYN-IMPORT-RET-011,SYN-IMPORT-RET-012,SYN-IMPORT-RET-013,SYN-IMPORT-RET-018,SYN-IMPORT-RET-019,SYN-IMPORT-RET-022",
+      "owning_rule_service_area": "SOURCE_IMPORT_ATTEMPT_RETENTION/TR-114 transaction-local DOISourceImportAttemptRetentionEventV1",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "source_retention_contract.md:TR-114/SYN-IMPORT-RET-*;DOI_STATE_TRANSITION_MATRIX_v0.1.5.md:TR-114;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-IMPORT-RET-002/004..009/011..013/018/019/022"
+    },
+    {
+      "reason_code": "RC-115",
+      "canonical_label": "UNKNOWN_LINE_ETA_STATE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-034,TR-037",
+      "owning_deterministic_oracles": "SYN-EXT-006[ETA_UNKNOWN]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "DOI_TRANSITION_TRACEABILITY_v0.1.5.md:TR-034,TR-037;DOI_ACCEPTANCE_TEST_MATRIX_v0.1.5.md:SYN-EXT-006[ETA_UNKNOWN]"
+    },
+    {
+      "reason_code": "RC-116",
+      "canonical_label": "UNKNOWN_ORDER_STATE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-117",
+      "canonical_label": "UNKNOWN_CURRENT_REP_VALUE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-118",
+      "canonical_label": "UNKNOWN_CURRENT_REP_RELATION",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-119",
+      "canonical_label": "UNKNOWN_GEOGRAPHY_CLASS",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-120",
+      "canonical_label": "UNKNOWN_PAYMENT_CONDITION",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-121",
+      "canonical_label": "UNKNOWN_ORDER_TOTAL",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-122",
+      "canonical_label": "UNKNOWN_WWC_PRESENCE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "WWC_COORDINATION/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-123",
+      "canonical_label": "UNKNOWN_DEDUPE_PRESENCE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "DEDUPE_COORDINATION/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-124",
+      "canonical_label": "UNKNOWN_STABLE_SOURCE_LINE_ID",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-125",
+      "canonical_label": "UNKNOWN_LINE_ACTIVITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-126",
+      "canonical_label": "UNKNOWN_LINE_ES_NUMBER",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-127",
+      "canonical_label": "UNKNOWN_LINE_MFG_NUMBER",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-128",
+      "canonical_label": "UNKNOWN_ORDERED_QUANTITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-129",
+      "canonical_label": "UNKNOWN_ACTIVE_QUANTITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-130",
+      "canonical_label": "UNKNOWN_CANCELED_QUANTITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-131",
+      "canonical_label": "UNKNOWN_EXPLICITLY_AVAILABLE_QUANTITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-132",
+      "canonical_label": "UNKNOWN_QUANTITY_AVAILABILITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-133",
+      "canonical_label": "UNKNOWN_LINE_UNIT_VALUE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-134",
+      "canonical_label": "UNKNOWN_ACTIVE_LINE_VALUE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-135",
+      "canonical_label": "UNKNOWN_LINE_SALES_REP",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-136",
+      "canonical_label": "UNKNOWN_ALTERNATE_PRICE",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "ALTERNATE_RESEARCH/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-137",
+      "canonical_label": "UNKNOWN_ALTERNATE_AVAILABILITY",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "ALTERNATE_RESEARCH/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    },
+    {
+      "reason_code": "RC-138",
+      "canonical_label": "UNKNOWN_ALTERNATE_ETA",
+      "registry_version": "synthetic-doi-reason-registry/v1",
+      "owning_transitions": "TR-027,TR-028,TR-033,TR-034,TR-035,TR-037",
+      "owning_deterministic_oracles": "SYN-R01-UNK-001[POSITIVE_TABLE],SYN-R01-UNK-002[WRONG_REASON],SYN-R01-UNK-003[ALIAS],SYN-R01-UNK-004[MISSING],SYN-R01-UNK-005[CROSS_FIELD]",
+      "owning_rule_service_area": "ALTERNATE_RESEARCH/DOIEvaluation",
+      "ownership_mode": "EMITTED_AND_ASSERTED",
+      "governing_refs": "R01_UNKNOWN_REASON_MATRIX.json#/rows;R01_CANONICAL_VECTORS.json;R01_NEGATIVE_VECTORS.json",
+      "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof.",
+      "oracle_status": "REQUIRES_EXECUTABLE_SELECTOR_RECONCILIATION"
+    }
+  ]
+}

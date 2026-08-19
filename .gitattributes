@@ -1,0 +1,12 @@
+# Preserve every supplied bundle byte exactly; opt only new implementation text into LF normalization.
+* -text
+/.editorconfig text eol=lf
+/.gitattributes text eol=lf
+/.gitignore text eol=lf
+/DEVELOPMENT.md text eol=lf
+/pyproject.toml text eol=lf
+/docs/** text eol=lf
+/migrations/** text eol=lf
+/src/** text eol=lf
+/tests/** text eol=lf
+/tools/** text eol=lf

@@ -1,0 +1,2283 @@
+{
+  "baseline_reason_count": 115,
+  "baseline_reason_owner_count": 115,
+  "baseline_reason_registry_version": "0.1.5.3",
+  "candidate_overlay_version": "doi-reason-registry/r01-v1",
+  "candidate_reason_count": 138,
+  "candidate_reason_owner_count": 138,
+  "containment_rule": "Block only a conclusion whose complete basis depends on the named field; retain every independently known source fact.",
+  "containment_vectors": {
+    "ETA_UNKNOWN_PRESERVES_SPLIT": "A fully known split basis may emit TR-034 plus existing RC-115; ETA ranking/readiness only is unavailable.",
+    "EXECUTABLE_FIELD_TABLE": {
+      "DOIAlternateObservation.observed_availability": {
+        "blocked_conclusions": [
+          "alternate-availability conclusion"
+        ],
+        "expected_reason_set": [
+          "RC-137"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-137",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "alternate price/ETA and primary facts"
+        ]
+      },
+      "DOIAlternateObservation.observed_eta": {
+        "blocked_conclusions": [
+          "alternate-ETA readiness/ranking"
+        ],
+        "expected_reason_set": [
+          "RC-138"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-138",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "alternate price/availability and primary facts"
+        ]
+      },
+      "DOIAlternateObservation.observed_price": {
+        "blocked_conclusions": [
+          "alternate-price comparison/value"
+        ],
+        "expected_reason_set": [
+          "RC-136"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-136",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "alternate availability/ETA and primary facts"
+        ]
+      },
+      "DOILineItemSnapshot.active_line_value": {
+        "blocked_conclusions": [
+          "active-line value arithmetic/KPI"
+        ],
+        "expected_reason_set": [
+          "RC-134"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-134",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "unit value",
+          "quantities",
+          "product/availability/DS/ETA facts"
+        ]
+      },
+      "DOILineItemSnapshot.active_quantity": {
+        "blocked_conclusions": [
+          "active-quantity arithmetic/value/scope"
+        ],
+        "expected_reason_set": [
+          "RC-129"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-129",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "ordered/canceled/available quantities",
+          "product/availability/DS/ETA facts"
+        ]
+      },
+      "DOILineItemSnapshot.activity": {
+        "blocked_conclusions": [
+          "active/canceled line partition",
+          "activity-dependent quantity/value"
+        ],
+        "expected_reason_set": [
+          "RC-125"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-125",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "product identity",
+          "source quantities",
+          "availability/DS/ETA observations"
+        ]
+      },
+      "DOILineItemSnapshot.availability": {
+        "blocked_conclusions": [
+          "availability-based ready/available classification",
+          "available-to-ship value"
+        ],
+        "expected_reason_set": [
+          "RC-016"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-016",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "DS state",
+          "ETA",
+          "quantities",
+          "product identity",
+          "line rep"
+        ]
+      },
+      "DOILineItemSnapshot.canceled_quantity": {
+        "blocked_conclusions": [
+          "canceled-quantity arithmetic"
+        ],
+        "expected_reason_set": [
+          "RC-130"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-130",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "ordered/active/available quantities",
+          "product/availability/DS/ETA facts"
+        ]
+      },
+      "DOILineItemSnapshot.drop_ship_state": {
+        "blocked_conclusions": [
+          "DS/non-DS classification",
+          "DS scope/value"
+        ],
+        "expected_reason_set": [
+          "RC-017"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-017",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "availability",
+          "ETA",
+          "quantities",
+          "product identity",
+          "line rep"
+        ]
+      },
+      "DOILineItemSnapshot.es_number": {
+        "blocked_conclusions": [
+          "ES exact relationship match"
+        ],
+        "expected_reason_set": [
+          "RC-126"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-126",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "MFG identity",
+          "quantities",
+          "availability/DS/ETA/value"
+        ]
+      },
+      "DOILineItemSnapshot.eta": {
+        "blocked_conclusions": [
+          "ETA date/readiness/ranking",
+          "ETA-dependent timing"
+        ],
+        "expected_reason_set": [
+          "RC-115"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-115",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "availability",
+          "DS state",
+          "quantities",
+          "product identity",
+          "line rep"
+        ]
+      },
+      "DOILineItemSnapshot.explicitly_available_quantity": {
+        "blocked_conclusions": [
+          "explicitly-available quantity arithmetic"
+        ],
+        "expected_reason_set": [
+          "RC-131"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-131",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "ordered/active/canceled quantities",
+          "product/DS/ETA facts"
+        ]
+      },
+      "DOILineItemSnapshot.line_sales_rep": {
+        "blocked_conclusions": [
+          "line-rep attribution/contact"
+        ],
+        "expected_reason_set": [
+          "RC-135"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-135",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "product/quantity/value/availability/DS/ETA facts"
+        ]
+      },
+      "DOILineItemSnapshot.mfg_number": {
+        "blocked_conclusions": [
+          "MFG exact relationship match"
+        ],
+        "expected_reason_set": [
+          "RC-127"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-127",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "ES identity",
+          "quantities",
+          "availability/DS/ETA/value"
+        ]
+      },
+      "DOILineItemSnapshot.ordered_quantity": {
+        "blocked_conclusions": [
+          "ordered-quantity arithmetic/scope"
+        ],
+        "expected_reason_set": [
+          "RC-128"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-128",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "other source quantities",
+          "product/availability/DS/ETA facts"
+        ]
+      },
+      "DOILineItemSnapshot.quantity_availability": {
+        "blocked_conclusions": [
+          "FULL/PARTIAL/NONE quantity-availability class"
+        ],
+        "expected_reason_set": [
+          "RC-132"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-132",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "exact source quantities",
+          "product/availability/DS/ETA facts"
+        ]
+      },
+      "DOILineItemSnapshot.stable_source_line_id": {
+        "blocked_conclusions": [
+          "cross-snapshot line continuity",
+          "move/split/merge mapping"
+        ],
+        "expected_reason_set": [
+          "RC-124"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-124",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "current-snapshot line facts and order opportunity"
+        ]
+      },
+      "DOILineItemSnapshot.unit_value": {
+        "blocked_conclusions": [
+          "unit-value arithmetic"
+        ],
+        "expected_reason_set": [
+          "RC-133"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-133",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "active-line value",
+          "quantities",
+          "product/availability/DS/ETA facts"
+        ]
+      },
+      "DOIOrderSnapshot.current_rep_relation": {
+        "blocked_conclusions": [
+          "TARGET_REP/other-rep ownership relation",
+          "relation-dependent contact"
+        ],
+        "expected_reason_set": [
+          "RC-118"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-118",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "rep display token",
+          "line/product/value opportunities"
+        ]
+      },
+      "DOIOrderSnapshot.current_rep_value": {
+        "blocked_conclusions": [
+          "named/current-rep attribution",
+          "rep-value-dependent contact"
+        ],
+        "expected_reason_set": [
+          "RC-117"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-117",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "line/product/value opportunities",
+          "geography and payment facts"
+        ]
+      },
+      "DOIOrderSnapshot.dedupe_finding.presence": {
+        "blocked_conclusions": [
+          "DEDUPE source-finding conclusion"
+        ],
+        "expected_reason_set": [
+          "RC-123"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-123",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "WWC and independent line/product/value opportunities"
+        ]
+      },
+      "DOIOrderSnapshot.geography_class": {
+        "blocked_conclusions": [
+          "geography-specific shipping/contact handling"
+        ],
+        "expected_reason_set": [
+          "RC-119"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-119",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "split opportunity with an independent complete basis",
+          "product/quantity/value facts"
+        ]
+      },
+      "DOIOrderSnapshot.order_state": {
+        "blocked_conclusions": [
+          "active/terminal order-state conclusion",
+          "state-dependent closure"
+        ],
+        "expected_reason_set": [
+          "RC-116"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-116",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "line opportunities",
+          "product identities",
+          "known value and rep facts"
+        ]
+      },
+      "DOIOrderSnapshot.order_total": {
+        "blocked_conclusions": [
+          "order-total arithmetic and total-dependent KPI"
+        ],
+        "expected_reason_set": [
+          "RC-121"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-121",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "per-line quantities/values and product opportunities"
+        ]
+      },
+      "DOIOrderSnapshot.payment_condition": {
+        "blocked_conclusions": [
+          "payment-condition handling"
+        ],
+        "expected_reason_set": [
+          "RC-120"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-120",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "line/product/value opportunity with an independent basis"
+        ]
+      },
+      "DOIOrderSnapshot.wwc_finding.author_relation": {
+        "blocked_conclusions": [
+          "SELF/OTHER_REP coordination classification",
+          "author-dependent contact"
+        ],
+        "expected_reason_set": [
+          "RC-055"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-055",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "finding presence",
+          "known contact time",
+          "independent opportunities"
+        ]
+      },
+      "DOIOrderSnapshot.wwc_finding.contact_at": {
+        "blocked_conclusions": [
+          "WWC eligibility/expiry timing",
+          "time-dependent contact"
+        ],
+        "expected_reason_set": [
+          "RC-056"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-056",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "finding presence",
+          "known author relation",
+          "independent opportunities"
+        ]
+      },
+      "DOIOrderSnapshot.wwc_finding.presence": {
+        "blocked_conclusions": [
+          "WWC protection/coordination state",
+          "WWC-dependent DEDUPE/contact"
+        ],
+        "expected_reason_set": [
+          "RC-122"
+        ],
+        "input_wrapper": {
+          "raw_hint": null,
+          "reason_code": "RC-122",
+          "tag": "UNKNOWN",
+          "value": null
+        },
+        "preserved_independent_conclusions": [
+          "independent line/product/value opportunity analysis"
+        ]
+      }
+    },
+    "GEOGRAPHY_UNKNOWN_PRESERVES_SPLIT": "A fully known split basis may emit TR-034 plus RC-119; geography-specific contact/shipping action is blocked.",
+    "MULTIPLE_UNKNOWN_EXACT_UNION": "Emit the sorted unique union of the exact mapped codes; no aggregate alias or substitution.",
+    "UNRELATED_UNKNOWN_PRESERVES_OPPORTUNITY": "TR-033/TR-034/TR-035 survives when the unknown field is outside the opportunity complete basis."
+  },
+  "direct_dependents": [
+    "DOI_REASON_CODE_REGISTRY",
+    "DOI_REASON_OWNERSHIP_MATRIX",
+    "DOI_STATE_TRANSITION_MATRIX TR-005 legality",
+    "DOI_TRANSITION_TRACEABILITY",
+    "acceptance matrix",
+    "synthetic requirements",
+    "rules/evaluation reason-set generation"
+  ],
+  "exact_union_rule": "The evaluation reason set is the mathematical set union of each UNKNOWN field row. Duplicate codes collapse; no reason substitutes across fields.",
+  "matrix_content_sha256": "87bcab8e15769bd5597576d43b05ae48b4c907735a8da3d94d92629d1f0c50c0",
+  "matrix_hash_domain_prefix": "doi-unknown-reason-matrix/r01-v1",
+  "matrix_hash_preimage": "RFC8785(complete matrix object excluding matrix_content_sha256)",
+  "matrix_hash_separator_hex": "0a",
+  "matrix_schema_version": "doi-unknown-reason-matrix/r01-v1",
+  "new_reason_count": 23,
+  "reason_id_range": "RC-001..RC-138 contiguous; RC-116..RC-138 are the R01 allocation",
+  "reason_ownership_overlay": {
+    "base_ownership_content_sha256": "c2f0e0a365aed6c594d5f4f5ad19efdac4ee9a1488f525a63f898a26bb571a45",
+    "base_ownership_version": "doi-reason-ownership/v1",
+    "candidate_ownership_version": "doi-reason-ownership/r01-v1",
+    "hash_domain_prefix": "doi-reason-ownership-overlay/r01-v1",
+    "hash_preimage": "RFC8785(complete overlay object excluding overlay_content_sha256)",
+    "hash_separator_hex": "0a",
+    "new_rows": [
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ORDER_STATE",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+        "reason_id": "RC-116",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_CURRENT_REP_VALUE",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+        "reason_id": "RC-117",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_CURRENT_REP_RELATION",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+        "reason_id": "RC-118",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_GEOGRAPHY_CLASS",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+        "reason_id": "RC-119",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_PAYMENT_CONDITION",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+        "reason_id": "RC-120",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ORDER_TOTAL",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+        "reason_id": "RC-121",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_WWC_PRESENCE",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "WWC_COORDINATION/DOIEvaluation",
+        "reason_id": "RC-122",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_DEDUPE_PRESENCE",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "DEDUPE_COORDINATION/DOIEvaluation",
+        "reason_id": "RC-123",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_STABLE_SOURCE_LINE_ID",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-124",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_LINE_ACTIVITY",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-125",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_LINE_ES_NUMBER",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-126",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_LINE_MFG_NUMBER",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-127",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ORDERED_QUANTITY",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-128",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ACTIVE_QUANTITY",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-129",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_CANCELED_QUANTITY",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-130",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_EXPLICITLY_AVAILABLE_QUANTITY",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-131",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_QUANTITY_AVAILABILITY",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-132",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_LINE_UNIT_VALUE",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-133",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ACTIVE_LINE_VALUE",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-134",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_LINE_SALES_REP",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "reason_id": "RC-135",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ALTERNATE_PRICE",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "ALTERNATE_RESEARCH/DOIEvaluation",
+        "reason_id": "RC-136",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ALTERNATE_AVAILABILITY",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "ALTERNATE_RESEARCH/DOIEvaluation",
+        "reason_id": "RC-137",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      },
+      {
+        "governing_refs": [
+          "R01_UNKNOWN_REASON_MATRIX.json#/rows",
+          "R01_CANONICAL_VECTORS.json",
+          "R01_NEGATIVE_VECTORS.json"
+        ],
+        "label": "UNKNOWN_ALTERNATE_ETA",
+        "legal_transition_contexts": [
+          "TR-027",
+          "TR-028",
+          "TR-033",
+          "TR-034",
+          "TR-035",
+          "TR-037"
+        ],
+        "mode": "EMITTED_AND_ASSERTED",
+        "oracle_selectors": [
+          "SYN-R01-UNK-001[POSITIVE_TABLE]",
+          "SYN-R01-UNK-002[WRONG_REASON]",
+          "SYN-R01-UNK-003[ALIAS]",
+          "SYN-R01-UNK-004[MISSING]",
+          "SYN-R01-UNK-005[CROSS_FIELD]"
+        ],
+        "owner": "ALTERNATE_RESEARCH/DOIEvaluation",
+        "reason_id": "RC-138",
+        "registry_version": "doi-reason-registry/r01-v1",
+        "transition_guard": "TR-033/TR-034/TR-035 is legal only when that result has a complete independently known basis outside this field; otherwise TR-037. A listed transition is not permission to use UNKNOWN as proof."
+      }
+    ],
+    "overlay_content_sha256": "948024fe9c2e2b8e461cd337ae280da8a1a11faa5b15bf41c1668482fc44e13b",
+    "overlay_schema_version": "doi-reason-ownership-overlay/r01-v1",
+    "preserved_existing_rows": {
+      "RC-016": {
+        "oracles": [
+          "SYN-EXT-005"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "transitions": [
+          "TR-037"
+        ]
+      },
+      "RC-017": {
+        "oracles": [
+          "SYN-EXT-006[DS_UNKNOWN]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "transitions": [
+          "TR-037"
+        ]
+      },
+      "RC-055": {
+        "oracles": [
+          "SYN-WWC-003"
+        ],
+        "owner": "WWC_COORDINATION/DOIEvaluation",
+        "transitions": [
+          "TR-037",
+          "TR-078",
+          "TR-079",
+          "TR-094"
+        ]
+      },
+      "RC-056": {
+        "oracles": [
+          "SYN-WWC-003"
+        ],
+        "owner": "WWC_COORDINATION/DOIEvaluation",
+        "transitions": [
+          "TR-037",
+          "TR-078",
+          "TR-079",
+          "TR-094"
+        ]
+      },
+      "RC-115": {
+        "oracles": [
+          "SYN-EXT-006[ETA_UNKNOWN]"
+        ],
+        "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+        "transitions": [
+          "TR-034",
+          "TR-037"
+        ]
+      }
+    }
+  },
+  "reason_registry_overlay": {
+    "base_registry_content_sha256": "38eba58f78950c320b9b4e3ece167cc050cae6c11ee0978b98749f3247c2ec86",
+    "base_registry_version": "0.1.5.3",
+    "candidate_registry_version": "doi-reason-registry/r01-v1",
+    "hash_domain_prefix": "doi-reason-registry-overlay/r01-v1",
+    "hash_preimage": "RFC8785(complete overlay object excluding overlay_content_sha256)",
+    "hash_separator_hex": "0a",
+    "new_rows": [
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.order_state was successfully observed but cannot be normalized. Preserve independent facts and block only ORDER_STATE_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_ORDER_STATE",
+        "reason_id": "RC-116"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.current_rep_value was successfully observed but cannot be normalized. Preserve independent facts and block only REP_VALUE_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_CURRENT_REP_VALUE",
+        "reason_id": "RC-117"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.current_rep_relation was successfully observed but cannot be normalized. Preserve independent facts and block only REP_RELATION_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_CURRENT_REP_RELATION",
+        "reason_id": "RC-118"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.geography_class was successfully observed but cannot be normalized. Preserve independent facts and block only GEOGRAPHY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_GEOGRAPHY_CLASS",
+        "reason_id": "RC-119"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.payment_condition was successfully observed but cannot be normalized. Preserve independent facts and block only PAYMENT_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_PAYMENT_CONDITION",
+        "reason_id": "RC-120"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.order_total was successfully observed but cannot be normalized. Preserve independent facts and block only ORDER_TOTAL_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_ORDER_TOTAL",
+        "reason_id": "RC-121"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.wwc_finding.presence was successfully observed but cannot be normalized. Preserve independent facts and block only WWC_PRESENCE_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_WWC_PRESENCE",
+        "reason_id": "RC-122"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIOrderSnapshot.dedupe_finding.presence was successfully observed but cannot be normalized. Preserve independent facts and block only DEDUPE_PRESENCE_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation",
+        "label": "UNKNOWN_DEDUPE_PRESENCE",
+        "reason_id": "RC-123"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.stable_source_line_id was successfully observed but cannot be normalized. Preserve independent facts and block only CONTINUITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_STABLE_SOURCE_LINE_ID",
+        "reason_id": "RC-124"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.activity was successfully observed but cannot be normalized. Preserve independent facts and block only LINE_ACTIVITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_LINE_ACTIVITY",
+        "reason_id": "RC-125"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.es_number was successfully observed but cannot be normalized. Preserve independent facts and block only ES_IDENTITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_LINE_ES_NUMBER",
+        "reason_id": "RC-126"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.mfg_number was successfully observed but cannot be normalized. Preserve independent facts and block only MFG_IDENTITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_LINE_MFG_NUMBER",
+        "reason_id": "RC-127"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.ordered_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only ORDERED_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_ORDERED_QUANTITY",
+        "reason_id": "RC-128"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.active_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only ACTIVE_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_ACTIVE_QUANTITY",
+        "reason_id": "RC-129"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.canceled_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only CANCELED_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_CANCELED_QUANTITY",
+        "reason_id": "RC-130"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.explicitly_available_quantity was successfully observed but cannot be normalized. Preserve independent facts and block only AVAILABLE_QUANTITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_EXPLICITLY_AVAILABLE_QUANTITY",
+        "reason_id": "RC-131"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.quantity_availability was successfully observed but cannot be normalized. Preserve independent facts and block only QUANTITY_CLASS_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_QUANTITY_AVAILABILITY",
+        "reason_id": "RC-132"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.unit_value was successfully observed but cannot be normalized. Preserve independent facts and block only UNIT_VALUE_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_LINE_UNIT_VALUE",
+        "reason_id": "RC-133"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.active_line_value was successfully observed but cannot be normalized. Preserve independent facts and block only ACTIVE_LINE_VALUE_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_ACTIVE_LINE_VALUE",
+        "reason_id": "RC-134"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOILineItemSnapshot.line_sales_rep was successfully observed but cannot be normalized. Preserve independent facts and block only LINE_REP_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIEvaluation line",
+        "label": "UNKNOWN_LINE_SALES_REP",
+        "reason_id": "RC-135"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIAlternateObservation.observed_price was successfully observed but cannot be normalized. Preserve independent facts and block only ALTERNATE_PRICE_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIAlternateObservation/DOIEvaluation",
+        "label": "UNKNOWN_ALTERNATE_PRICE",
+        "reason_id": "RC-136"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIAlternateObservation.observed_availability was successfully observed but cannot be normalized. Preserve independent facts and block only ALTERNATE_AVAILABILITY_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIAlternateObservation/DOIEvaluation",
+        "label": "UNKNOWN_ALTERNATE_AVAILABILITY",
+        "reason_id": "RC-137"
+      },
+      {
+        "class": "OBSERVATION",
+        "description": "The exact field DOIAlternateObservation.observed_eta was successfully observed but cannot be normalized. Preserve independent facts and block only ALTERNATE_ETA_ONLY. Missing or unreadable input remains extraction failure.",
+        "entity": "DOIAlternateObservation/DOIEvaluation",
+        "label": "UNKNOWN_ALTERNATE_ETA",
+        "reason_id": "RC-138"
+      }
+    ],
+    "overlay_content_sha256": "7349508cb8596ef9db89a1a22d0049905eb47e05aa634058554c031203843d7e",
+    "overlay_schema_version": "doi-reason-registry-overlay/r01-v1"
+  },
+  "rows": [
+    {
+      "allocation": "EXISTING",
+      "blocked_conclusions": [
+        "availability-based ready/available classification",
+        "available-to-ship value"
+      ],
+      "containment": "LINE_AVAILABILITY_ONLY",
+      "domain": "LineAvailability",
+      "field": "DOILineItemSnapshot.availability",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "DS state",
+        "ETA",
+        "quantities",
+        "product identity",
+        "line rep"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-016",
+      "unknown_reason_label": "UNKNOWN_LINE_AVAILABILITY"
+    },
+    {
+      "allocation": "EXISTING",
+      "blocked_conclusions": [
+        "DS/non-DS classification",
+        "DS scope/value"
+      ],
+      "containment": "LINE_DS_ONLY",
+      "domain": "DropShipState",
+      "field": "DOILineItemSnapshot.drop_ship_state",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "availability",
+        "ETA",
+        "quantities",
+        "product identity",
+        "line rep"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-017",
+      "unknown_reason_label": "UNKNOWN_LINE_DS_STATE"
+    },
+    {
+      "allocation": "EXISTING",
+      "blocked_conclusions": [
+        "ETA date/readiness/ranking",
+        "ETA-dependent timing"
+      ],
+      "containment": "LINE_ETA_ONLY",
+      "domain": "Timestamp|Date",
+      "field": "DOILineItemSnapshot.eta",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "availability",
+        "DS state",
+        "quantities",
+        "product identity",
+        "line rep"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-115",
+      "unknown_reason_label": "UNKNOWN_LINE_ETA_STATE"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "active/terminal order-state conclusion",
+        "state-dependent closure"
+      ],
+      "containment": "ORDER_STATE_ONLY",
+      "domain": "OrderState",
+      "field": "DOIOrderSnapshot.order_state",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "preserved_independent_conclusions": [
+        "line opportunities",
+        "product identities",
+        "known value and rep facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-116",
+      "unknown_reason_label": "UNKNOWN_ORDER_STATE"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "named/current-rep attribution",
+        "rep-value-dependent contact"
+      ],
+      "containment": "REP_VALUE_ONLY",
+      "domain": "SalesRepToken",
+      "field": "DOIOrderSnapshot.current_rep_value",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "preserved_independent_conclusions": [
+        "line/product/value opportunities",
+        "geography and payment facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-117",
+      "unknown_reason_label": "UNKNOWN_CURRENT_REP_VALUE"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "TARGET_REP/other-rep ownership relation",
+        "relation-dependent contact"
+      ],
+      "containment": "REP_RELATION_ONLY",
+      "domain": "RepRelation",
+      "field": "DOIOrderSnapshot.current_rep_relation",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "preserved_independent_conclusions": [
+        "rep display token",
+        "line/product/value opportunities"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-118",
+      "unknown_reason_label": "UNKNOWN_CURRENT_REP_RELATION"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "geography-specific shipping/contact handling"
+      ],
+      "containment": "GEOGRAPHY_ONLY",
+      "domain": "GeographyClass",
+      "field": "DOIOrderSnapshot.geography_class",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "preserved_independent_conclusions": [
+        "split opportunity with an independent complete basis",
+        "product/quantity/value facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-119",
+      "unknown_reason_label": "UNKNOWN_GEOGRAPHY_CLASS"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "payment-condition handling"
+      ],
+      "containment": "PAYMENT_ONLY",
+      "domain": "PaymentCondition",
+      "field": "DOIOrderSnapshot.payment_condition",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "preserved_independent_conclusions": [
+        "line/product/value opportunity with an independent basis"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-120",
+      "unknown_reason_label": "UNKNOWN_PAYMENT_CONDITION"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "order-total arithmetic and total-dependent KPI"
+      ],
+      "containment": "ORDER_TOTAL_ONLY",
+      "domain": "Money",
+      "field": "DOIOrderSnapshot.order_total",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation order",
+      "preserved_independent_conclusions": [
+        "per-line quantities/values and product opportunities"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-121",
+      "unknown_reason_label": "UNKNOWN_ORDER_TOTAL"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "WWC protection/coordination state",
+        "WWC-dependent DEDUPE/contact"
+      ],
+      "containment": "WWC_PRESENCE_ONLY",
+      "domain": "FindingPresence",
+      "field": "DOIOrderSnapshot.wwc_finding.presence",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "WWC_COORDINATION/DOIEvaluation",
+      "preserved_independent_conclusions": [
+        "independent line/product/value opportunity analysis"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-122",
+      "unknown_reason_label": "UNKNOWN_WWC_PRESENCE"
+    },
+    {
+      "allocation": "EXISTING",
+      "blocked_conclusions": [
+        "SELF/OTHER_REP coordination classification",
+        "author-dependent contact"
+      ],
+      "containment": "WWC_AUTHOR_ONLY",
+      "domain": "WWCAuthorRelation",
+      "field": "DOIOrderSnapshot.wwc_finding.author_relation",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "WWC_COORDINATION/DOIEvaluation",
+      "preserved_independent_conclusions": [
+        "finding presence",
+        "known contact time",
+        "independent opportunities"
+      ],
+      "reason_class": "BLOCK",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-055",
+      "unknown_reason_label": "WWC_AUTHOR_UNCERTAIN"
+    },
+    {
+      "allocation": "EXISTING",
+      "blocked_conclusions": [
+        "WWC eligibility/expiry timing",
+        "time-dependent contact"
+      ],
+      "containment": "WWC_TIME_ONLY",
+      "domain": "Timestamp",
+      "field": "DOIOrderSnapshot.wwc_finding.contact_at",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "WWC_COORDINATION/DOIEvaluation",
+      "preserved_independent_conclusions": [
+        "finding presence",
+        "known author relation",
+        "independent opportunities"
+      ],
+      "reason_class": "BLOCK",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-056",
+      "unknown_reason_label": "TIMING_UNCERTAIN"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "DEDUPE source-finding conclusion"
+      ],
+      "containment": "DEDUPE_PRESENCE_ONLY",
+      "domain": "FindingPresence",
+      "field": "DOIOrderSnapshot.dedupe_finding.presence",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "DEDUPE_COORDINATION/DOIEvaluation",
+      "preserved_independent_conclusions": [
+        "WWC and independent line/product/value opportunities"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-123",
+      "unknown_reason_label": "UNKNOWN_DEDUPE_PRESENCE"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "cross-snapshot line continuity",
+        "move/split/merge mapping"
+      ],
+      "containment": "CONTINUITY_ONLY",
+      "domain": "StableSourceLineId",
+      "field": "DOILineItemSnapshot.stable_source_line_id",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "current-snapshot line facts and order opportunity"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-124",
+      "unknown_reason_label": "UNKNOWN_STABLE_SOURCE_LINE_ID"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "active/canceled line partition",
+        "activity-dependent quantity/value"
+      ],
+      "containment": "LINE_ACTIVITY_ONLY",
+      "domain": "LineActivity",
+      "field": "DOILineItemSnapshot.activity",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "product identity",
+        "source quantities",
+        "availability/DS/ETA observations"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-125",
+      "unknown_reason_label": "UNKNOWN_LINE_ACTIVITY"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "ES exact relationship match"
+      ],
+      "containment": "ES_IDENTITY_ONLY",
+      "domain": "ESNumber",
+      "field": "DOILineItemSnapshot.es_number",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "MFG identity",
+        "quantities",
+        "availability/DS/ETA/value"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-126",
+      "unknown_reason_label": "UNKNOWN_LINE_ES_NUMBER"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "MFG exact relationship match"
+      ],
+      "containment": "MFG_IDENTITY_ONLY",
+      "domain": "MFGNumber",
+      "field": "DOILineItemSnapshot.mfg_number",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "ES identity",
+        "quantities",
+        "availability/DS/ETA/value"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-127",
+      "unknown_reason_label": "UNKNOWN_LINE_MFG_NUMBER"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "ordered-quantity arithmetic/scope"
+      ],
+      "containment": "ORDERED_QUANTITY_ONLY",
+      "domain": "Quantity",
+      "field": "DOILineItemSnapshot.ordered_quantity",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "other source quantities",
+        "product/availability/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-128",
+      "unknown_reason_label": "UNKNOWN_ORDERED_QUANTITY"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "active-quantity arithmetic/value/scope"
+      ],
+      "containment": "ACTIVE_QUANTITY_ONLY",
+      "domain": "Quantity",
+      "field": "DOILineItemSnapshot.active_quantity",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "ordered/canceled/available quantities",
+        "product/availability/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-129",
+      "unknown_reason_label": "UNKNOWN_ACTIVE_QUANTITY"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "canceled-quantity arithmetic"
+      ],
+      "containment": "CANCELED_QUANTITY_ONLY",
+      "domain": "Quantity",
+      "field": "DOILineItemSnapshot.canceled_quantity",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "ordered/active/available quantities",
+        "product/availability/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-130",
+      "unknown_reason_label": "UNKNOWN_CANCELED_QUANTITY"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "explicitly-available quantity arithmetic"
+      ],
+      "containment": "AVAILABLE_QUANTITY_ONLY",
+      "domain": "Quantity",
+      "field": "DOILineItemSnapshot.explicitly_available_quantity",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "ordered/active/canceled quantities",
+        "product/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-131",
+      "unknown_reason_label": "UNKNOWN_EXPLICITLY_AVAILABLE_QUANTITY"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "FULL/PARTIAL/NONE quantity-availability class"
+      ],
+      "containment": "QUANTITY_CLASS_ONLY",
+      "domain": "QuantityAvailability",
+      "field": "DOILineItemSnapshot.quantity_availability",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "exact source quantities",
+        "product/availability/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-132",
+      "unknown_reason_label": "UNKNOWN_QUANTITY_AVAILABILITY"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "unit-value arithmetic"
+      ],
+      "containment": "UNIT_VALUE_ONLY",
+      "domain": "Money",
+      "field": "DOILineItemSnapshot.unit_value",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "active-line value",
+        "quantities",
+        "product/availability/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-133",
+      "unknown_reason_label": "UNKNOWN_LINE_UNIT_VALUE"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "active-line value arithmetic/KPI"
+      ],
+      "containment": "ACTIVE_LINE_VALUE_ONLY",
+      "domain": "Money",
+      "field": "DOILineItemSnapshot.active_line_value",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "unit value",
+        "quantities",
+        "product/availability/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-134",
+      "unknown_reason_label": "UNKNOWN_ACTIVE_LINE_VALUE"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "line-rep attribution/contact"
+      ],
+      "containment": "LINE_REP_ONLY",
+      "domain": "SalesRepToken",
+      "field": "DOILineItemSnapshot.line_sales_rep",
+      "legal_transition_context": "TR-005 stores the complete snapshot containing this observed UNKNOWN wrapper; TR-027/TR-028 emit the exact reason when evaluating it; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "EXTRACTION_NORMALIZATION_CONTINUITY/DOIEvaluation line",
+      "preserved_independent_conclusions": [
+        "product/quantity/value/availability/DS/ETA facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-135",
+      "unknown_reason_label": "UNKNOWN_LINE_SALES_REP"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "alternate-price comparison/value"
+      ],
+      "containment": "ALTERNATE_PRICE_ONLY",
+      "domain": "Money",
+      "field": "DOIAlternateObservation.observed_price",
+      "legal_transition_context": "TR-042 stores the complete alternate observation; TR-027/TR-028 may bind it and emit this reason; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "ALTERNATE_RESEARCH/DOIEvaluation",
+      "preserved_independent_conclusions": [
+        "alternate availability/ETA and primary facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-136",
+      "unknown_reason_label": "UNKNOWN_ALTERNATE_PRICE"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "alternate-availability conclusion"
+      ],
+      "containment": "ALTERNATE_AVAILABILITY_ONLY",
+      "domain": "AlternateAvailability",
+      "field": "DOIAlternateObservation.observed_availability",
+      "legal_transition_context": "TR-042 stores the complete alternate observation; TR-027/TR-028 may bind it and emit this reason; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "ALTERNATE_RESEARCH/DOIEvaluation",
+      "preserved_independent_conclusions": [
+        "alternate price/ETA and primary facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-137",
+      "unknown_reason_label": "UNKNOWN_ALTERNATE_AVAILABILITY"
+    },
+    {
+      "allocation": "NEW",
+      "blocked_conclusions": [
+        "alternate-ETA readiness/ranking"
+      ],
+      "containment": "ALTERNATE_ETA_ONLY",
+      "domain": "Timestamp|Date",
+      "field": "DOIAlternateObservation.observed_eta",
+      "legal_transition_context": "TR-042 stores the complete alternate observation; TR-027/TR-028 may bind it and emit this reason; no new transition ID.",
+      "missing_or_unreadable_behavior": "EXTRACTION_FAILURE_NOT_UNKNOWN",
+      "owner": "ALTERNATE_RESEARCH/DOIEvaluation",
+      "preserved_independent_conclusions": [
+        "alternate price/availability and primary facts"
+      ],
+      "reason_class": "OBSERVATION",
+      "tests": [
+        "SYN-R01-UNK-001[POSITIVE_TABLE]",
+        "SYN-R01-UNK-002[WRONG_REASON]",
+        "SYN-R01-UNK-003[ALIAS]",
+        "SYN-R01-UNK-004[MISSING]",
+        "SYN-R01-UNK-005[CROSS_FIELD]"
+      ],
+      "unknown_reason_id": "RC-138",
+      "unknown_reason_label": "UNKNOWN_ALTERNATE_ETA"
+    }
+  ],
+  "rules_bundle_delta": {
+    "field_unknown_reason_map": {
+      "DOIAlternateObservation.observed_availability": "RC-137",
+      "DOIAlternateObservation.observed_eta": "RC-138",
+      "DOIAlternateObservation.observed_price": "RC-136",
+      "DOILineItemSnapshot.active_line_value": "RC-134",
+      "DOILineItemSnapshot.active_quantity": "RC-129",
+      "DOILineItemSnapshot.activity": "RC-125",
+      "DOILineItemSnapshot.availability": "RC-016",
+      "DOILineItemSnapshot.canceled_quantity": "RC-130",
+      "DOILineItemSnapshot.drop_ship_state": "RC-017",
+      "DOILineItemSnapshot.es_number": "RC-126",
+      "DOILineItemSnapshot.eta": "RC-115",
+      "DOILineItemSnapshot.explicitly_available_quantity": "RC-131",
+      "DOILineItemSnapshot.line_sales_rep": "RC-135",
+      "DOILineItemSnapshot.mfg_number": "RC-127",
+      "DOILineItemSnapshot.ordered_quantity": "RC-128",
+      "DOILineItemSnapshot.quantity_availability": "RC-132",
+      "DOILineItemSnapshot.stable_source_line_id": "RC-124",
+      "DOILineItemSnapshot.unit_value": "RC-133",
+      "DOIOrderSnapshot.current_rep_relation": "RC-118",
+      "DOIOrderSnapshot.current_rep_value": "RC-117",
+      "DOIOrderSnapshot.dedupe_finding.presence": "RC-123",
+      "DOIOrderSnapshot.geography_class": "RC-119",
+      "DOIOrderSnapshot.order_state": "RC-116",
+      "DOIOrderSnapshot.order_total": "RC-121",
+      "DOIOrderSnapshot.payment_condition": "RC-120",
+      "DOIOrderSnapshot.wwc_finding.author_relation": "RC-055",
+      "DOIOrderSnapshot.wwc_finding.contact_at": "RC-056",
+      "DOIOrderSnapshot.wwc_finding.presence": "RC-122"
+    },
+    "operation": "replace field_unknown_reason_map (3 rows) with the complete 28-row fully-qualified map",
+    "reason_ownership_overlay_content_sha256": "948024fe9c2e2b8e461cd337ae280da8a1a11faa5b15bf41c1668482fc44e13b",
+    "reason_ownership_version": "doi-reason-ownership/r01-v1",
+    "reason_registry_overlay_content_sha256": "7349508cb8596ef9db89a1a22d0049905eb47e05aa634058554c031203843d7e",
+    "reason_registry_version": "doi-reason-registry/r01-v1",
+    "transition_legality_overlay_content_sha256": "fd78479578cc8368468ffbbc5d79d83c25cdaceaaa7ae716337304ba9470bc42",
+    "transition_legality_overlay_version": "doi-unknown-transition-legality-overlay/r01-v1",
+    "transition_routes_operation": "replace UNKNOWN handling for TR-005, TR-042, TR-027, TR-028 and TR-033..TR-039 with transition_legality_overlay.transition_routes; preserve every other route byte-exactly"
+  },
+  "state_transition_count_after": 115,
+  "state_transition_count_before": 115,
+  "status": "NORMATIVE_R01_OBJECT_NOT_INTEGRATED_NOT_FROZEN",
+  "transition_count_note": "No new state transition is created; TR-005/evaluation legality and traceability acquire the field table. Reason cardinality is not transition cardinality.",
+  "transition_legality_overlay": {
+    "hash_domain_prefix": "doi-unknown-transition-legality-overlay/r01-v1",
+    "hash_preimage": "RFC8785(complete overlay object excluding overlay_content_sha256)",
+    "hash_separator_hex": "0a",
+    "overlay_content_sha256": "fd78479578cc8368468ffbbc5d79d83c25cdaceaaa7ae716337304ba9470bc42",
+    "overlay_schema_version": "doi-unknown-transition-legality-overlay/r01-v1",
+    "transition_routes": [
+      {
+        "transition_id": "TR-005",
+        "unknown_rule": "Store every complete snapshot UNKNOWN wrapper and exact field reason; missing/unreadable required input is extraction failure."
+      },
+      {
+        "transition_id": "TR-042",
+        "unknown_rule": "Store every complete alternate-observation UNKNOWN wrapper and exact field reason; all three alternate fields remain present wrappers."
+      },
+      {
+        "transition_id": "TR-027",
+        "unknown_rule": "Evaluate with the sorted set union of exact field reasons; no substitution or aggregate alias."
+      },
+      {
+        "transition_id": "TR-028",
+        "unknown_rule": "Re-evaluate from the new snapshot/observation only; never inherit a stale known or UNKNOWN value."
+      },
+      {
+        "transition_id": "TR-033",
+        "unknown_rule": "Allowed only when its complete opportunity basis excludes every applicable UNKNOWN field; carry the exact reason set."
+      },
+      {
+        "transition_id": "TR-034",
+        "unknown_rule": "Allowed only when its complete split basis excludes every applicable UNKNOWN field; carry the exact reason set."
+      },
+      {
+        "transition_id": "TR-035",
+        "unknown_rule": "Allowed only when its complete alternate basis excludes every applicable UNKNOWN field; carry the exact reason set."
+      },
+      {
+        "transition_id": "TR-036",
+        "unknown_rule": "No UNKNOWN may be used as positive evidence of a terminal/excluded conclusion."
+      },
+      {
+        "transition_id": "TR-037",
+        "unknown_rule": "Use manual review only when applicable uncertainty prevents every safe order-level conclusion."
+      },
+      {
+        "transition_id": "TR-038",
+        "unknown_rule": "Forbidden while any applicable UNKNOWN remains in the complete basis."
+      },
+      {
+        "transition_id": "TR-039",
+        "unknown_rule": "Closure cannot be inferred from UNKNOWN; only independent terminal authority may support it."
+      }
+    ]
+  }
+}

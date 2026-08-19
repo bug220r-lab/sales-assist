@@ -1,0 +1,275 @@
+{
+  "approved_decisions": {
+    "R01_ES_NORMALIZATION_POLICY": "ES_NUMERIC_CORE",
+    "R01_FINDING_PRESENCE_POLICY": "DIRECT_FOUR_MEMBER_V2",
+    "R01_IDENTIFIER_TRIM_POLICY": "ASCII_FOUR",
+    "R01_MFG_OE_NORMALIZATION_POLICY": "MFG_SEPARATOR_PRESERVING_UPPER",
+    "R01_QUANTITY_POLICY": "INTEGER_ONLY_ALL_FOUR_FIELDS_MAX_9_DIGITS"
+  },
+  "binding_content_sha256": "48f140593c568ce6d9ceb0c5ae2b9c6886ca66158f192f89df6b743d121e4dde",
+  "binding_schema_version": "doi-r01-product-decision-binding/v1",
+  "blocker_outside_r01": {
+    "blocker": "DOI-FWD-B010",
+    "owner": "R07",
+    "status": "NOT_CLOSED_BY_R01"
+  },
+  "blockers_closed_by_r01": [
+    "DOI-FWD-B003",
+    "DOI-FWD-B004",
+    "DOI-FWD-B005",
+    "DOI-FWD-B006",
+    "DOI-FWD-B007",
+    "DOI-FWD-B009",
+    "DOI-FWD-B011",
+    "DOI-FWD-B021",
+    "DOI-FWD-B037",
+    "DOI-FWD-B043"
+  ],
+  "canonical_bytes": "{\"approved_decisions\":{\"R01_ES_NORMALIZATION_POLICY\":\"ES_NUMERIC_CORE\",\"R01_FINDING_PRESENCE_POLICY\":\"DIRECT_FOUR_MEMBER_V2\",\"R01_IDENTIFIER_TRIM_POLICY\":\"ASCII_FOUR\",\"R01_MFG_OE_NORMALIZATION_POLICY\":\"MFG_SEPARATOR_PRESERVING_UPPER\",\"R01_QUANTITY_POLICY\":\"INTEGER_ONLY_ALL_FOUR_FIELDS_MAX_9_DIGITS\"},\"binding_schema_version\":\"doi-r01-product-decision-binding/v1\",\"blocker_outside_r01\":{\"blocker\":\"DOI-FWD-B010\",\"owner\":\"R07\",\"status\":\"NOT_CLOSED_BY_R01\"},\"blockers_closed_by_r01\":[\"DOI-FWD-B003\",\"DOI-FWD-B004\",\"DOI-FWD-B005\",\"DOI-FWD-B006\",\"DOI-FWD-B007\",\"DOI-FWD-B009\",\"DOI-FWD-B011\",\"DOI-FWD-B021\",\"DOI-FWD-B037\",\"DOI-FWD-B043\"],\"counts\":{\"new_reason_codes_over_baseline\":23,\"reason_codes\":138,\"reason_owners\":138,\"transitions\":115},\"date\":\"2026-08-11\",\"exact_effects\":{\"ASCII_FOUR\":{\"algorithm\":\"Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.\",\"canonical_bytes\":\"{\\\"algorithm\\\":\\\"Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.\\\",\\\"edge_trim_bytes_hex\\\":[\\\"09\\\",\\\"0a\\\",\\\"0d\\\",\\\"20\\\"],\\\"edge_trim_codepoints\\\":[\\\"U+0009\\\",\\\"U+000A\\\",\\\"U+000D\\\",\\\"U+0020\\\"],\\\"forbidden_operations\\\":[\\\"Unicode normalization\\\",\\\"Unicode casefold\\\",\\\"locale behavior\\\",\\\"Unicode whitespace lookup\\\",\\\"internal whitespace removal\\\"],\\\"input_encoding\\\":\\\"UTF-8 text\\\",\\\"policy_literal\\\":\\\"ASCII_FOUR\\\",\\\"surviving_byte_rule\\\":\\\"Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.\\\",\\\"trim_schema_version\\\":\\\"doi-edge-trim-schema/r01-v1\\\",\\\"trim_version\\\":\\\"doi-ascii-four-edge-trim/r01-v1\\\"}\",\"edge_trim_bytes_hex\":[\"09\",\"0a\",\"0d\",\"20\"],\"edge_trim_codepoints\":[\"U+0009\",\"U+000A\",\"U+000D\",\"U+0020\"],\"forbidden_operations\":[\"Unicode normalization\",\"Unicode casefold\",\"locale behavior\",\"Unicode whitespace lookup\",\"internal whitespace removal\"],\"input_encoding\":\"UTF-8 text\",\"policy_literal\":\"ASCII_FOUR\",\"surviving_byte_rule\":\"Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.\",\"trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"trim_schema_version\":\"doi-edge-trim-schema/r01-v1\",\"trim_version\":\"doi-ascii-four-edge-trim/r01-v1\"},\"ESNumber\":{\"canonical_bytes\":\"{\\\"canonical_identifier_hash_domain\\\":\\\"doi-es-number/r01-v1\\\",\\\"canonical_name\\\":\\\"ESNumber\\\",\\\"canonicalization\\\":\\\"Remove leading zeros from the digit core and retain the digit core only.\\\",\\\"edge_trim_content_sha256\\\":\\\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\\\",\\\"edge_trim_version\\\":\\\"doi-ascii-four-edge-trim/r01-v1\\\",\\\"maximum_input_utf8_bytes_before_canonicalization\\\":64,\\\"normalization_schema_version\\\":\\\"doi-identifier-normalization-schema/r01-v1\\\",\\\"normalization_version\\\":\\\"doi-es-number-normalization/r01-v1\\\",\\\"optional_prefixes\\\":[\\\"ES#\\\",\\\"ES\\\"],\\\"policy_literal\\\":\\\"ES_NUMERIC_CORE\\\",\\\"post_prefix_grammar\\\":\\\"one or more ASCII digits\\\",\\\"prefix_comparison\\\":\\\"ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte\\\",\\\"readable_invalid_source_route\\\":\\\"Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\\\",\\\"reject\\\":[\\\"zero/all-zero\\\",\\\"empty\\\",\\\"prefix-only\\\",\\\"internal whitespace\\\",\\\"other punctuation\\\",\\\"sign\\\",\\\"exponent\\\",\\\"Unicode digit\\\",\\\"non-ASCII\\\",\\\"control byte\\\",\\\"provider numeric cell\\\",\\\"input longer than 64 UTF-8 bytes\\\"],\\\"source_preservation\\\":\\\"Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\\\"}\",\"canonical_identifier_hash_domain\":\"doi-es-number/r01-v1\",\"canonical_name\":\"ESNumber\",\"canonicalization\":\"Remove leading zeros from the digit core and retain the digit core only.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"maximum_input_utf8_bytes_before_canonicalization\":64,\"normalization_content_sha256\":\"794961d7287e97547882d8b89d5578a28b72b360ca2b164b02e00fcda2b32cc1\",\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-es-number-normalization/r01-v1\",\"optional_prefixes\":[\"ES#\",\"ES\"],\"policy_literal\":\"ES_NUMERIC_CORE\",\"post_prefix_grammar\":\"one or more ASCII digits\",\"prefix_comparison\":\"ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte\",\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"zero/all-zero\",\"empty\",\"prefix-only\",\"internal whitespace\",\"other punctuation\",\"sign\",\"exponent\",\"Unicode digit\",\"non-ASCII\",\"control byte\",\"provider numeric cell\",\"input longer than 64 UTF-8 bytes\"],\"source_preservation\":\"Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"},\"FindingPresenceV2\":{\"canonical_bytes\":\"{\\\"forbidden\\\":[\\\"ABSENT\\\",\\\"outer ObservedTaggedValue wrapper\\\",\\\"dual direct/wrapped representation\\\",\\\"aliases\\\",\\\"case folding\\\"],\\\"ordered_members\\\":[\\\"PRESENT\\\",\\\"NOT_PRESENT\\\",\\\"UNKNOWN\\\",\\\"NOT_APPLICABLE\\\"],\\\"policy_literal\\\":\\\"DIRECT_FOUR_MEMBER_V2\\\",\\\"registry_schema_version\\\":\\\"doi-finding-presence-registry-schema/r01-v2\\\",\\\"registry_version\\\":\\\"doi-finding-presence/r01-v2\\\",\\\"representation\\\":\\\"DIRECT_ENUM_ONLY\\\",\\\"state_locus_count\\\":1,\\\"unknown_reason_routing\\\":{\\\"DEDUPE\\\":\\\"RC-123 in completeness_reason_codes\\\",\\\"WWC\\\":\\\"RC-122 in completeness_reason_codes\\\"}}\",\"forbidden\":[\"ABSENT\",\"outer ObservedTaggedValue wrapper\",\"dual direct/wrapped representation\",\"aliases\",\"case folding\"],\"ordered_members\":[\"PRESENT\",\"NOT_PRESENT\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"policy_literal\":\"DIRECT_FOUR_MEMBER_V2\",\"registry_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"registry_schema_version\":\"doi-finding-presence-registry-schema/r01-v2\",\"registry_version\":\"doi-finding-presence/r01-v2\",\"representation\":\"DIRECT_ENUM_ONLY\",\"state_locus_count\":1,\"unknown_reason_routing\":{\"DEDUPE\":\"RC-123 in completeness_reason_codes\",\"WWC\":\"RC-122 in completeness_reason_codes\"}},\"MFGNumber\":{\"canonical_bytes\":\"{\\\"canonical_identifier_hash_domain\\\":\\\"doi-mfg-oe-number/r01-v1\\\",\\\"canonical_name\\\":\\\"MFGNumber\\\",\\\"canonicalization\\\":\\\"Uppercase ASCII a-z only; preserve every other printable ASCII byte.\\\",\\\"edge_trim_content_sha256\\\":\\\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\\\",\\\"edge_trim_version\\\":\\\"doi-ascii-four-edge-trim/r01-v1\\\",\\\"forbidden\\\":[\\\"separator removal\\\",\\\"leading-zero removal\\\",\\\"component splitting\\\",\\\"fuzzy matching\\\",\\\"manufacturer inference\\\",\\\"manufacturer registry creation\\\"],\\\"maximum_input_utf8_bytes_before_canonicalization\\\":128,\\\"normalization_schema_version\\\":\\\"doi-identifier-normalization-schema/r01-v1\\\",\\\"normalization_version\\\":\\\"doi-mfg-oe-number-normalization/r01-v1\\\",\\\"policy_literal\\\":\\\"MFG_SEPARATOR_PRESERVING_UPPER\\\",\\\"policy_section_name\\\":\\\"MFG_OE_Number\\\",\\\"post_trim_grammar\\\":\\\"1..128 bytes, every byte printable ASCII 0x20..0x7e\\\",\\\"preserved\\\":[\\\"internal ASCII whitespace\\\",\\\"hyphen\\\",\\\"period\\\",\\\"underscore\\\",\\\"slash\\\",\\\"repeated spaces\\\",\\\"leading zeros\\\",\\\"an opaque compound source value\\\"],\\\"readable_invalid_source_route\\\":\\\"Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\\\",\\\"reject\\\":[\\\"empty/trim-only\\\",\\\"Unicode\\\",\\\"control byte\\\",\\\"provider numeric cell\\\",\\\"input longer than 128 UTF-8 bytes\\\"],\\\"source_preservation\\\":\\\"Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\\\"}\",\"canonical_identifier_hash_domain\":\"doi-mfg-oe-number/r01-v1\",\"canonical_name\":\"MFGNumber\",\"canonicalization\":\"Uppercase ASCII a-z only; preserve every other printable ASCII byte.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"forbidden\":[\"separator removal\",\"leading-zero removal\",\"component splitting\",\"fuzzy matching\",\"manufacturer inference\",\"manufacturer registry creation\"],\"maximum_input_utf8_bytes_before_canonicalization\":128,\"normalization_content_sha256\":\"ce3bfb100ab3b94d0a28e6679bdfe9af52d7db0171f0aeaa1e78a625d301309b\",\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-mfg-oe-number-normalization/r01-v1\",\"policy_literal\":\"MFG_SEPARATOR_PRESERVING_UPPER\",\"policy_section_name\":\"MFG_OE_Number\",\"post_trim_grammar\":\"1..128 bytes, every byte printable ASCII 0x20..0x7e\",\"preserved\":[\"internal ASCII whitespace\",\"hyphen\",\"period\",\"underscore\",\"slash\",\"repeated spaces\",\"leading zeros\",\"an opaque compound source value\"],\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"empty/trim-only\",\"Unicode\",\"control byte\",\"provider numeric cell\",\"input longer than 128 UTF-8 bytes\"],\"source_preservation\":\"Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"},\"Quantity\":{\"adapter_normalization\":{\"accepted\":[\"exact integer text\",\"exact provider integer lexeme/proof with no binary-float ambiguity\",\"exact decimal text only when every fractional digit is zero and exactness is proved\",\"leading integer zero removal at the adapter boundary\"],\"forbidden\":[\"nonzero fraction\",\"rounding\",\"truncation\",\"sign\",\"exponent\",\"comma\",\"binary float\",\"precision-ambiguous provider numeric\",\"value above 999999999\"]},\"availability_classification_rule\":\"FULL/PARTIAL/NONE retains the exact predecessor operand comparisons; this decision adds no formula.\",\"canonical_bytes\":\"{\\\"adapter_normalization\\\":{\\\"accepted\\\":[\\\"exact integer text\\\",\\\"exact provider integer lexeme/proof with no binary-float ambiguity\\\",\\\"exact decimal text only when every fractional digit is zero and exactness is proved\\\",\\\"leading integer zero removal at the adapter boundary\\\"],\\\"forbidden\\\":[\\\"nonzero fraction\\\",\\\"rounding\\\",\\\"truncation\\\",\\\"sign\\\",\\\"exponent\\\",\\\"comma\\\",\\\"binary float\\\",\\\"precision-ambiguous provider numeric\\\",\\\"value above 999999999\\\"]},\\\"availability_classification_rule\\\":\\\"FULL/PARTIAL/NONE retains the exact predecessor operand comparisons; this decision adds no formula.\\\",\\\"canonical_grammar\\\":\\\"0|[1-9][0-9]{0,8}\\\",\\\"counts_are_quantity\\\":false,\\\"domain_class\\\":\\\"NONNEGATIVE_INTEGER\\\",\\\"downstream_inheritance\\\":{\\\"fields\\\":[\\\"CreditScopeComponent.quantity\\\",\\\"group-scope quantities\\\",\\\"MovedLineMappingComponent.quantity\\\"],\\\"fractional_scale\\\":0,\\\"maximum\\\":\\\"999999999\\\",\\\"minimum\\\":\\\"1\\\",\\\"zero_behavior\\\":\\\"reject before enclosing object or hash construction\\\"},\\\"evolution\\\":\\\"Any domain, bound, scale, grammar, representation, normalization, or hash change requires a new specialization version.\\\",\\\"fractional_scale\\\":0,\\\"full_match_grammar\\\":\\\"^(?:0|[1-9][0-9]{0,8})$\\\",\\\"immutable_json_representation\\\":\\\"STRING\\\",\\\"immutable_rejections\\\":[\\\"JSON number\\\",\\\"SQLite REAL\\\",\\\"binary floating point\\\",\\\"noncanonical numeric string\\\"],\\\"invalid_numeric_behavior\\\":\\\"Fail before Quantity, ObservedTaggedValue, snapshot, scope, mapping, persistence, arithmetic result, or hash construction. A parsed out-of-domain numeric, including a nonzero fraction, is never converted to UNKNOWN.\\\",\\\"maximum\\\":\\\"999999999\\\",\\\"maximum_total_digits\\\":9,\\\"minimum\\\":\\\"0\\\",\\\"money_arithmetic\\\":\\\"Quantity multiplied by Money uses exact integer/decimal arithmetic; binary float and rounding are forbidden.\\\",\\\"opaque_source_fact_unknown_carveout\\\":\\\"RC-128..RC-131 remain legal only for a readable opaque or uninterpretable source fact for which no numeric value was parsed; they do not admit a parsed numeric outside this specialization.\\\",\\\"policy_literal\\\":\\\"INTEGER_ONLY_ALL_FOUR_FIELDS_MAX_9_DIGITS\\\",\\\"primitive_hash\\\":\\\"SHA256(UTF8(specialization_version) || 0x0A || UTF8(canonical_quantity_string))\\\",\\\"shared_source_fields\\\":[\\\"DOILineItemSnapshot.active_quantity\\\",\\\"DOILineItemSnapshot.canceled_quantity\\\",\\\"DOILineItemSnapshot.explicitly_available_quantity\\\",\\\"DOILineItemSnapshot.ordered_quantity\\\"],\\\"specialization_schema_version\\\":\\\"doi-quantity-specialization-schema/r01-v1\\\",\\\"specialization_version\\\":\\\"doi-quantity/nonnegative-integer-max-9-digits/r01-v1\\\",\\\"sqlite_logical_storage\\\":\\\"TEXT COLLATE BINARY\\\",\\\"status\\\":\\\"FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT\\\"}\",\"canonical_grammar\":\"0|[1-9][0-9]{0,8}\",\"counts_are_quantity\":false,\"domain_class\":\"NONNEGATIVE_INTEGER\",\"downstream_inheritance\":{\"fields\":[\"CreditScopeComponent.quantity\",\"group-scope quantities\",\"MovedLineMappingComponent.quantity\"],\"fractional_scale\":0,\"maximum\":\"999999999\",\"minimum\":\"1\",\"zero_behavior\":\"reject before enclosing object or hash construction\"},\"evolution\":\"Any domain, bound, scale, grammar, representation, normalization, or hash change requires a new specialization version.\",\"fractional_scale\":0,\"full_match_grammar\":\"^(?:0|[1-9][0-9]{0,8})$\",\"immutable_json_representation\":\"STRING\",\"immutable_rejections\":[\"JSON number\",\"SQLite REAL\",\"binary floating point\",\"noncanonical numeric string\"],\"invalid_numeric_behavior\":\"Fail before Quantity, ObservedTaggedValue, snapshot, scope, mapping, persistence, arithmetic result, or hash construction. A parsed out-of-domain numeric, including a nonzero fraction, is never converted to UNKNOWN.\",\"maximum\":\"999999999\",\"maximum_total_digits\":9,\"minimum\":\"0\",\"money_arithmetic\":\"Quantity multiplied by Money uses exact integer/decimal arithmetic; binary float and rounding are forbidden.\",\"opaque_source_fact_unknown_carveout\":\"RC-128..RC-131 remain legal only for a readable opaque or uninterpretable source fact for which no numeric value was parsed; they do not admit a parsed numeric outside this specialization.\",\"policy_literal\":\"INTEGER_ONLY_ALL_FOUR_FIELDS_MAX_9_DIGITS\",\"primitive_hash\":\"SHA256(UTF8(specialization_version) || 0x0A || UTF8(canonical_quantity_string))\",\"shared_source_fields\":[\"DOILineItemSnapshot.active_quantity\",\"DOILineItemSnapshot.canceled_quantity\",\"DOILineItemSnapshot.explicitly_available_quantity\",\"DOILineItemSnapshot.ordered_quantity\"],\"specialization_content_sha256\":\"8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca\",\"specialization_schema_version\":\"doi-quantity-specialization-schema/r01-v1\",\"specialization_version\":\"doi-quantity/nonnegative-integer-max-9-digits/r01-v1\",\"sqlite_logical_storage\":\"TEXT COLLATE BINARY\",\"status\":\"FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT\"},\"normalization_contract_binding\":{\"content_sha256\":\"d6db114b3fcfb326509609f2d2d570935765a9adb7d279248bc35ae6a61ae7d1\",\"version\":\"doi-normalization-contract/r01-v1\"},\"observed_registry_binding\":{\"content_sha256\":\"c45c18b5ccbf6406c99f8adbbb6dcfcb94b18f03087c9333fef1d28bb10ee59e\",\"version\":\"doi-observed-tagged-value-registry/r01-v2\"},\"source_finding_registry_binding\":{\"content_sha256\":\"b3fe7245dc15ca20c0f313a128114b4685d4dbc3b7d987606673337b7e1661a7\",\"version\":\"doi-source-finding-schema-registry/r01-v2\"}},\"package_id\":\"doi-authority-remediation-r01-fact-normalization/v1.1\",\"predecessor_evidence\":{\"authority_manifest_sha256\":\"95e911cddc50cfe240204b7079fcee8fd07d9f7c45c618d6e61a129e3ab684ff\",\"file_count\":29,\"manifest_covered_payload_count\":28,\"package_id\":\"doi-authority-remediation-r01-fact-normalization/v1\",\"preservation\":\"READ_ONLY_BYTE_IDENTICAL\",\"sha256sums_sha256\":\"27536f0d635c5980383e00a78aedf8706b8bc3c5ea6f1260661147c73b3d56cd\"},\"scope_guards\":{\"audit_packages_modified\":false,\"authority_cache_modified\":false,\"checkpoints_04_11_claimed_ready\":false,\"complete_doi_spec_declared_frozen\":false,\"historical_corpora_modified\":false,\"live_order_admin_accessed\":false,\"migration_0005_created\":false,\"production_code_created\":false,\"repository_modified\":false,\"workbooks_modified\":false},\"source\":{\"file_citation_identifier\":\"file_00000000f98481fbab8b0239b93cd34a\",\"raw_sha256\":\"54d523be29a188264d0b32abe5102e394521a07363e0e608315e9d69e1800b63\",\"uploaded_name\":\"43_DOI_R01_Approved_Product_Decisions_Incorporation.txt\"},\"status\":\"READY_FOR_INDEPENDENT_AUDIT\"}",
+  "counts": {
+    "new_reason_codes_over_baseline": 23,
+    "reason_codes": 138,
+    "reason_owners": 138,
+    "transitions": 115
+  },
+  "date": "2026-08-11",
+  "exact_effects": {
+    "ASCII_FOUR": {
+      "algorithm": "Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.",
+      "canonical_bytes": "{\"algorithm\":\"Repeatedly remove only the listed single bytes from the outer left and right edges until neither edge is listed. Internal bytes are untouched.\",\"edge_trim_bytes_hex\":[\"09\",\"0a\",\"0d\",\"20\"],\"edge_trim_codepoints\":[\"U+0009\",\"U+000A\",\"U+000D\",\"U+0020\"],\"forbidden_operations\":[\"Unicode normalization\",\"Unicode casefold\",\"locale behavior\",\"Unicode whitespace lookup\",\"internal whitespace removal\"],\"input_encoding\":\"UTF-8 text\",\"policy_literal\":\"ASCII_FOUR\",\"surviving_byte_rule\":\"Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.\",\"trim_schema_version\":\"doi-edge-trim-schema/r01-v1\",\"trim_version\":\"doi-ascii-four-edge-trim/r01-v1\"}",
+      "edge_trim_bytes_hex": [
+        "09",
+        "0a",
+        "0d",
+        "20"
+      ],
+      "edge_trim_codepoints": [
+        "U+0009",
+        "U+000A",
+        "U+000D",
+        "U+0020"
+      ],
+      "forbidden_operations": [
+        "Unicode normalization",
+        "Unicode casefold",
+        "locale behavior",
+        "Unicode whitespace lookup",
+        "internal whitespace removal"
+      ],
+      "input_encoding": "UTF-8 text",
+      "policy_literal": "ASCII_FOUR",
+      "surviving_byte_rule": "Every untrimmed byte is passed to the selected identifier grammar; an illegal byte rejects.",
+      "trim_content_sha256": "94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e",
+      "trim_schema_version": "doi-edge-trim-schema/r01-v1",
+      "trim_version": "doi-ascii-four-edge-trim/r01-v1"
+    },
+    "ESNumber": {
+      "canonical_bytes": "{\"canonical_identifier_hash_domain\":\"doi-es-number/r01-v1\",\"canonical_name\":\"ESNumber\",\"canonicalization\":\"Remove leading zeros from the digit core and retain the digit core only.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"maximum_input_utf8_bytes_before_canonicalization\":64,\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-es-number-normalization/r01-v1\",\"optional_prefixes\":[\"ES#\",\"ES\"],\"policy_literal\":\"ES_NUMERIC_CORE\",\"post_prefix_grammar\":\"one or more ASCII digits\",\"prefix_comparison\":\"ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte\",\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"zero/all-zero\",\"empty\",\"prefix-only\",\"internal whitespace\",\"other punctuation\",\"sign\",\"exponent\",\"Unicode digit\",\"non-ASCII\",\"control byte\",\"provider numeric cell\",\"input longer than 64 UTF-8 bytes\"],\"source_preservation\":\"Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"}",
+      "canonical_identifier_hash_domain": "doi-es-number/r01-v1",
+      "canonical_name": "ESNumber",
+      "canonicalization": "Remove leading zeros from the digit core and retain the digit core only.",
+      "edge_trim_content_sha256": "94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e",
+      "edge_trim_version": "doi-ascii-four-edge-trim/r01-v1",
+      "maximum_input_utf8_bytes_before_canonicalization": 64,
+      "normalization_content_sha256": "794961d7287e97547882d8b89d5578a28b72b360ca2b164b02e00fcda2b32cc1",
+      "normalization_schema_version": "doi-identifier-normalization-schema/r01-v1",
+      "normalization_version": "doi-es-number-normalization/r01-v1",
+      "optional_prefixes": [
+        "ES#",
+        "ES"
+      ],
+      "policy_literal": "ES_NUMERIC_CORE",
+      "post_prefix_grammar": "one or more ASCII digits",
+      "prefix_comparison": "ASCII_CASE_INSENSITIVE; parse ES# before ES; prefix is anchored at the first post-trim byte",
+      "readable_invalid_source_route": "Outer ObservedTaggedValue UNKNOWN with RC-126, value null, raw_hint null; construct no identifier, identifier hash, or relationship.",
+      "reject": [
+        "zero/all-zero",
+        "empty",
+        "prefix-only",
+        "internal whitespace",
+        "other punctuation",
+        "sign",
+        "exponent",
+        "Unicode digit",
+        "non-ASCII",
+        "control byte",
+        "provider numeric cell",
+        "input longer than 64 UTF-8 bytes"
+      ],
+      "source_preservation": "Raw ES input is transient; retain only the canonical identifier and a privacy-closed SourceRef."
+    },
+    "FindingPresenceV2": {
+      "canonical_bytes": "{\"forbidden\":[\"ABSENT\",\"outer ObservedTaggedValue wrapper\",\"dual direct/wrapped representation\",\"aliases\",\"case folding\"],\"ordered_members\":[\"PRESENT\",\"NOT_PRESENT\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"policy_literal\":\"DIRECT_FOUR_MEMBER_V2\",\"registry_schema_version\":\"doi-finding-presence-registry-schema/r01-v2\",\"registry_version\":\"doi-finding-presence/r01-v2\",\"representation\":\"DIRECT_ENUM_ONLY\",\"state_locus_count\":1,\"unknown_reason_routing\":{\"DEDUPE\":\"RC-123 in completeness_reason_codes\",\"WWC\":\"RC-122 in completeness_reason_codes\"}}",
+      "forbidden": [
+        "ABSENT",
+        "outer ObservedTaggedValue wrapper",
+        "dual direct/wrapped representation",
+        "aliases",
+        "case folding"
+      ],
+      "ordered_members": [
+        "PRESENT",
+        "NOT_PRESENT",
+        "UNKNOWN",
+        "NOT_APPLICABLE"
+      ],
+      "policy_literal": "DIRECT_FOUR_MEMBER_V2",
+      "registry_content_sha256": "c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc",
+      "registry_schema_version": "doi-finding-presence-registry-schema/r01-v2",
+      "registry_version": "doi-finding-presence/r01-v2",
+      "representation": "DIRECT_ENUM_ONLY",
+      "state_locus_count": 1,
+      "unknown_reason_routing": {
+        "DEDUPE": "RC-123 in completeness_reason_codes",
+        "WWC": "RC-122 in completeness_reason_codes"
+      }
+    },
+    "MFGNumber": {
+      "canonical_bytes": "{\"canonical_identifier_hash_domain\":\"doi-mfg-oe-number/r01-v1\",\"canonical_name\":\"MFGNumber\",\"canonicalization\":\"Uppercase ASCII a-z only; preserve every other printable ASCII byte.\",\"edge_trim_content_sha256\":\"94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e\",\"edge_trim_version\":\"doi-ascii-four-edge-trim/r01-v1\",\"forbidden\":[\"separator removal\",\"leading-zero removal\",\"component splitting\",\"fuzzy matching\",\"manufacturer inference\",\"manufacturer registry creation\"],\"maximum_input_utf8_bytes_before_canonicalization\":128,\"normalization_schema_version\":\"doi-identifier-normalization-schema/r01-v1\",\"normalization_version\":\"doi-mfg-oe-number-normalization/r01-v1\",\"policy_literal\":\"MFG_SEPARATOR_PRESERVING_UPPER\",\"policy_section_name\":\"MFG_OE_Number\",\"post_trim_grammar\":\"1..128 bytes, every byte printable ASCII 0x20..0x7e\",\"preserved\":[\"internal ASCII whitespace\",\"hyphen\",\"period\",\"underscore\",\"slash\",\"repeated spaces\",\"leading zeros\",\"an opaque compound source value\"],\"readable_invalid_source_route\":\"Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.\",\"reject\":[\"empty/trim-only\",\"Unicode\",\"control byte\",\"provider numeric cell\",\"input longer than 128 UTF-8 bytes\"],\"source_preservation\":\"Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef.\"}",
+      "canonical_identifier_hash_domain": "doi-mfg-oe-number/r01-v1",
+      "canonical_name": "MFGNumber",
+      "canonicalization": "Uppercase ASCII a-z only; preserve every other printable ASCII byte.",
+      "edge_trim_content_sha256": "94c91a658738504340099ae892a4cfe383f6b89b4808a1d24302c5d7049ed17e",
+      "edge_trim_version": "doi-ascii-four-edge-trim/r01-v1",
+      "forbidden": [
+        "separator removal",
+        "leading-zero removal",
+        "component splitting",
+        "fuzzy matching",
+        "manufacturer inference",
+        "manufacturer registry creation"
+      ],
+      "maximum_input_utf8_bytes_before_canonicalization": 128,
+      "normalization_content_sha256": "ce3bfb100ab3b94d0a28e6679bdfe9af52d7db0171f0aeaa1e78a625d301309b",
+      "normalization_schema_version": "doi-identifier-normalization-schema/r01-v1",
+      "normalization_version": "doi-mfg-oe-number-normalization/r01-v1",
+      "policy_literal": "MFG_SEPARATOR_PRESERVING_UPPER",
+      "policy_section_name": "MFG_OE_Number",
+      "post_trim_grammar": "1..128 bytes, every byte printable ASCII 0x20..0x7e",
+      "preserved": [
+        "internal ASCII whitespace",
+        "hyphen",
+        "period",
+        "underscore",
+        "slash",
+        "repeated spaces",
+        "leading zeros",
+        "an opaque compound source value"
+      ],
+      "readable_invalid_source_route": "Outer ObservedTaggedValue UNKNOWN with RC-127, value null, raw_hint null; construct no identifier, identifier hash, or relationship.",
+      "reject": [
+        "empty/trim-only",
+        "Unicode",
+        "control byte",
+        "provider numeric cell",
+        "input longer than 128 UTF-8 bytes"
+      ],
+      "source_preservation": "Raw MFG/OE input is transient; retain only the canonical identifier and a privacy-closed SourceRef."
+    },
+    "Quantity": {
+      "adapter_normalization": {
+        "accepted": [
+          "exact integer text",
+          "exact provider integer lexeme/proof with no binary-float ambiguity",
+          "exact decimal text only when every fractional digit is zero and exactness is proved",
+          "leading integer zero removal at the adapter boundary"
+        ],
+        "forbidden": [
+          "nonzero fraction",
+          "rounding",
+          "truncation",
+          "sign",
+          "exponent",
+          "comma",
+          "binary float",
+          "precision-ambiguous provider numeric",
+          "value above 999999999"
+        ]
+      },
+      "availability_classification_rule": "FULL/PARTIAL/NONE retains the exact predecessor operand comparisons; this decision adds no formula.",
+      "canonical_bytes": "{\"adapter_normalization\":{\"accepted\":[\"exact integer text\",\"exact provider integer lexeme/proof with no binary-float ambiguity\",\"exact decimal text only when every fractional digit is zero and exactness is proved\",\"leading integer zero removal at the adapter boundary\"],\"forbidden\":[\"nonzero fraction\",\"rounding\",\"truncation\",\"sign\",\"exponent\",\"comma\",\"binary float\",\"precision-ambiguous provider numeric\",\"value above 999999999\"]},\"availability_classification_rule\":\"FULL/PARTIAL/NONE retains the exact predecessor operand comparisons; this decision adds no formula.\",\"canonical_grammar\":\"0|[1-9][0-9]{0,8}\",\"counts_are_quantity\":false,\"domain_class\":\"NONNEGATIVE_INTEGER\",\"downstream_inheritance\":{\"fields\":[\"CreditScopeComponent.quantity\",\"group-scope quantities\",\"MovedLineMappingComponent.quantity\"],\"fractional_scale\":0,\"maximum\":\"999999999\",\"minimum\":\"1\",\"zero_behavior\":\"reject before enclosing object or hash construction\"},\"evolution\":\"Any domain, bound, scale, grammar, representation, normalization, or hash change requires a new specialization version.\",\"fractional_scale\":0,\"full_match_grammar\":\"^(?:0|[1-9][0-9]{0,8})$\",\"immutable_json_representation\":\"STRING\",\"immutable_rejections\":[\"JSON number\",\"SQLite REAL\",\"binary floating point\",\"noncanonical numeric string\"],\"invalid_numeric_behavior\":\"Fail before Quantity, ObservedTaggedValue, snapshot, scope, mapping, persistence, arithmetic result, or hash construction. A parsed out-of-domain numeric, including a nonzero fraction, is never converted to UNKNOWN.\",\"maximum\":\"999999999\",\"maximum_total_digits\":9,\"minimum\":\"0\",\"money_arithmetic\":\"Quantity multiplied by Money uses exact integer/decimal arithmetic; binary float and rounding are forbidden.\",\"opaque_source_fact_unknown_carveout\":\"RC-128..RC-131 remain legal only for a readable opaque or uninterpretable source fact for which no numeric value was parsed; they do not admit a parsed numeric outside this specialization.\",\"policy_literal\":\"INTEGER_ONLY_ALL_FOUR_FIELDS_MAX_9_DIGITS\",\"primitive_hash\":\"SHA256(UTF8(specialization_version) || 0x0A || UTF8(canonical_quantity_string))\",\"shared_source_fields\":[\"DOILineItemSnapshot.active_quantity\",\"DOILineItemSnapshot.canceled_quantity\",\"DOILineItemSnapshot.explicitly_available_quantity\",\"DOILineItemSnapshot.ordered_quantity\"],\"specialization_schema_version\":\"doi-quantity-specialization-schema/r01-v1\",\"specialization_version\":\"doi-quantity/nonnegative-integer-max-9-digits/r01-v1\",\"sqlite_logical_storage\":\"TEXT COLLATE BINARY\",\"status\":\"FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT\"}",
+      "canonical_grammar": "0|[1-9][0-9]{0,8}",
+      "counts_are_quantity": false,
+      "domain_class": "NONNEGATIVE_INTEGER",
+      "downstream_inheritance": {
+        "fields": [
+          "CreditScopeComponent.quantity",
+          "group-scope quantities",
+          "MovedLineMappingComponent.quantity"
+        ],
+        "fractional_scale": 0,
+        "maximum": "999999999",
+        "minimum": "1",
+        "zero_behavior": "reject before enclosing object or hash construction"
+      },
+      "evolution": "Any domain, bound, scale, grammar, representation, normalization, or hash change requires a new specialization version.",
+      "fractional_scale": 0,
+      "full_match_grammar": "^(?:0|[1-9][0-9]{0,8})$",
+      "immutable_json_representation": "STRING",
+      "immutable_rejections": [
+        "JSON number",
+        "SQLite REAL",
+        "binary floating point",
+        "noncanonical numeric string"
+      ],
+      "invalid_numeric_behavior": "Fail before Quantity, ObservedTaggedValue, snapshot, scope, mapping, persistence, arithmetic result, or hash construction. A parsed out-of-domain numeric, including a nonzero fraction, is never converted to UNKNOWN.",
+      "maximum": "999999999",
+      "maximum_total_digits": 9,
+      "minimum": "0",
+      "money_arithmetic": "Quantity multiplied by Money uses exact integer/decimal arithmetic; binary float and rounding are forbidden.",
+      "opaque_source_fact_unknown_carveout": "RC-128..RC-131 remain legal only for a readable opaque or uninterpretable source fact for which no numeric value was parsed; they do not admit a parsed numeric outside this specialization.",
+      "policy_literal": "INTEGER_ONLY_ALL_FOUR_FIELDS_MAX_9_DIGITS",
+      "primitive_hash": "SHA256(UTF8(specialization_version) || 0x0A || UTF8(canonical_quantity_string))",
+      "shared_source_fields": [
+        "DOILineItemSnapshot.active_quantity",
+        "DOILineItemSnapshot.canceled_quantity",
+        "DOILineItemSnapshot.explicitly_available_quantity",
+        "DOILineItemSnapshot.ordered_quantity"
+      ],
+      "specialization_content_sha256": "8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca",
+      "specialization_schema_version": "doi-quantity-specialization-schema/r01-v1",
+      "specialization_version": "doi-quantity/nonnegative-integer-max-9-digits/r01-v1",
+      "sqlite_logical_storage": "TEXT COLLATE BINARY",
+      "status": "FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT"
+    },
+    "normalization_contract_binding": {
+      "content_sha256": "d6db114b3fcfb326509609f2d2d570935765a9adb7d279248bc35ae6a61ae7d1",
+      "version": "doi-normalization-contract/r01-v1"
+    },
+    "observed_registry_binding": {
+      "content_sha256": "c45c18b5ccbf6406c99f8adbbb6dcfcb94b18f03087c9333fef1d28bb10ee59e",
+      "version": "doi-observed-tagged-value-registry/r01-v2"
+    },
+    "source_finding_registry_binding": {
+      "content_sha256": "b3fe7245dc15ca20c0f313a128114b4685d4dbc3b7d987606673337b7e1661a7",
+      "version": "doi-source-finding-schema-registry/r01-v2"
+    }
+  },
+  "package_id": "doi-authority-remediation-r01-fact-normalization/v1.1",
+  "predecessor_evidence": {
+    "authority_manifest_sha256": "95e911cddc50cfe240204b7079fcee8fd07d9f7c45c618d6e61a129e3ab684ff",
+    "file_count": 29,
+    "manifest_covered_payload_count": 28,
+    "package_id": "doi-authority-remediation-r01-fact-normalization/v1",
+    "preservation": "READ_ONLY_BYTE_IDENTICAL",
+    "sha256sums_sha256": "27536f0d635c5980383e00a78aedf8706b8bc3c5ea6f1260661147c73b3d56cd"
+  },
+  "scope_guards": {
+    "audit_packages_modified": false,
+    "authority_cache_modified": false,
+    "checkpoints_04_11_claimed_ready": false,
+    "complete_doi_spec_declared_frozen": false,
+    "historical_corpora_modified": false,
+    "live_order_admin_accessed": false,
+    "migration_0005_created": false,
+    "production_code_created": false,
+    "repository_modified": false,
+    "workbooks_modified": false
+  },
+  "source": {
+    "file_citation_identifier": "file_00000000f98481fbab8b0239b93cd34a",
+    "raw_sha256": "54d523be29a188264d0b32abe5102e394521a07363e0e608315e9d69e1800b63",
+    "uploaded_name": "43_DOI_R01_Approved_Product_Decisions_Incorporation.txt"
+  },
+  "status": "READY_FOR_INDEPENDENT_AUDIT"
+}

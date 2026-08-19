@@ -1,0 +1,768 @@
+{
+  "canonical_bytes": "{\"canonical_member_order\":[\"author_classification\",\"author_provenance\",\"completeness_reason_codes\",\"finding_at\",\"finding_identity\",\"finding_kind\",\"presence\",\"raw_hint\",\"schema_version\",\"source_refs\",\"structured_value\"],\"finding_presence_registry\":{\"canonical_bytes\":\"{\\\"forbidden\\\":[\\\"ABSENT\\\",\\\"outer ObservedTaggedValue wrapper\\\",\\\"dual direct/wrapped representation\\\",\\\"aliases\\\",\\\"case folding\\\"],\\\"ordered_members\\\":[\\\"PRESENT\\\",\\\"NOT_PRESENT\\\",\\\"UNKNOWN\\\",\\\"NOT_APPLICABLE\\\"],\\\"policy_literal\\\":\\\"DIRECT_FOUR_MEMBER_V2\\\",\\\"registry_schema_version\\\":\\\"doi-finding-presence-registry-schema/r01-v2\\\",\\\"registry_version\\\":\\\"doi-finding-presence/r01-v2\\\",\\\"representation\\\":\\\"DIRECT_ENUM_ONLY\\\",\\\"state_locus_count\\\":1,\\\"unknown_reason_routing\\\":{\\\"DEDUPE\\\":\\\"RC-123 in completeness_reason_codes\\\",\\\"WWC\\\":\\\"RC-122 in completeness_reason_codes\\\"}}\",\"forbidden\":[\"ABSENT\",\"outer ObservedTaggedValue wrapper\",\"dual direct/wrapped representation\",\"aliases\",\"case folding\"],\"ordered_members\":[\"PRESENT\",\"NOT_PRESENT\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"policy_literal\":\"DIRECT_FOUR_MEMBER_V2\",\"registry_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"registry_schema_version\":\"doi-finding-presence-registry-schema/r01-v2\",\"registry_version\":\"doi-finding-presence/r01-v2\",\"representation\":\"DIRECT_ENUM_ONLY\",\"state_locus_count\":1,\"unknown_reason_routing\":{\"DEDUPE\":\"RC-123 in completeness_reason_codes\",\"WWC\":\"RC-122 in completeness_reason_codes\"}},\"raw_finding_text_forbidden\":true,\"registry_schema_version\":\"doi-source-finding-schema-registry/r01-v2\",\"registry_version\":\"doi-source-finding-schema-registry/r01-v2\",\"rejected_alternatives_evidence\":{\"immutable_predecessor_package_id\":\"doi-authority-remediation-r01-fact-normalization/v1\",\"predecessor_file\":\"R01_WWC_DEDUPE_FINDING_SCHEMAS.json\",\"predecessor_file_sha256\":\"1022b6150f555d1384e9fe990f1dc4c8794e3495cf646209b36b8624fde9a5fa\"},\"rejected_predecessor_alternatives\":[{\"id\":\"BASELINE_DIRECT_THREE_PLUS_OUTER_NA\",\"reason\":\"Rejected by DIRECT_FOUR_MEMBER_V2; ABSENT and a second applicability locus are forbidden.\"},{\"id\":\"WRAPPER_REDESIGN\",\"reason\":\"Rejected by DIRECT_FOUR_MEMBER_V2; an outer observed-value wrapper is forbidden.\"}],\"runtime_dedupe_separation\":\"Source-observed DEDUPE finding is not DedupeState, a human DEDUPE decision, or an Synthetic Order Portal note/action.\",\"schema_descriptors\":{\"DEDUPE\":{\"canonical_bytes\":\"{\\\"canonical_member_order\\\":[\\\"author_classification\\\",\\\"author_provenance\\\",\\\"completeness_reason_codes\\\",\\\"finding_at\\\",\\\"finding_identity\\\",\\\"finding_kind\\\",\\\"presence\\\",\\\"raw_hint\\\",\\\"schema_version\\\",\\\"source_refs\\\",\\\"structured_value\\\"],\\\"descriptor_version\\\":\\\"doi-dedupe-source-finding-schema/r01-v1\\\",\\\"exact_members\\\":[\\\"schema_version\\\",\\\"finding_kind\\\",\\\"presence\\\",\\\"source_refs\\\",\\\"finding_at\\\",\\\"author_classification\\\",\\\"author_provenance\\\",\\\"finding_identity\\\",\\\"structured_value\\\",\\\"raw_hint\\\",\\\"completeness_reason_codes\\\"],\\\"finding_kind\\\":\\\"DEDUPE\\\",\\\"instance_hash\\\":\\\"SHA256(UTF8(\\\\\\\"doi-dedupe-source-finding/r01-v1\\\\\\\") || 0x0A || UTF8(RFC8785(complete object)))\\\",\\\"instance_schema_version\\\":\\\"doi-dedupe-source-finding/r01-v1\\\",\\\"non_present_subfield_guard\\\":\\\"finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE\\\",\\\"presence_registry_content_sha256\\\":\\\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\\\",\\\"presence_registry_version\\\":\\\"doi-finding-presence/r01-v2\\\",\\\"truth_table\\\":{\\\"NOT_APPLICABLE\\\":\\\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\\\",\\\"NOT_PRESENT\\\":\\\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\\\",\\\"PRESENT\\\":\\\"source_refs>=1; finding_at KNOWN; author NOT_APPLICABLE; identity and DEDUPE marker required; reasons=[]; raw_hint=null\\\",\\\"UNKNOWN\\\":\\\"source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-123]; raw_hint=null\\\"}}\",\"canonical_member_order\":[\"author_classification\",\"author_provenance\",\"completeness_reason_codes\",\"finding_at\",\"finding_identity\",\"finding_kind\",\"presence\",\"raw_hint\",\"schema_version\",\"source_refs\",\"structured_value\"],\"descriptor_content_sha256\":\"c7d9b52a5f1caf7d610ff245211a9ac3012b647e279823e7356f3717cb7f6801\",\"descriptor_version\":\"doi-dedupe-source-finding-schema/r01-v1\",\"exact_members\":[\"schema_version\",\"finding_kind\",\"presence\",\"source_refs\",\"finding_at\",\"author_classification\",\"author_provenance\",\"finding_identity\",\"structured_value\",\"raw_hint\",\"completeness_reason_codes\"],\"finding_kind\":\"DEDUPE\",\"instance_hash\":\"SHA256(UTF8(\\\"doi-dedupe-source-finding/r01-v1\\\") || 0x0A || UTF8(RFC8785(complete object)))\",\"instance_schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"non_present_subfield_guard\":\"finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE\",\"presence_registry_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"presence_registry_version\":\"doi-finding-presence/r01-v2\",\"truth_table\":{\"NOT_APPLICABLE\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"NOT_PRESENT\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"PRESENT\":\"source_refs>=1; finding_at KNOWN; author NOT_APPLICABLE; identity and DEDUPE marker required; reasons=[]; raw_hint=null\",\"UNKNOWN\":\"source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-123]; raw_hint=null\"}},\"WWC\":{\"canonical_bytes\":\"{\\\"canonical_member_order\\\":[\\\"author_classification\\\",\\\"author_provenance\\\",\\\"completeness_reason_codes\\\",\\\"finding_at\\\",\\\"finding_identity\\\",\\\"finding_kind\\\",\\\"presence\\\",\\\"raw_hint\\\",\\\"schema_version\\\",\\\"source_refs\\\",\\\"structured_value\\\"],\\\"descriptor_version\\\":\\\"doi-wwc-source-finding-schema/r01-v1\\\",\\\"exact_members\\\":[\\\"schema_version\\\",\\\"finding_kind\\\",\\\"presence\\\",\\\"source_refs\\\",\\\"finding_at\\\",\\\"author_classification\\\",\\\"author_provenance\\\",\\\"finding_identity\\\",\\\"structured_value\\\",\\\"raw_hint\\\",\\\"completeness_reason_codes\\\"],\\\"finding_kind\\\":\\\"WWC\\\",\\\"instance_hash\\\":\\\"SHA256(UTF8(\\\\\\\"doi-wwc-source-finding/r01-v1\\\\\\\") || 0x0A || UTF8(RFC8785(complete object)))\\\",\\\"instance_schema_version\\\":\\\"doi-wwc-source-finding/r01-v1\\\",\\\"non_present_subfield_guard\\\":\\\"finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE\\\",\\\"presence_registry_content_sha256\\\":\\\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\\\",\\\"presence_registry_version\\\":\\\"doi-finding-presence/r01-v2\\\",\\\"truth_table\\\":{\\\"NOT_APPLICABLE\\\":\\\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\\\",\\\"NOT_PRESENT\\\":\\\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\\\",\\\"PRESENT\\\":\\\"source_refs>=1; identity and WWC marker required; finding_at and author_classification each KNOWN or UNKNOWN(RC-056/RC-055); author_provenance required iff author is KNOWN; completeness reasons are the exact union\\\",\\\"UNKNOWN\\\":\\\"source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-122]; raw_hint=null\\\"}}\",\"canonical_member_order\":[\"author_classification\",\"author_provenance\",\"completeness_reason_codes\",\"finding_at\",\"finding_identity\",\"finding_kind\",\"presence\",\"raw_hint\",\"schema_version\",\"source_refs\",\"structured_value\"],\"descriptor_content_sha256\":\"6c0c7ebbbb02699214806b12eba86a40ade8ae3873e6a3f976a6a4799f1e4255\",\"descriptor_version\":\"doi-wwc-source-finding-schema/r01-v1\",\"exact_members\":[\"schema_version\",\"finding_kind\",\"presence\",\"source_refs\",\"finding_at\",\"author_classification\",\"author_provenance\",\"finding_identity\",\"structured_value\",\"raw_hint\",\"completeness_reason_codes\"],\"finding_kind\":\"WWC\",\"instance_hash\":\"SHA256(UTF8(\\\"doi-wwc-source-finding/r01-v1\\\") || 0x0A || UTF8(RFC8785(complete object)))\",\"instance_schema_version\":\"doi-wwc-source-finding/r01-v1\",\"non_present_subfield_guard\":\"finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE\",\"presence_registry_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"presence_registry_version\":\"doi-finding-presence/r01-v2\",\"truth_table\":{\"NOT_APPLICABLE\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"NOT_PRESENT\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"PRESENT\":\"source_refs>=1; identity and WWC marker required; finding_at and author_classification each KNOWN or UNKNOWN(RC-056/RC-055); author_provenance required iff author is KNOWN; completeness reasons are the exact union\",\"UNKNOWN\":\"source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-122]; raw_hint=null\"}}},\"selected_branch_objects\":[{\"content_sha256\":\"55fffdd9abde7439cb2bcdf1415fdffb8e4442dd9a55e2e263e77ee2c64fe795\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"SELF\"},\"author_provenance\":{\"asserted_relation\":\"SELF\",\"author_provenance_schema_version\":\"doi-wwc-author-provenance/r01-v1\",\"classification_method\":\"SOURCE_EXPLICIT\",\"source_ref_fingerprint\":\"ecf7687d91513a05912bab2d59533da96ae23b60d214a5e24d3a7820f095b3fa\"},\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"2026-08-10T12:00:00Z\"},\"finding_identity\":\"1cff359fc06c9d22650b2c55d691bfa823a58d82d3feb6307f30d05e5bb6e993\",\"finding_kind\":\"WWC\",\"presence\":\"PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-WWC-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"WWC_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":{\"marker\":\"CONTACT_FINDING\",\"marker_schema_version\":\"doi-wwc-configured-marker/r01-v1\"}},\"semantic_branch\":\"PRESENT\"},{\"content_sha256\":\"96807da9a623d2eebd9d54de201dc546c2094f7d13a23bc38dbdb1327e33e288\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"WWC\",\"presence\":\"NOT_PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":null},\"semantic_branch\":\"NOT_PRESENT\"},{\"content_sha256\":\"249a0bdae5d19eccfe0feab96957a61bfedd43415930a60a30c632201bf18cf3\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[\"RC-122\"],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"WWC\",\"presence\":\"UNKNOWN\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-WWC-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"WWC_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":null},\"semantic_branch\":\"UNKNOWN\"},{\"content_sha256\":\"ffd91082963737e7ae2049921c039860058974c876217fa7c838000fac4afc9a\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"WWC\",\"presence\":\"NOT_APPLICABLE\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":null},\"semantic_branch\":\"NOT_APPLICABLE\"},{\"content_sha256\":\"4137176d00c44b91271f928e864a7e3ab0d239fb419b352bddbaeed32aec7143\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"2026-08-10T12:00:00Z\"},\"finding_identity\":\"0e03e8fe3c1446d4a5847b63bafbbc1ea0a36c64ff1d008d8b73eb8ad7c6496f\",\"finding_kind\":\"DEDUPE\",\"presence\":\"PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-DEDUPE-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"DEDUPE_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":{\"marker\":\"DEDUPE_FINDING\",\"marker_schema_version\":\"doi-dedupe-configured-marker/r01-v1\"}},\"semantic_branch\":\"PRESENT\"},{\"content_sha256\":\"4c7a023ed411f31a5349a2f298ffcb19cf0aa5723752555103201e348b88e94a\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"DEDUPE\",\"presence\":\"NOT_PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":null},\"semantic_branch\":\"NOT_PRESENT\"},{\"content_sha256\":\"4ff3b909c31963e36c606e1a24e6e530d37f85e1a4f2ff040528d6291c2149b2\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[\"RC-123\"],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"DEDUPE\",\"presence\":\"UNKNOWN\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-DEDUPE-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"DEDUPE_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":null},\"semantic_branch\":\"UNKNOWN\"},{\"content_sha256\":\"07f292f917d0ceb3ee73b1b1a164eb5d7c8aff7b2c30761ed4b2cf2e005f2069\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"DEDUPE\",\"presence\":\"NOT_APPLICABLE\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":null},\"semantic_branch\":\"NOT_APPLICABLE\"}],\"selected_contradiction_objects\":[{\"case\":\"NOT_PRESENT_WITH_SOURCE\",\"content_sha256\":\"3ac60272c28aaf86ff0316ea4993ba25a110497eee80459ee3194bbe4c01264b\",\"expected_error\":\"FINDING_BRANCH_CONTRADICTION\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"WWC\",\"presence\":\"NOT_PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-WWC-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"WWC_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":null}},{\"case\":\"PRESENT_WITHOUT_SOURCE\",\"content_sha256\":\"f5a32dde4535a2d94888d0513530abb969d46395bcaeeb5fc37c2826258d140d\",\"expected_error\":\"FINDING_SOURCE_REQUIRED\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"SELF\"},\"author_provenance\":{\"asserted_relation\":\"SELF\",\"author_provenance_schema_version\":\"doi-wwc-author-provenance/r01-v1\",\"classification_method\":\"SOURCE_EXPLICIT\",\"source_ref_fingerprint\":\"ecf7687d91513a05912bab2d59533da96ae23b60d214a5e24d3a7820f095b3fa\"},\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"2026-08-10T12:00:00Z\"},\"finding_identity\":\"1cff359fc06c9d22650b2c55d691bfa823a58d82d3feb6307f30d05e5bb6e993\",\"finding_kind\":\"WWC\",\"presence\":\"PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":{\"marker\":\"CONTACT_FINDING\",\"marker_schema_version\":\"doi-wwc-configured-marker/r01-v1\"}}},{\"case\":\"UNKNOWN_WITH_KNOWN_TIME\",\"content_sha256\":\"a8b0a80e1d73fce1824517ff73e90a32efaf7272a390d6be06a286fe52ace8b7\",\"expected_error\":\"FINDING_BRANCH_CONTRADICTION\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[\"RC-122\"],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"2026-08-10T12:00:00Z\"},\"finding_identity\":null,\"finding_kind\":\"WWC\",\"presence\":\"UNKNOWN\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-WWC-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"WWC_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":null}},{\"case\":\"NOT_APPLICABLE_WITH_EVIDENCE\",\"content_sha256\":\"0259c8654de4bdcc85919048480ad0870cf9a1cccb1a8efbe61ea7715120cae0\",\"expected_error\":\"FINDING_BRANCH_CONTRADICTION\",\"kind\":\"WWC\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"WWC\",\"presence\":\"NOT_APPLICABLE\",\"raw_hint\":null,\"schema_version\":\"doi-wwc-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":{\"marker\":\"CONTACT_FINDING\",\"marker_schema_version\":\"doi-wwc-configured-marker/r01-v1\"}}},{\"case\":\"NOT_PRESENT_WITH_SOURCE\",\"content_sha256\":\"78ad39b93d3436862baefa17273e5aeff55b2d5d3a10b3495b88c5b14651e6e0\",\"expected_error\":\"FINDING_BRANCH_CONTRADICTION\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"DEDUPE\",\"presence\":\"NOT_PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-DEDUPE-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"DEDUPE_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":null}},{\"case\":\"PRESENT_WITHOUT_SOURCE\",\"content_sha256\":\"6248355d244780499962c4f765eb4be474a7cd668e014ab0a31071734ea80e75\",\"expected_error\":\"FINDING_SOURCE_REQUIRED\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"2026-08-10T12:00:00Z\"},\"finding_identity\":\"0e03e8fe3c1446d4a5847b63bafbbc1ea0a36c64ff1d008d8b73eb8ad7c6496f\",\"finding_kind\":\"DEDUPE\",\"presence\":\"PRESENT\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":{\"marker\":\"DEDUPE_FINDING\",\"marker_schema_version\":\"doi-dedupe-configured-marker/r01-v1\"}}},{\"case\":\"UNKNOWN_WITH_KNOWN_TIME\",\"content_sha256\":\"3c14c5cd9ece2704f279b801a9019137e677c6fb6a06e808ce100196b4e60e70\",\"expected_error\":\"FINDING_BRANCH_CONTRADICTION\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[\"RC-123\"],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"KNOWN\",\"value\":\"2026-08-10T12:00:00Z\"},\"finding_identity\":null,\"finding_kind\":\"DEDUPE\",\"presence\":\"UNKNOWN\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[{\"content_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"fixture_content_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"fixture_id\":\"SYN-DOI-FIXTURE-FINDING-CANDIDATE\",\"fixture_set_id\":\"SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE\",\"line_key\":null,\"object_id\":\"SYN-DOI-FACT-DEDUPE-CANDIDATE-0001\",\"provider\":\"OFFLINE_FIXTURE\",\"schema_version\":\"doi-source-ref/offline-fake-oa/r01-v1\",\"section\":\"DEDUPE_FINDING\",\"source_ref_type\":\"OFFLINE_FAKE_OA\",\"source_revision_token\":\"SYN-DOI-REVISION-CANDIDATE\",\"surface\":\"ORDER_FACT_FIXTURE\"}],\"structured_value\":null}},{\"case\":\"NOT_APPLICABLE_WITH_EVIDENCE\",\"content_sha256\":\"c79e674da0ebefdf0d82d6297befb1054a707042241f7821889d885c84f63050\",\"expected_error\":\"FINDING_BRANCH_CONTRADICTION\",\"kind\":\"DEDUPE\",\"object\":{\"author_classification\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"author_provenance\":null,\"completeness_reason_codes\":[],\"finding_at\":{\"raw_hint\":null,\"reason_code\":null,\"tag\":\"NOT_APPLICABLE\",\"value\":null},\"finding_identity\":null,\"finding_kind\":\"DEDUPE\",\"presence\":\"NOT_APPLICABLE\",\"raw_hint\":null,\"schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"source_refs\":[],\"structured_value\":{\"marker\":\"DEDUPE_FINDING\",\"marker_schema_version\":\"doi-dedupe-configured-marker/r01-v1\"}}}],\"selected_policy\":\"DIRECT_FOUR_MEMBER_V2\",\"status\":\"FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT\"}",
+  "canonical_member_order": [
+    "author_classification",
+    "author_provenance",
+    "completeness_reason_codes",
+    "finding_at",
+    "finding_identity",
+    "finding_kind",
+    "presence",
+    "raw_hint",
+    "schema_version",
+    "source_refs",
+    "structured_value"
+  ],
+  "finding_presence_registry": {
+    "canonical_bytes": "{\"forbidden\":[\"ABSENT\",\"outer ObservedTaggedValue wrapper\",\"dual direct/wrapped representation\",\"aliases\",\"case folding\"],\"ordered_members\":[\"PRESENT\",\"NOT_PRESENT\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"policy_literal\":\"DIRECT_FOUR_MEMBER_V2\",\"registry_schema_version\":\"doi-finding-presence-registry-schema/r01-v2\",\"registry_version\":\"doi-finding-presence/r01-v2\",\"representation\":\"DIRECT_ENUM_ONLY\",\"state_locus_count\":1,\"unknown_reason_routing\":{\"DEDUPE\":\"RC-123 in completeness_reason_codes\",\"WWC\":\"RC-122 in completeness_reason_codes\"}}",
+    "forbidden": [
+      "ABSENT",
+      "outer ObservedTaggedValue wrapper",
+      "dual direct/wrapped representation",
+      "aliases",
+      "case folding"
+    ],
+    "ordered_members": [
+      "PRESENT",
+      "NOT_PRESENT",
+      "UNKNOWN",
+      "NOT_APPLICABLE"
+    ],
+    "policy_literal": "DIRECT_FOUR_MEMBER_V2",
+    "registry_content_sha256": "c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc",
+    "registry_schema_version": "doi-finding-presence-registry-schema/r01-v2",
+    "registry_version": "doi-finding-presence/r01-v2",
+    "representation": "DIRECT_ENUM_ONLY",
+    "state_locus_count": 1,
+    "unknown_reason_routing": {
+      "DEDUPE": "RC-123 in completeness_reason_codes",
+      "WWC": "RC-122 in completeness_reason_codes"
+    }
+  },
+  "raw_finding_text_forbidden": true,
+  "registry_content_sha256": "b3fe7245dc15ca20c0f313a128114b4685d4dbc3b7d987606673337b7e1661a7",
+  "registry_schema_version": "doi-source-finding-schema-registry/r01-v2",
+  "registry_version": "doi-source-finding-schema-registry/r01-v2",
+  "rejected_alternatives_evidence": {
+    "immutable_predecessor_package_id": "doi-authority-remediation-r01-fact-normalization/v1",
+    "predecessor_file": "R01_WWC_DEDUPE_FINDING_SCHEMAS.json",
+    "predecessor_file_sha256": "1022b6150f555d1384e9fe990f1dc4c8794e3495cf646209b36b8624fde9a5fa"
+  },
+  "rejected_predecessor_alternatives": [
+    {
+      "id": "BASELINE_DIRECT_THREE_PLUS_OUTER_NA",
+      "reason": "Rejected by DIRECT_FOUR_MEMBER_V2; ABSENT and a second applicability locus are forbidden."
+    },
+    {
+      "id": "WRAPPER_REDESIGN",
+      "reason": "Rejected by DIRECT_FOUR_MEMBER_V2; an outer observed-value wrapper is forbidden."
+    }
+  ],
+  "runtime_dedupe_separation": "Source-observed DEDUPE finding is not DedupeState, a human DEDUPE decision, or an Synthetic Order Portal note/action.",
+  "schema_descriptors": {
+    "DEDUPE": {
+      "canonical_bytes": "{\"canonical_member_order\":[\"author_classification\",\"author_provenance\",\"completeness_reason_codes\",\"finding_at\",\"finding_identity\",\"finding_kind\",\"presence\",\"raw_hint\",\"schema_version\",\"source_refs\",\"structured_value\"],\"descriptor_version\":\"doi-dedupe-source-finding-schema/r01-v1\",\"exact_members\":[\"schema_version\",\"finding_kind\",\"presence\",\"source_refs\",\"finding_at\",\"author_classification\",\"author_provenance\",\"finding_identity\",\"structured_value\",\"raw_hint\",\"completeness_reason_codes\"],\"finding_kind\":\"DEDUPE\",\"instance_hash\":\"SHA256(UTF8(\\\"doi-dedupe-source-finding/r01-v1\\\") || 0x0A || UTF8(RFC8785(complete object)))\",\"instance_schema_version\":\"doi-dedupe-source-finding/r01-v1\",\"non_present_subfield_guard\":\"finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE\",\"presence_registry_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"presence_registry_version\":\"doi-finding-presence/r01-v2\",\"truth_table\":{\"NOT_APPLICABLE\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"NOT_PRESENT\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"PRESENT\":\"source_refs>=1; finding_at KNOWN; author NOT_APPLICABLE; identity and DEDUPE marker required; reasons=[]; raw_hint=null\",\"UNKNOWN\":\"source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-123]; raw_hint=null\"}}",
+      "canonical_member_order": [
+        "author_classification",
+        "author_provenance",
+        "completeness_reason_codes",
+        "finding_at",
+        "finding_identity",
+        "finding_kind",
+        "presence",
+        "raw_hint",
+        "schema_version",
+        "source_refs",
+        "structured_value"
+      ],
+      "descriptor_content_sha256": "c7d9b52a5f1caf7d610ff245211a9ac3012b647e279823e7356f3717cb7f6801",
+      "descriptor_version": "doi-dedupe-source-finding-schema/r01-v1",
+      "exact_members": [
+        "schema_version",
+        "finding_kind",
+        "presence",
+        "source_refs",
+        "finding_at",
+        "author_classification",
+        "author_provenance",
+        "finding_identity",
+        "structured_value",
+        "raw_hint",
+        "completeness_reason_codes"
+      ],
+      "finding_kind": "DEDUPE",
+      "instance_hash": "SHA256(UTF8(\"doi-dedupe-source-finding/r01-v1\") || 0x0A || UTF8(RFC8785(complete object)))",
+      "instance_schema_version": "doi-dedupe-source-finding/r01-v1",
+      "non_present_subfield_guard": "finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE",
+      "presence_registry_content_sha256": "c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc",
+      "presence_registry_version": "doi-finding-presence/r01-v2",
+      "truth_table": {
+        "NOT_APPLICABLE": "source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null",
+        "NOT_PRESENT": "source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null",
+        "PRESENT": "source_refs>=1; finding_at KNOWN; author NOT_APPLICABLE; identity and DEDUPE marker required; reasons=[]; raw_hint=null",
+        "UNKNOWN": "source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-123]; raw_hint=null"
+      }
+    },
+    "WWC": {
+      "canonical_bytes": "{\"canonical_member_order\":[\"author_classification\",\"author_provenance\",\"completeness_reason_codes\",\"finding_at\",\"finding_identity\",\"finding_kind\",\"presence\",\"raw_hint\",\"schema_version\",\"source_refs\",\"structured_value\"],\"descriptor_version\":\"doi-wwc-source-finding-schema/r01-v1\",\"exact_members\":[\"schema_version\",\"finding_kind\",\"presence\",\"source_refs\",\"finding_at\",\"author_classification\",\"author_provenance\",\"finding_identity\",\"structured_value\",\"raw_hint\",\"completeness_reason_codes\"],\"finding_kind\":\"WWC\",\"instance_hash\":\"SHA256(UTF8(\\\"doi-wwc-source-finding/r01-v1\\\") || 0x0A || UTF8(RFC8785(complete object)))\",\"instance_schema_version\":\"doi-wwc-source-finding/r01-v1\",\"non_present_subfield_guard\":\"finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE\",\"presence_registry_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"presence_registry_version\":\"doi-finding-presence/r01-v2\",\"truth_table\":{\"NOT_APPLICABLE\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"NOT_PRESENT\":\"source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null\",\"PRESENT\":\"source_refs>=1; identity and WWC marker required; finding_at and author_classification each KNOWN or UNKNOWN(RC-056/RC-055); author_provenance required iff author is KNOWN; completeness reasons are the exact union\",\"UNKNOWN\":\"source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-122]; raw_hint=null\"}}",
+      "canonical_member_order": [
+        "author_classification",
+        "author_provenance",
+        "completeness_reason_codes",
+        "finding_at",
+        "finding_identity",
+        "finding_kind",
+        "presence",
+        "raw_hint",
+        "schema_version",
+        "source_refs",
+        "structured_value"
+      ],
+      "descriptor_content_sha256": "6c0c7ebbbb02699214806b12eba86a40ade8ae3873e6a3f976a6a4799f1e4255",
+      "descriptor_version": "doi-wwc-source-finding-schema/r01-v1",
+      "exact_members": [
+        "schema_version",
+        "finding_kind",
+        "presence",
+        "source_refs",
+        "finding_at",
+        "author_classification",
+        "author_provenance",
+        "finding_identity",
+        "structured_value",
+        "raw_hint",
+        "completeness_reason_codes"
+      ],
+      "finding_kind": "WWC",
+      "instance_hash": "SHA256(UTF8(\"doi-wwc-source-finding/r01-v1\") || 0x0A || UTF8(RFC8785(complete object)))",
+      "instance_schema_version": "doi-wwc-source-finding/r01-v1",
+      "non_present_subfield_guard": "finding_at and author_classification are NOT_APPLICABLE whenever presence is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE",
+      "presence_registry_content_sha256": "c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc",
+      "presence_registry_version": "doi-finding-presence/r01-v2",
+      "truth_table": {
+        "NOT_APPLICABLE": "source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null",
+        "NOT_PRESENT": "source_refs=[]; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons=[]; raw_hint=null",
+        "PRESENT": "source_refs>=1; identity and WWC marker required; finding_at and author_classification each KNOWN or UNKNOWN(RC-056/RC-055); author_provenance required iff author is KNOWN; completeness reasons are the exact union",
+        "UNKNOWN": "source_refs>=1; finding_at/author NOT_APPLICABLE; provenance/identity/value null; reasons exactly [RC-122]; raw_hint=null"
+      }
+    }
+  },
+  "selected_branch_objects": [
+    {
+      "content_sha256": "55fffdd9abde7439cb2bcdf1415fdffb8e4442dd9a55e2e263e77ee2c64fe795",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "SELF"
+        },
+        "author_provenance": {
+          "asserted_relation": "SELF",
+          "author_provenance_schema_version": "doi-wwc-author-provenance/r01-v1",
+          "classification_method": "SOURCE_EXPLICIT",
+          "source_ref_fingerprint": "ecf7687d91513a05912bab2d59533da96ae23b60d214a5e24d3a7820f095b3fa"
+        },
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "2026-08-10T12:00:00Z"
+        },
+        "finding_identity": "1cff359fc06c9d22650b2c55d691bfa823a58d82d3feb6307f30d05e5bb6e993",
+        "finding_kind": "WWC",
+        "presence": "PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-WWC-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "WWC_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": {
+          "marker": "CONTACT_FINDING",
+          "marker_schema_version": "doi-wwc-configured-marker/r01-v1"
+        }
+      },
+      "semantic_branch": "PRESENT"
+    },
+    {
+      "content_sha256": "96807da9a623d2eebd9d54de201dc546c2094f7d13a23bc38dbdb1327e33e288",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "WWC",
+        "presence": "NOT_PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": null
+      },
+      "semantic_branch": "NOT_PRESENT"
+    },
+    {
+      "content_sha256": "249a0bdae5d19eccfe0feab96957a61bfedd43415930a60a30c632201bf18cf3",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [
+          "RC-122"
+        ],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "WWC",
+        "presence": "UNKNOWN",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-WWC-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "WWC_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": null
+      },
+      "semantic_branch": "UNKNOWN"
+    },
+    {
+      "content_sha256": "ffd91082963737e7ae2049921c039860058974c876217fa7c838000fac4afc9a",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "WWC",
+        "presence": "NOT_APPLICABLE",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": null
+      },
+      "semantic_branch": "NOT_APPLICABLE"
+    },
+    {
+      "content_sha256": "4137176d00c44b91271f928e864a7e3ab0d239fb419b352bddbaeed32aec7143",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "2026-08-10T12:00:00Z"
+        },
+        "finding_identity": "0e03e8fe3c1446d4a5847b63bafbbc1ea0a36c64ff1d008d8b73eb8ad7c6496f",
+        "finding_kind": "DEDUPE",
+        "presence": "PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-DEDUPE-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "DEDUPE_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": {
+          "marker": "DEDUPE_FINDING",
+          "marker_schema_version": "doi-dedupe-configured-marker/r01-v1"
+        }
+      },
+      "semantic_branch": "PRESENT"
+    },
+    {
+      "content_sha256": "4c7a023ed411f31a5349a2f298ffcb19cf0aa5723752555103201e348b88e94a",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "DEDUPE",
+        "presence": "NOT_PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": null
+      },
+      "semantic_branch": "NOT_PRESENT"
+    },
+    {
+      "content_sha256": "4ff3b909c31963e36c606e1a24e6e530d37f85e1a4f2ff040528d6291c2149b2",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [
+          "RC-123"
+        ],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "DEDUPE",
+        "presence": "UNKNOWN",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-DEDUPE-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "DEDUPE_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": null
+      },
+      "semantic_branch": "UNKNOWN"
+    },
+    {
+      "content_sha256": "07f292f917d0ceb3ee73b1b1a164eb5d7c8aff7b2c30761ed4b2cf2e005f2069",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "DEDUPE",
+        "presence": "NOT_APPLICABLE",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": null
+      },
+      "semantic_branch": "NOT_APPLICABLE"
+    }
+  ],
+  "selected_contradiction_objects": [
+    {
+      "case": "NOT_PRESENT_WITH_SOURCE",
+      "content_sha256": "3ac60272c28aaf86ff0316ea4993ba25a110497eee80459ee3194bbe4c01264b",
+      "expected_error": "FINDING_BRANCH_CONTRADICTION",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "WWC",
+        "presence": "NOT_PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-WWC-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "WWC_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": null
+      }
+    },
+    {
+      "case": "PRESENT_WITHOUT_SOURCE",
+      "content_sha256": "f5a32dde4535a2d94888d0513530abb969d46395bcaeeb5fc37c2826258d140d",
+      "expected_error": "FINDING_SOURCE_REQUIRED",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "SELF"
+        },
+        "author_provenance": {
+          "asserted_relation": "SELF",
+          "author_provenance_schema_version": "doi-wwc-author-provenance/r01-v1",
+          "classification_method": "SOURCE_EXPLICIT",
+          "source_ref_fingerprint": "ecf7687d91513a05912bab2d59533da96ae23b60d214a5e24d3a7820f095b3fa"
+        },
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "2026-08-10T12:00:00Z"
+        },
+        "finding_identity": "1cff359fc06c9d22650b2c55d691bfa823a58d82d3feb6307f30d05e5bb6e993",
+        "finding_kind": "WWC",
+        "presence": "PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": {
+          "marker": "CONTACT_FINDING",
+          "marker_schema_version": "doi-wwc-configured-marker/r01-v1"
+        }
+      }
+    },
+    {
+      "case": "UNKNOWN_WITH_KNOWN_TIME",
+      "content_sha256": "a8b0a80e1d73fce1824517ff73e90a32efaf7272a390d6be06a286fe52ace8b7",
+      "expected_error": "FINDING_BRANCH_CONTRADICTION",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [
+          "RC-122"
+        ],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "2026-08-10T12:00:00Z"
+        },
+        "finding_identity": null,
+        "finding_kind": "WWC",
+        "presence": "UNKNOWN",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-WWC-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "WWC_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": null
+      }
+    },
+    {
+      "case": "NOT_APPLICABLE_WITH_EVIDENCE",
+      "content_sha256": "0259c8654de4bdcc85919048480ad0870cf9a1cccb1a8efbe61ea7715120cae0",
+      "expected_error": "FINDING_BRANCH_CONTRADICTION",
+      "kind": "WWC",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "WWC",
+        "presence": "NOT_APPLICABLE",
+        "raw_hint": null,
+        "schema_version": "doi-wwc-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": {
+          "marker": "CONTACT_FINDING",
+          "marker_schema_version": "doi-wwc-configured-marker/r01-v1"
+        }
+      }
+    },
+    {
+      "case": "NOT_PRESENT_WITH_SOURCE",
+      "content_sha256": "78ad39b93d3436862baefa17273e5aeff55b2d5d3a10b3495b88c5b14651e6e0",
+      "expected_error": "FINDING_BRANCH_CONTRADICTION",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "DEDUPE",
+        "presence": "NOT_PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-DEDUPE-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "DEDUPE_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": null
+      }
+    },
+    {
+      "case": "PRESENT_WITHOUT_SOURCE",
+      "content_sha256": "6248355d244780499962c4f765eb4be474a7cd668e014ab0a31071734ea80e75",
+      "expected_error": "FINDING_SOURCE_REQUIRED",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "2026-08-10T12:00:00Z"
+        },
+        "finding_identity": "0e03e8fe3c1446d4a5847b63bafbbc1ea0a36c64ff1d008d8b73eb8ad7c6496f",
+        "finding_kind": "DEDUPE",
+        "presence": "PRESENT",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": {
+          "marker": "DEDUPE_FINDING",
+          "marker_schema_version": "doi-dedupe-configured-marker/r01-v1"
+        }
+      }
+    },
+    {
+      "case": "UNKNOWN_WITH_KNOWN_TIME",
+      "content_sha256": "3c14c5cd9ece2704f279b801a9019137e677c6fb6a06e808ce100196b4e60e70",
+      "expected_error": "FINDING_BRANCH_CONTRADICTION",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [
+          "RC-123"
+        ],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "KNOWN",
+          "value": "2026-08-10T12:00:00Z"
+        },
+        "finding_identity": null,
+        "finding_kind": "DEDUPE",
+        "presence": "UNKNOWN",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [
+          {
+            "content_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "fixture_content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "fixture_id": "SYN-DOI-FIXTURE-FINDING-CANDIDATE",
+            "fixture_set_id": "SYN-DOI-FIXTURE-SET-FINDING-CANDIDATE",
+            "line_key": null,
+            "object_id": "SYN-DOI-FACT-DEDUPE-CANDIDATE-0001",
+            "provider": "OFFLINE_FIXTURE",
+            "schema_version": "doi-source-ref/offline-fake-oa/r01-v1",
+            "section": "DEDUPE_FINDING",
+            "source_ref_type": "OFFLINE_FAKE_OA",
+            "source_revision_token": "SYN-DOI-REVISION-CANDIDATE",
+            "surface": "ORDER_FACT_FIXTURE"
+          }
+        ],
+        "structured_value": null
+      }
+    },
+    {
+      "case": "NOT_APPLICABLE_WITH_EVIDENCE",
+      "content_sha256": "c79e674da0ebefdf0d82d6297befb1054a707042241f7821889d885c84f63050",
+      "expected_error": "FINDING_BRANCH_CONTRADICTION",
+      "kind": "DEDUPE",
+      "object": {
+        "author_classification": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "author_provenance": null,
+        "completeness_reason_codes": [],
+        "finding_at": {
+          "raw_hint": null,
+          "reason_code": null,
+          "tag": "NOT_APPLICABLE",
+          "value": null
+        },
+        "finding_identity": null,
+        "finding_kind": "DEDUPE",
+        "presence": "NOT_APPLICABLE",
+        "raw_hint": null,
+        "schema_version": "doi-dedupe-source-finding/r01-v1",
+        "source_refs": [],
+        "structured_value": {
+          "marker": "DEDUPE_FINDING",
+          "marker_schema_version": "doi-dedupe-configured-marker/r01-v1"
+        }
+      }
+    }
+  ],
+  "selected_policy": "DIRECT_FOUR_MEMBER_V2",
+  "status": "FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT"
+}

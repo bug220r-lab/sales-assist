@@ -1,0 +1,175 @@
+{
+  "schema_version": "synthetic-spec-source-provenance/v1.0.1",
+  "generated_at_utc": "2026-08-18T00:42:49.858280+00:00",
+  "sources": [
+    {
+      "source_label": "sales_credit_technical_spec",
+      "source_sha256": "163846c539c72669ea8e4a71c88e23a0519cbd6bf7d85956de8abdb8de416ce5",
+      "sanitized_reference_path": "reference/sales_credit/technical_specification.md",
+      "sanitized_sha256": "7ebbe661a30830b6abcd8377ff107bb52c97fdc4d724552fdfd48ba80934f408"
+    },
+    {
+      "source_label": "sales_credit_milestone_a",
+      "source_sha256": "8f608c13f3e73bf6392539ae834235a0fa2e56ad5edd43c767d655b2cc29c21d",
+      "sanitized_reference_path": "reference/sales_credit/milestone_a_specification.md",
+      "sanitized_sha256": "f38fdf9ea1269d82f19ee44bd08193c2ff8d04d894a30837b24b60e511095628"
+    },
+    {
+      "source_label": "doi_technical_spec",
+      "source_sha256": "176f7ed5f67b391adfaaa5c4a83220adc3e0ce7de749f79142ae034b38d20c2f",
+      "sanitized_reference_path": "reference/doi/technical_specification.md",
+      "sanitized_sha256": "b7aa7739b430f0bd41b6e8a83debda2935fa26b30b1784d7362e27bfc474cd6e"
+    },
+    {
+      "source_label": "doi_machine_contract",
+      "source_sha256": "cc346ba8025d9e6e2718cd6e6e56104e731cc36b2e420b210271c30ba0f9fcca",
+      "sanitized_reference_path": "reference/doi/machine_contract.md",
+      "sanitized_sha256": "91e82929268b5ab5740ff380d78376c6ea210d7683380571ed9fd4db97a98240"
+    },
+    {
+      "source_label": "doi_reason_registry",
+      "source_sha256": "38eba58f78950c320b9b4e3ece167cc050cae6c11ee0978b98749f3247c2ec86",
+      "sanitized_reference_path": "reference/doi/reason_registry_source.md",
+      "sanitized_sha256": "2cb71b926ff7e3822da4f3eb7779978a9f20c1af15f3b23e71228783649c7107"
+    },
+    {
+      "source_label": "doi_reason_ownership",
+      "source_sha256": "c2f0e0a365aed6c594d5f4f5ad19efdac4ee9a1488f525a63f898a26bb571a45",
+      "sanitized_reference_path": "reference/doi/reason_ownership_source.md",
+      "sanitized_sha256": "a53f6e870b749b4e5a3f52e92e0056fee8de67bfe4f0d99107893a7502a8d362"
+    },
+    {
+      "source_label": "doi_transitions",
+      "source_sha256": "b3bcfaaf735df27018a7ff95020068f7cd516ac53f0a5b6da5587ca52df991bd",
+      "sanitized_reference_path": "reference/doi/state_transition_matrix.md",
+      "sanitized_sha256": "3a0b079b3723e0f109b09bb2233b098dda1a870daa7a67af69f537b9bc663140"
+    },
+    {
+      "source_label": "doi_lifecycle_registry",
+      "source_sha256": "0ee2c0f7b2d4c9947660f2578ce466e5015362b08736ab52caa1ec3295b0bd3b",
+      "sanitized_reference_path": "reference/doi/lifecycle_payload_registry.md",
+      "sanitized_sha256": "31bd2da956b9a2eb8b0190a30ddc433c9fc74f1fc79ed94f986426c663214806"
+    },
+    {
+      "source_label": "doi_acceptance_matrix",
+      "source_sha256": "0efbf49f9f085b157bd11ce729bfaf4725616148a70abf4fc152c9a5936c9216",
+      "sanitized_reference_path": "reference/doi/acceptance_test_matrix.md",
+      "sanitized_sha256": "6c2e77e4fd9e1b6a12868bc3eb1bd1e712addbeb86079873a69c125f9f69691c"
+    },
+    {
+      "source_label": "doi_synthetic_requirements",
+      "source_sha256": "e2a6b83d3a0bf1c726b3165cc77417f03bb133cf93db5e6690bc13d3673d1f30",
+      "sanitized_reference_path": "reference/doi/synthetic_test_requirements.md",
+      "sanitized_sha256": "67115dea59352d206317cad14375ba3473883e9e7779d6cce04b1d98ced59888"
+    },
+    {
+      "source_label": "doi_provenance",
+      "source_sha256": "d7af1bf413afaf82976410caa99743565ecdeb92c2235c5608ca55d8a606beec",
+      "sanitized_reference_path": "reference/doi/provenance_state_contract.md",
+      "sanitized_sha256": "0b64a3212247ac9438fa938bffe5e58e9429ddbe7d531eda2bdbb041f2825515"
+    },
+    {
+      "source_label": "doi_retention",
+      "source_sha256": "4ea0565cb5a17dfc150bc0acab68e85ffabcd664acb3baa813b8d7075fb45f69",
+      "sanitized_reference_path": "reference/doi/source_retention_contract.md",
+      "sanitized_sha256": "b3d25ecb55c9dbd5b2965d5932f5e84b680e6b3b0b1d055560cdab27be1e19ec"
+    },
+    {
+      "source_label": "doi_kpi",
+      "source_sha256": "a4687afd52820c5e3426816ce1dfaec6b7e662b78175bfb33c86fd538e58447a",
+      "sanitized_reference_path": "reference/doi/opportunity_kpi_contract.md",
+      "sanitized_sha256": "863c49e3595cc1f22c678538ab313317e8aa2407b222499d98d0654c29d825aa"
+    },
+    {
+      "source_label": "doi_persistence",
+      "source_sha256": "71db6fc3d220a7dd8a0dcfbd7155127b5ebdbf716d85ad12d858221483db6745",
+      "sanitized_reference_path": "reference/doi/persistence_model.md",
+      "sanitized_sha256": "845cbd4db8b1d7f16b6ffc1efbc4e893a2d8357b899d9c015fd312a17baf686d"
+    },
+    {
+      "source_label": "doi_capability",
+      "source_sha256": "1d0523284a9485a72603f6fd4221f4a2935733c86c432e4f584c40bd3bfefdd3",
+      "sanitized_reference_path": "reference/doi/capability_policy.md",
+      "sanitized_sha256": "28800bd9b6a5255df9696f2817a33bced2563e46dd7e54b94a8efa3af9164ba1"
+    },
+    {
+      "source_label": "doi_handoff",
+      "source_sha256": "88dd75762390379a71dc99d57dce213683e077a77c9d0fc6780563b9597c014f",
+      "sanitized_reference_path": "reference/doi/implementation_handoff.md",
+      "sanitized_sha256": "08c1ff95430fad8f806c3ef45a9ce14079c092ed7f27572831d69944589da517"
+    },
+    {
+      "source_label": "r01_product_decisions",
+      "source_sha256": "967c6e46ebe4f17ff3517566f6b440f221735d136286ed1ea253a6805d817e5c",
+      "sanitized_reference_path": "reference/r01/product_decision_binding.json",
+      "sanitized_sha256": "967c6e46ebe4f17ff3517566f6b440f221735d136286ed1ea253a6805d817e5c"
+    },
+    {
+      "source_label": "r01_normalization",
+      "source_sha256": "9d6f62d7930cc1c7c7a66ce3f521f2a57b8fb5272710577226849e930ae4c1ef",
+      "sanitized_reference_path": "reference/r01/normalization_contract.json",
+      "sanitized_sha256": "ec7d6e0e9b8a35d9df5cfeeea2b21431f30ec62640c22b2567c1d87c6178d4ed"
+    },
+    {
+      "source_label": "r01_timestamp_quantity",
+      "source_sha256": "d2306df3c3adb6c91c6c0b58f985cd907e6d05a59fafd7fa2f0781ef5a558734",
+      "sanitized_reference_path": "reference/r01/timestamp_quantity_contract.md",
+      "sanitized_sha256": "885b708b9e3f817815ca2eb0687635608b1e6ad086f9f3ec9a949976b3136f89"
+    },
+    {
+      "source_label": "r01_completeness",
+      "source_sha256": "9aee5f7e7bf570a8d157156881e14795a3133b6090c2c94c92f30eeb9c414ab5",
+      "sanitized_reference_path": "reference/r01/whole_order_completeness_contract.md",
+      "sanitized_sha256": "c55d14e5abbb918cd16be7af4a1e4d44c648847fe772a4730c954c6da7fa1825"
+    },
+    {
+      "source_label": "r01_observed_values",
+      "source_sha256": "9738faf9a86c94a70d89ead273864c5d99b4758506f6bb0106c6468cf2914760",
+      "sanitized_reference_path": "reference/r01/observed_tagged_value_schemas.json",
+      "sanitized_sha256": "9738faf9a86c94a70d89ead273864c5d99b4758506f6bb0106c6468cf2914760"
+    },
+    {
+      "source_label": "r01_findings",
+      "source_sha256": "44bd619534b2bddce90aacc592b513bf878773ec10e86b3606fe9c224e6b795f",
+      "sanitized_reference_path": "reference/r01/wwc_dedupe_finding_schemas.json",
+      "sanitized_sha256": "9d6c7b70772fcd9581329e33a7be5affaacab03ebdf2545da2f297d39ba32b8e"
+    },
+    {
+      "source_label": "r01_unknown_reasons",
+      "source_sha256": "4320cc7713a74575e1bc302d64fdadb34555a3b4fcb341a22841dd2a31e6d59f",
+      "sanitized_reference_path": "reference/r01/unknown_reason_matrix.json",
+      "sanitized_sha256": "28ca774870a458083a03a61f57668bc0e868d82a322f9fc541dce4057c3b30e1"
+    },
+    {
+      "source_label": "r01_audit",
+      "source_sha256": "71d6ee311ef7dd0b1723f26ff2f91a5beff6dcf3abc62c9604ef45b0c4c5a353",
+      "sanitized_reference_path": "reference/r01/independent_audit_report.md",
+      "sanitized_sha256": "d3431ebbb87c53408adbe57665489d41db0445f701320708c13d980690b4e165"
+    },
+    {
+      "source_label": "r02_run_machines",
+      "source_sha256": "08f13cb7b733429a9dcc7f4fc00ec28b366fce4d6ee8192f54e38a356561b5ac",
+      "sanitized_reference_path": "reference/r02/run_type_state_machines.md",
+      "sanitized_sha256": "4b5e196d74fd7fd011a5b8ed0d1f71cb5abac860a44053faf26d923790f8c32e"
+    },
+    {
+      "source_label": "r02_count_equations",
+      "source_sha256": "77ff30bd6fcf421e070089b72fbf61d9e2965ef8164beefcc3307598b9f85860",
+      "sanitized_reference_path": "reference/r02/source_count_equations.md",
+      "sanitized_sha256": "3baf9ec62592d47b4dc95ef937b6f785a5bb42d1329b126049c7a11941107eea"
+    },
+    {
+      "source_label": "r02_finalization",
+      "source_sha256": "deef0436ae0ceacaed641e17e65e6b1fd012968c129f936fc0b52d59649bffb3",
+      "sanitized_reference_path": "reference/r02/failed_source_attempt_finalization.md",
+      "sanitized_sha256": "ee8c8dbc6ace53b3e3ea8b3b43d4a31dfdd67088c8703be70c0cebedd4fe0ed0"
+    },
+    {
+      "source_label": "r02_audit",
+      "source_sha256": "a45c045c56fe15ff85b43e7c5d4a5ba8c319d9b0c0abe6248f8f8d9b819bdb45",
+      "sanitized_reference_path": "reference/r02/independent_audit_report.md",
+      "sanitized_sha256": "7e3633947d8a22520c1e6636cd5529fc37cdcf88870c7def605ffcfa012b3f81"
+    }
+  ],
+  "note": "Source labels and original source hashes are retained for lineage. Every sanitized_reference_sha256 was recomputed from the exact v1.0.1 bundle bytes. Curated files under specs/ govern."
+}

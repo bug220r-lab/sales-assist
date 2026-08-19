@@ -1,0 +1,574 @@
+{
+  "canonical_bytes": "{\"canonical_member_order\":[\"raw_hint\",\"reason_code\",\"tag\",\"value\"],\"closed_supporting_domains\":{\"SalesRepToken\":{\"compatibility\":\"does not require uppercase conversion or case folding; exact bytes remain material\",\"grammar\":\"^[A-Za-z0-9][A-Za-z0-9 ._:/\\\\'-]{0,127}$\",\"privacy\":\"non-customer employee/synthetic rep display token already authorized by the owning source field; @, controls, line breaks, email, phone and customer-derived content forbidden\"},\"StableSourceLineId\":{\"grammar\":\"^[A-Za-z0-9._:-]{1,128}$\",\"privacy\":\"order-local operational identifier; no customer-derived content\"},\"TimestampOrDate\":{\"date_branch\":\"exact Gregorian YYYY-MM-DD with no T/offset\",\"disjointness\":\"a lexeme matches exactly one branch or rejects\",\"timestamp_branch\":\"contains literal T and required Z/offset under doi-timestamp/r01-v1\"}},\"dependent_artifacts\":[\"order/line snapshot schemas\",\"alternate observation schema\",\"WWC/DEDUPE finding schemas\",\"evaluation reason generation\",\"R07 known-answer vectors\"],\"direct_value_bindings\":[{\"absent_alias_forbidden\":true,\"field\":\"DOIOrderSnapshot.wwc_finding.presence\",\"ordered_members\":[\"PRESENT\",\"NOT_PRESENT\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"outer_wrapper_forbidden\":true,\"representation\":\"DIRECT_FINDING_PRESENCE_V2\",\"unknown_reason_route\":\"RC-122 in owning finding completeness_reason_codes\",\"value_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"value_version\":\"doi-finding-presence/r01-v2\"},{\"absent_alias_forbidden\":true,\"field\":\"DOIOrderSnapshot.dedupe_finding.presence\",\"ordered_members\":[\"PRESENT\",\"NOT_PRESENT\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"outer_wrapper_forbidden\":true,\"representation\":\"DIRECT_FINDING_PRESENCE_V2\",\"unknown_reason_route\":\"RC-123 in owning finding completeness_reason_codes\",\"value_content_sha256\":\"c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc\",\"value_version\":\"doi-finding-presence/r01-v2\"}],\"equality\":\"same specialization plus byte-identical RFC8785 wrapper\",\"explicit_null_rule\":\"All four members are always serialized; omission is invalid.\",\"hash\":\"For each wrapper row, SHA256(UTF8(\\\"doi-observed-value/r01-v2/\\\" + exact canonical field path + \\\"\\\\n\\\") || UTF8(RFC8785(wrapper))).\",\"invalid_cross_partitions\":[\"KNOWN with reason/raw_hint\",\"UNKNOWN with non-null value or missing/wrong reason\",\"NOT_APPLICABLE with value/reason/raw_hint\",\"bare null\",\"extra/unknown member/tag\"],\"legacy_line_hint_map\":\"The independent v1 privacy_safe_raw_hints map is not writable in the replacement line schema. The integrated doi-line-item-snapshot/v2 removes it; a compatibility view may derive the same field→symbolic-code projection from wrappers but never hashes or persists a second copy.\",\"partitions\":{\"KNOWN\":{\"raw_hint\":null,\"reason_code\":null,\"value\":\"required and non-null, exact field specialization\"},\"NOT_APPLICABLE\":{\"raw_hint\":null,\"reason_code\":null,\"value\":null},\"UNKNOWN\":{\"raw_hint\":\"null or field-allowlisted RawHint\",\"reason_code\":\"required exact field row from R01_UNKNOWN_REASON_MATRIX.json\",\"value\":null}},\"quantity_failure_precedence\":\"A parsed numeric outside the final Quantity domain fails construction and is never represented by RC-128..RC-131. Those reasons remain for readable opaque/uninterpretable source facts only.\",\"raw_hint_rules\":{\"all_other_fields\":\"raw_hint must be null, including every rep/geography/payment/quantity/money/product/finding and alternate-observation field\",\"field_allowlist\":{\"DOILineItemSnapshot.availability\":[\"UNRECOGNIZED_AVAILABILITY_TOKEN\",\"CONTRADICTORY_AVAILABILITY_TOKENS\"],\"DOILineItemSnapshot.drop_ship_state\":[\"UNRECOGNIZED_DS_TOKEN\",\"CONTRADICTORY_DS_TOKENS\"],\"DOILineItemSnapshot.eta\":[\"UNRECOGNIZED_ETA_TOKEN\",\"CONTRADICTORY_ETA_TOKENS\",\"UNSUPPORTED_ETA_FORMAT\",\"ETA_OUT_OF_RANGE\"]},\"global_max_utf8_bytes\":48,\"global_reject\":[\"any unregistered code\",\"any source text\",\"name\",\"email\",\"phone\",\"VIN\",\"address\",\"note/message body\",\"HTML/DOM/screenshot\",\"session/cookie/credential\",\"customer or order hash\"],\"grammar\":\"^[A-Z][A-Z0-9_]{0,47}$\",\"invalid_behavior\":\"Reject the hint before persistence; retain no rejected bytes and return only the field normalization reason.\",\"privacy_class\":\"PRIVACY_SAFE_NONIDENTIFYING_SYMBOLIC_ENUM\",\"representation\":\"null or one exact RawHintCode JSON string; copied source text and extension objects are forbidden\",\"source_locus_gate\":\"A code may be selected only from the matching field allowlist after a source-locus privacy gate. The source lexeme is never copied.\"},\"reason_matrix_path_mapping\":{\"DOIOrderSnapshot.dedupe_finding.presence\":\"direct completeness reason route RC-123; no wrapper\",\"DOIOrderSnapshot.wwc_finding.author_relation\":\"DOIOrderSnapshot.wwc_finding.author_classification\",\"DOIOrderSnapshot.wwc_finding.contact_at\":\"DOIOrderSnapshot.wwc_finding.finding_at\",\"DOIOrderSnapshot.wwc_finding.presence\":\"direct completeness reason route RC-122; no wrapper\"},\"registry_hash_domain_prefix\":\"doi-observed-tagged-value-registry/r01-v2\",\"registry_hash_preimage\":\"RFC8785(complete registry object excluding canonical_bytes and registry_content_sha256)\",\"registry_hash_separator_hex\":\"0a\",\"registry_schema_version\":\"doi-observed-tagged-value-registry-schema/r01-v2\",\"registry_version\":\"doi-observed-tagged-value-registry/r01-v2\",\"single_unknown_encoding\":\"For ObservedTaggedValue payload domains, an underlying UNKNOWN literal is forbidden inside KNOWN; the outer tag is the sole wrapper UNKNOWN. Direct FindingPresenceV2.UNKNOWN is explicitly outside this wrapper rule.\",\"specializations\":[{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIAlternateObservation.observed_availability\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIAlternateObservation.observed_availability\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"AlternateAvailability excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-137\",\"value_domain\":\"AlternateAvailability\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIAlternateObservation.observed_eta\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIAlternateObservation.observed_eta\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Timestamp|Date excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-138\",\"value_domain\":\"Timestamp|Date\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIAlternateObservation.observed_price\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIAlternateObservation.observed_price\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Money excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-136\",\"value_domain\":\"Money\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.active_line_value\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.active_line_value\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Money excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-134\",\"value_domain\":\"Money\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.active_quantity\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.active_quantity\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1\",\"not_applicable_guard\":\"FORBIDDEN\",\"parsed_out_of_domain_numeric_behavior\":\"FAIL_CLOSED_NO_UNKNOWN_WRAPPER\",\"unknown_reason\":\"RC-129\",\"value_domain\":\"Quantity\",\"value_specialization_content_sha256\":\"8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca\",\"value_specialization_version\":\"doi-quantity/nonnegative-integer-max-9-digits/r01-v1\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.activity\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.activity\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"LineActivity excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-125\",\"value_domain\":\"LineActivity\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.availability\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.availability\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"LineAvailability excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-016\",\"value_domain\":\"LineAvailability\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.canceled_quantity\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.canceled_quantity\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1\",\"not_applicable_guard\":\"FORBIDDEN\",\"parsed_out_of_domain_numeric_behavior\":\"FAIL_CLOSED_NO_UNKNOWN_WRAPPER\",\"unknown_reason\":\"RC-130\",\"value_domain\":\"Quantity\",\"value_specialization_content_sha256\":\"8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca\",\"value_specialization_version\":\"doi-quantity/nonnegative-integer-max-9-digits/r01-v1\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.drop_ship_state\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.drop_ship_state\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"DropShipState excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-017\",\"value_domain\":\"DropShipState\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.es_number\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.es_number\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"canonical ES numeric core under doi-es-number-normalization/r01-v1\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-126\",\"value_domain\":\"ESNumber\",\"value_specialization_content_sha256\":\"794961d7287e97547882d8b89d5578a28b72b360ca2b164b02e00fcda2b32cc1\",\"value_specialization_version\":\"doi-es-number-normalization/r01-v1\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.eta\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.eta\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Timestamp|Date excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-115\",\"value_domain\":\"Timestamp|Date\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.explicitly_available_quantity\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.explicitly_available_quantity\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1\",\"not_applicable_guard\":\"FORBIDDEN\",\"parsed_out_of_domain_numeric_behavior\":\"FAIL_CLOSED_NO_UNKNOWN_WRAPPER\",\"unknown_reason\":\"RC-131\",\"value_domain\":\"Quantity\",\"value_specialization_content_sha256\":\"8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca\",\"value_specialization_version\":\"doi-quantity/nonnegative-integer-max-9-digits/r01-v1\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.line_sales_rep\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.line_sales_rep\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"SalesRepToken excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-135\",\"value_domain\":\"SalesRepToken\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.mfg_number\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.mfg_number\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"canonical MFGNumber under doi-mfg-oe-number-normalization/r01-v1\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-127\",\"value_domain\":\"MFGNumber\",\"value_specialization_content_sha256\":\"ce3bfb100ab3b94d0a28e6679bdfe9af52d7db0171f0aeaa1e78a625d301309b\",\"value_specialization_version\":\"doi-mfg-oe-number-normalization/r01-v1\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.ordered_quantity\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.ordered_quantity\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1\",\"not_applicable_guard\":\"FORBIDDEN\",\"parsed_out_of_domain_numeric_behavior\":\"FAIL_CLOSED_NO_UNKNOWN_WRAPPER\",\"unknown_reason\":\"RC-128\",\"value_domain\":\"Quantity\",\"value_specialization_content_sha256\":\"8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca\",\"value_specialization_version\":\"doi-quantity/nonnegative-integer-max-9-digits/r01-v1\"},{\"allowed_known_values\":[\"FULL\",\"PARTIAL\",\"NONE\"],\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.quantity_availability\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.quantity_availability\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"FULL|PARTIAL|NONE\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-132\",\"value_domain\":\"QuantityAvailability\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.stable_source_line_id\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.stable_source_line_id\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"StableSourceLineId excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-124\",\"value_domain\":\"StableSourceLineId\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOILineItemSnapshot.unit_value\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOILineItemSnapshot.unit_value\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Money excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-133\",\"value_domain\":\"Money\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.current_rep_relation\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.current_rep_relation\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"RepRelation excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-118\",\"value_domain\":\"RepRelation\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.current_rep_value\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.current_rep_value\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"SalesRepToken excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-117\",\"value_domain\":\"SalesRepToken\"},{\"allowed_tags\":[\"NOT_APPLICABLE\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.dedupe_finding.author_classification\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.dedupe_finding.author_classification\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"EMPTY\",\"not_applicable_guard\":\"required for every direct FindingPresenceV2 branch\",\"source_field\":null,\"unknown_reason\":null,\"value_domain\":\"NEVER_APPLICABLE_FOR_DEDUPE\"},{\"allowed_tags\":[\"KNOWN\",\"NOT_APPLICABLE\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.dedupe_finding.finding_at\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.dedupe_finding.finding_at\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Timestamp under doi-timestamp/r01-v1\",\"not_applicable_guard\":\"required when direct FindingPresenceV2 is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE; forbidden when PRESENT\",\"source_field\":\"DEDUPE_FINDING.observed_at\",\"unknown_reason\":null,\"value_domain\":\"Timestamp\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.geography_class\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.geography_class\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"GeographyClass excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-119\",\"value_domain\":\"GeographyClass\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.order_state\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.order_state\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"OrderState excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-116\",\"value_domain\":\"OrderState\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.order_total\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.order_total\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Money excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-121\",\"value_domain\":\"Money\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.payment_condition\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.payment_condition\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"PaymentCondition excluding any literal UNKNOWN\",\"not_applicable_guard\":\"FORBIDDEN\",\"unknown_reason\":\"RC-120\",\"value_domain\":\"PaymentCondition\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.wwc_finding.author_classification\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.wwc_finding.author_classification\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"WWCAuthorRelation excluding any literal UNKNOWN\",\"not_applicable_guard\":\"required when direct FindingPresenceV2 is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE; forbidden when PRESENT\",\"reason_matrix_field\":\"DOIOrderSnapshot.wwc_finding.author_relation\",\"source_field\":\"WWC_FINDING.author_relation\",\"unknown_reason\":\"RC-055\",\"value_domain\":\"WWCAuthorRelation\"},{\"allowed_tags\":[\"KNOWN\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"construction_status\":\"CLOSED\",\"field\":\"DOIOrderSnapshot.wwc_finding.finding_at\",\"hash_domain_prefix\":\"doi-observed-value/r01-v2/DOIOrderSnapshot.wwc_finding.finding_at\",\"hash_separator_hex\":\"0a\",\"known_value_domain\":\"Timestamp excluding any literal UNKNOWN\",\"not_applicable_guard\":\"required when direct FindingPresenceV2 is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE; forbidden when PRESENT\",\"reason_matrix_field\":\"DOIOrderSnapshot.wwc_finding.contact_at\",\"source_field\":\"WWC_FINDING.contact_at\",\"unknown_reason\":\"RC-056\",\"value_domain\":\"Timestamp\"}],\"status\":\"FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT\",\"tags\":[\"KNOWN\",\"UNKNOWN\",\"NOT_APPLICABLE\"],\"value_schema_version\":\"doi-observed-tagged-value/r01-v2\",\"version_evolution\":\"Any tag/member/raw-hint/value-domain semantic change creates a new version/domain and forces dependent hash regeneration.\"}",
+  "canonical_member_order": [
+    "raw_hint",
+    "reason_code",
+    "tag",
+    "value"
+  ],
+  "closed_supporting_domains": {
+    "SalesRepToken": {
+      "compatibility": "does not require uppercase conversion or case folding; exact bytes remain material",
+      "grammar": "^[A-Za-z0-9][A-Za-z0-9 ._:/\\'-]{0,127}$",
+      "privacy": "non-customer employee/synthetic rep display token already authorized by the owning source field; @, controls, line breaks, email, phone and customer-derived content forbidden"
+    },
+    "StableSourceLineId": {
+      "grammar": "^[A-Za-z0-9._:-]{1,128}$",
+      "privacy": "order-local operational identifier; no customer-derived content"
+    },
+    "TimestampOrDate": {
+      "date_branch": "exact Gregorian YYYY-MM-DD with no T/offset",
+      "disjointness": "a lexeme matches exactly one branch or rejects",
+      "timestamp_branch": "contains literal T and required Z/offset under doi-timestamp/r01-v1"
+    }
+  },
+  "dependent_artifacts": [
+    "order/line snapshot schemas",
+    "alternate observation schema",
+    "WWC/DEDUPE finding schemas",
+    "evaluation reason generation",
+    "R07 known-answer vectors"
+  ],
+  "direct_value_bindings": [
+    {
+      "absent_alias_forbidden": true,
+      "field": "DOIOrderSnapshot.wwc_finding.presence",
+      "ordered_members": [
+        "PRESENT",
+        "NOT_PRESENT",
+        "UNKNOWN",
+        "NOT_APPLICABLE"
+      ],
+      "outer_wrapper_forbidden": true,
+      "representation": "DIRECT_FINDING_PRESENCE_V2",
+      "unknown_reason_route": "RC-122 in owning finding completeness_reason_codes",
+      "value_content_sha256": "c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc",
+      "value_version": "doi-finding-presence/r01-v2"
+    },
+    {
+      "absent_alias_forbidden": true,
+      "field": "DOIOrderSnapshot.dedupe_finding.presence",
+      "ordered_members": [
+        "PRESENT",
+        "NOT_PRESENT",
+        "UNKNOWN",
+        "NOT_APPLICABLE"
+      ],
+      "outer_wrapper_forbidden": true,
+      "representation": "DIRECT_FINDING_PRESENCE_V2",
+      "unknown_reason_route": "RC-123 in owning finding completeness_reason_codes",
+      "value_content_sha256": "c58dff43bb80eb0b8232e9ce0a534f27e5e3823040dae0ba5363f5afcf533fbc",
+      "value_version": "doi-finding-presence/r01-v2"
+    }
+  ],
+  "equality": "same specialization plus byte-identical RFC8785 wrapper",
+  "explicit_null_rule": "All four members are always serialized; omission is invalid.",
+  "hash": "For each wrapper row, SHA256(UTF8(\"doi-observed-value/r01-v2/\" + exact canonical field path + \"\\n\") || UTF8(RFC8785(wrapper))).",
+  "invalid_cross_partitions": [
+    "KNOWN with reason/raw_hint",
+    "UNKNOWN with non-null value or missing/wrong reason",
+    "NOT_APPLICABLE with value/reason/raw_hint",
+    "bare null",
+    "extra/unknown member/tag"
+  ],
+  "legacy_line_hint_map": "The independent v1 privacy_safe_raw_hints map is not writable in the replacement line schema. The integrated doi-line-item-snapshot/v2 removes it; a compatibility view may derive the same field→symbolic-code projection from wrappers but never hashes or persists a second copy.",
+  "partitions": {
+    "KNOWN": {
+      "raw_hint": null,
+      "reason_code": null,
+      "value": "required and non-null, exact field specialization"
+    },
+    "NOT_APPLICABLE": {
+      "raw_hint": null,
+      "reason_code": null,
+      "value": null
+    },
+    "UNKNOWN": {
+      "raw_hint": "null or field-allowlisted RawHint",
+      "reason_code": "required exact field row from R01_UNKNOWN_REASON_MATRIX.json",
+      "value": null
+    }
+  },
+  "quantity_failure_precedence": "A parsed numeric outside the final Quantity domain fails construction and is never represented by RC-128..RC-131. Those reasons remain for readable opaque/uninterpretable source facts only.",
+  "raw_hint_rules": {
+    "all_other_fields": "raw_hint must be null, including every rep/geography/payment/quantity/money/product/finding and alternate-observation field",
+    "field_allowlist": {
+      "DOILineItemSnapshot.availability": [
+        "UNRECOGNIZED_AVAILABILITY_TOKEN",
+        "CONTRADICTORY_AVAILABILITY_TOKENS"
+      ],
+      "DOILineItemSnapshot.drop_ship_state": [
+        "UNRECOGNIZED_DS_TOKEN",
+        "CONTRADICTORY_DS_TOKENS"
+      ],
+      "DOILineItemSnapshot.eta": [
+        "UNRECOGNIZED_ETA_TOKEN",
+        "CONTRADICTORY_ETA_TOKENS",
+        "UNSUPPORTED_ETA_FORMAT",
+        "ETA_OUT_OF_RANGE"
+      ]
+    },
+    "global_max_utf8_bytes": 48,
+    "global_reject": [
+      "any unregistered code",
+      "any source text",
+      "name",
+      "email",
+      "phone",
+      "VIN",
+      "address",
+      "note/message body",
+      "HTML/DOM/screenshot",
+      "session/cookie/credential",
+      "customer or order hash"
+    ],
+    "grammar": "^[A-Z][A-Z0-9_]{0,47}$",
+    "invalid_behavior": "Reject the hint before persistence; retain no rejected bytes and return only the field normalization reason.",
+    "privacy_class": "PRIVACY_SAFE_NONIDENTIFYING_SYMBOLIC_ENUM",
+    "representation": "null or one exact RawHintCode JSON string; copied source text and extension objects are forbidden",
+    "source_locus_gate": "A code may be selected only from the matching field allowlist after a source-locus privacy gate. The source lexeme is never copied."
+  },
+  "reason_matrix_path_mapping": {
+    "DOIOrderSnapshot.dedupe_finding.presence": "direct completeness reason route RC-123; no wrapper",
+    "DOIOrderSnapshot.wwc_finding.author_relation": "DOIOrderSnapshot.wwc_finding.author_classification",
+    "DOIOrderSnapshot.wwc_finding.contact_at": "DOIOrderSnapshot.wwc_finding.finding_at",
+    "DOIOrderSnapshot.wwc_finding.presence": "direct completeness reason route RC-122; no wrapper"
+  },
+  "registry_content_sha256": "c45c18b5ccbf6406c99f8adbbb6dcfcb94b18f03087c9333fef1d28bb10ee59e",
+  "registry_hash_domain_prefix": "doi-observed-tagged-value-registry/r01-v2",
+  "registry_hash_preimage": "RFC8785(complete registry object excluding canonical_bytes and registry_content_sha256)",
+  "registry_hash_separator_hex": "0a",
+  "registry_schema_version": "doi-observed-tagged-value-registry-schema/r01-v2",
+  "registry_version": "doi-observed-tagged-value-registry/r01-v2",
+  "single_unknown_encoding": "For ObservedTaggedValue payload domains, an underlying UNKNOWN literal is forbidden inside KNOWN; the outer tag is the sole wrapper UNKNOWN. Direct FindingPresenceV2.UNKNOWN is explicitly outside this wrapper rule.",
+  "specializations": [
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIAlternateObservation.observed_availability",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIAlternateObservation.observed_availability",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "AlternateAvailability excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-137",
+      "value_domain": "AlternateAvailability"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIAlternateObservation.observed_eta",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIAlternateObservation.observed_eta",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Timestamp|Date excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-138",
+      "value_domain": "Timestamp|Date"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIAlternateObservation.observed_price",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIAlternateObservation.observed_price",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Money excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-136",
+      "value_domain": "Money"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.active_line_value",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.active_line_value",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Money excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-134",
+      "value_domain": "Money"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.active_quantity",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.active_quantity",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1",
+      "not_applicable_guard": "FORBIDDEN",
+      "parsed_out_of_domain_numeric_behavior": "FAIL_CLOSED_NO_UNKNOWN_WRAPPER",
+      "unknown_reason": "RC-129",
+      "value_domain": "Quantity",
+      "value_specialization_content_sha256": "8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca",
+      "value_specialization_version": "doi-quantity/nonnegative-integer-max-9-digits/r01-v1"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.activity",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.activity",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "LineActivity excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-125",
+      "value_domain": "LineActivity"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.availability",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.availability",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "LineAvailability excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-016",
+      "value_domain": "LineAvailability"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.canceled_quantity",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.canceled_quantity",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1",
+      "not_applicable_guard": "FORBIDDEN",
+      "parsed_out_of_domain_numeric_behavior": "FAIL_CLOSED_NO_UNKNOWN_WRAPPER",
+      "unknown_reason": "RC-130",
+      "value_domain": "Quantity",
+      "value_specialization_content_sha256": "8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca",
+      "value_specialization_version": "doi-quantity/nonnegative-integer-max-9-digits/r01-v1"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.drop_ship_state",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.drop_ship_state",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "DropShipState excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-017",
+      "value_domain": "DropShipState"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.es_number",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.es_number",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "canonical ES numeric core under doi-es-number-normalization/r01-v1",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-126",
+      "value_domain": "ESNumber",
+      "value_specialization_content_sha256": "794961d7287e97547882d8b89d5578a28b72b360ca2b164b02e00fcda2b32cc1",
+      "value_specialization_version": "doi-es-number-normalization/r01-v1"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.eta",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.eta",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Timestamp|Date excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-115",
+      "value_domain": "Timestamp|Date"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.explicitly_available_quantity",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.explicitly_available_quantity",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1",
+      "not_applicable_guard": "FORBIDDEN",
+      "parsed_out_of_domain_numeric_behavior": "FAIL_CLOSED_NO_UNKNOWN_WRAPPER",
+      "unknown_reason": "RC-131",
+      "value_domain": "Quantity",
+      "value_specialization_content_sha256": "8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca",
+      "value_specialization_version": "doi-quantity/nonnegative-integer-max-9-digits/r01-v1"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.line_sales_rep",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.line_sales_rep",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "SalesRepToken excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-135",
+      "value_domain": "SalesRepToken"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.mfg_number",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.mfg_number",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "canonical MFGNumber under doi-mfg-oe-number-normalization/r01-v1",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-127",
+      "value_domain": "MFGNumber",
+      "value_specialization_content_sha256": "ce3bfb100ab3b94d0a28e6679bdfe9af52d7db0171f0aeaa1e78a625d301309b",
+      "value_specialization_version": "doi-mfg-oe-number-normalization/r01-v1"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.ordered_quantity",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.ordered_quantity",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "canonical Quantity string under doi-quantity/nonnegative-integer-max-9-digits/r01-v1",
+      "not_applicable_guard": "FORBIDDEN",
+      "parsed_out_of_domain_numeric_behavior": "FAIL_CLOSED_NO_UNKNOWN_WRAPPER",
+      "unknown_reason": "RC-128",
+      "value_domain": "Quantity",
+      "value_specialization_content_sha256": "8d021f3460545fae638ce6df4b6cfcac46f693e7c5ad7a4cfd82f252fce4a5ca",
+      "value_specialization_version": "doi-quantity/nonnegative-integer-max-9-digits/r01-v1"
+    },
+    {
+      "allowed_known_values": [
+        "FULL",
+        "PARTIAL",
+        "NONE"
+      ],
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.quantity_availability",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.quantity_availability",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "FULL|PARTIAL|NONE",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-132",
+      "value_domain": "QuantityAvailability"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.stable_source_line_id",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.stable_source_line_id",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "StableSourceLineId excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-124",
+      "value_domain": "StableSourceLineId"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOILineItemSnapshot.unit_value",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOILineItemSnapshot.unit_value",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Money excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-133",
+      "value_domain": "Money"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.current_rep_relation",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.current_rep_relation",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "RepRelation excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-118",
+      "value_domain": "RepRelation"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.current_rep_value",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.current_rep_value",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "SalesRepToken excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-117",
+      "value_domain": "SalesRepToken"
+    },
+    {
+      "allowed_tags": [
+        "NOT_APPLICABLE"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.dedupe_finding.author_classification",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.dedupe_finding.author_classification",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "EMPTY",
+      "not_applicable_guard": "required for every direct FindingPresenceV2 branch",
+      "source_field": null,
+      "unknown_reason": null,
+      "value_domain": "NEVER_APPLICABLE_FOR_DEDUPE"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "NOT_APPLICABLE"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.dedupe_finding.finding_at",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.dedupe_finding.finding_at",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Timestamp under doi-timestamp/r01-v1",
+      "not_applicable_guard": "required when direct FindingPresenceV2 is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE; forbidden when PRESENT",
+      "source_field": "DEDUPE_FINDING.observed_at",
+      "unknown_reason": null,
+      "value_domain": "Timestamp"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.geography_class",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.geography_class",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "GeographyClass excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-119",
+      "value_domain": "GeographyClass"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.order_state",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.order_state",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "OrderState excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-116",
+      "value_domain": "OrderState"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.order_total",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.order_total",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Money excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-121",
+      "value_domain": "Money"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.payment_condition",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.payment_condition",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "PaymentCondition excluding any literal UNKNOWN",
+      "not_applicable_guard": "FORBIDDEN",
+      "unknown_reason": "RC-120",
+      "value_domain": "PaymentCondition"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN",
+        "NOT_APPLICABLE"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.wwc_finding.author_classification",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.wwc_finding.author_classification",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "WWCAuthorRelation excluding any literal UNKNOWN",
+      "not_applicable_guard": "required when direct FindingPresenceV2 is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE; forbidden when PRESENT",
+      "reason_matrix_field": "DOIOrderSnapshot.wwc_finding.author_relation",
+      "source_field": "WWC_FINDING.author_relation",
+      "unknown_reason": "RC-055",
+      "value_domain": "WWCAuthorRelation"
+    },
+    {
+      "allowed_tags": [
+        "KNOWN",
+        "UNKNOWN",
+        "NOT_APPLICABLE"
+      ],
+      "construction_status": "CLOSED",
+      "field": "DOIOrderSnapshot.wwc_finding.finding_at",
+      "hash_domain_prefix": "doi-observed-value/r01-v2/DOIOrderSnapshot.wwc_finding.finding_at",
+      "hash_separator_hex": "0a",
+      "known_value_domain": "Timestamp excluding any literal UNKNOWN",
+      "not_applicable_guard": "required when direct FindingPresenceV2 is NOT_PRESENT, UNKNOWN, or NOT_APPLICABLE; forbidden when PRESENT",
+      "reason_matrix_field": "DOIOrderSnapshot.wwc_finding.contact_at",
+      "source_field": "WWC_FINDING.contact_at",
+      "unknown_reason": "RC-056",
+      "value_domain": "Timestamp"
+    }
+  ],
+  "status": "FINAL_R01_AUTHORITY_READY_FOR_INDEPENDENT_AUDIT",
+  "tags": [
+    "KNOWN",
+    "UNKNOWN",
+    "NOT_APPLICABLE"
+  ],
+  "value_schema_version": "doi-observed-tagged-value/r01-v2",
+  "version_evolution": "Any tag/member/raw-hint/value-domain semantic change creates a new version/domain and forces dependent hash regeneration."
+}
