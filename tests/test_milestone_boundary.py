@@ -17,7 +17,6 @@ FORBIDDEN_FEATURE_NAMES = {
     "extension",
     "portal",
     "rules_engine",
-    "sales_credit",
 }
 ALLOWED_DOMAIN_MODULES = {
     "__init__.py",
@@ -48,9 +47,12 @@ class MilestoneBoundaryTests(unittest.TestCase):
     def test_audit_finding_closure_matrix_is_complete(self) -> None:
         matrix_path = ROOT / "docs" / "audit-finding-closure-matrix.md"
         self.assertTrue(matrix_path.is_file())
+        matrix_text = matrix_path.read_text(encoding="utf-8")
+        self.assertIn("- Matrix version: `milestone2/v1`", matrix_text)
+        self.assertNotIn("DEFERRED_NOT_IN_M1", matrix_text)
         rows = [
             line
-            for line in matrix_path.read_text(encoding="utf-8").splitlines()
+            for line in matrix_text.splitlines()
             if line.startswith("| R01-") or line.startswith("| R02-")
         ]
         expected = {
@@ -68,8 +70,10 @@ class MilestoneBoundaryTests(unittest.TestCase):
         allowed_statuses = {
             "CLOSED_M1",
             "CLOSED_M1_REOPEN_ON_EXTENSION",
-            "DEFERRED_NOT_IN_M1",
-            "PARTIAL_M1_OPEN_M3",
+            "CLOSED_M2",
+            "CLOSED_M2_REOPEN_ON_EXTENSION",
+            "DEFERRED_NOT_IN_M2",
+            "PARTIAL_M2_OPEN_M3",
         }
         self.assertTrue(all(cells[1] in allowed_statuses for cells in parsed.values()))
 
@@ -90,7 +94,7 @@ class MilestoneBoundaryTests(unittest.TestCase):
         }
         self.assertTrue(required.issubset(exported))
 
-    def test_future_feature_modules_are_absent(self) -> None:
+    def test_milestone_three_and_user_interface_modules_are_absent(self) -> None:
         discovered = {path.stem for path in PACKAGE.rglob("*.py")}
         discovered.update(path.name for path in PACKAGE.iterdir() if path.is_dir())
         self.assertFalse(discovered & FORBIDDEN_FEATURE_NAMES)

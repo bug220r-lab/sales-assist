@@ -133,6 +133,28 @@ class ProhibitedInputCategoryTests(unittest.TestCase):
         self.assertEqual(scan_payload(payload), ())
         self.assertIsNone(assert_payload_safe(payload))
 
+    def test_colon_wrapped_synthetic_product_sources_are_explicitly_safe(self) -> None:
+        payload = {
+            "oe_number": "synthetic: ES#000123",
+            "manufacturer_part_number": "synthetic: ab-001 / c",
+        }
+        self.assertEqual(scan_payload(payload), ())
+
+        unwrapped = "".join(("ORDINARY", "-MFG-", "123"))
+        findings = scan_payload({"manufacturer_part_number": unwrapped})
+        self.assertEqual(
+            tuple(item.category for item in findings),
+            (ProhibitedCategory.REAL_PRODUCT_OR_MANUFACTURER_ID,),
+        )
+
+        prohibited = "synthetic: private.marker@" + "outside.invalid"
+        findings = scan_payload({"manufacturer_part_number": prohibited})
+        self.assertEqual(
+            tuple(item.category for item in findings),
+            (ProhibitedCategory.NON_SYNTHETIC_EMAIL,),
+        )
+        self.assertNotIn(prohibited, repr(findings))
+
     def test_opaque_and_cyclic_values_fail_closed(self) -> None:
         cycle: list[object] = []
         cycle.append(cycle)

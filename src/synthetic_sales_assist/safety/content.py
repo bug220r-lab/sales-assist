@@ -269,6 +269,12 @@ def _identity_namespace(field: str) -> str | None:
 def _is_obviously_synthetic_text(value: str) -> bool:
     candidate = value.strip()
     if re.fullmatch(
+        r"(?i)(?:synthetic|fictional|test):[ -~]{1,128}",
+        candidate,
+        re.ASCII,
+    ):
+        return True
+    if re.fullmatch(
         r"(?i)(?:synthetic|fictional|test)(?:[ _-][A-Za-z0-9]+)+",
         candidate,
         re.ASCII,
