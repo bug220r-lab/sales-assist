@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "synthetic-sales-assist"
-version = "0.0.0"
-description = "Synthetic-only Sales Assist proof-of-concept foundation"
+version = "0.1.0"
+description = "Synthetic-only Sales Assist foundation and shared domain engine"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []

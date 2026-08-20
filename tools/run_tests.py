@@ -1,4 +1,4 @@
-"""Run the dependency-free Milestone 0 unittest suite."""
+"""Run the dependency-free foundation and Shared Domain Engine test suite."""
 
 from __future__ import annotations
 
