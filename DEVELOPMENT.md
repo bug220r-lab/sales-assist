@@ -1,9 +1,9 @@
-# Milestone 2 development
+# Milestone 3 development
 
-This repository contains the synthetic-only foundation, immutable Shared Domain Engine, and pure
-Milestone 2 Sales Credit rule pack. DOI behavior, business persistence, a portal, a dashboard,
-and a Chrome extension remain deliberately absent until a later milestone is explicitly
-authorized.
+This repository contains the synthetic-only foundation, immutable Shared Domain Engine, pure
+Milestone 2 Sales Credit rule pack, and pure deterministic Milestone 3 DOI rule pack. Business
+persistence, source connectors, a portal, an API, a dashboard, and a Chrome extension remain
+absent. Milestone 4 has not begun.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ The executable foundation has no runtime package dependencies. Optional developm
 declared in `pyproject.toml`; the commit gate itself runs on the Python standard library so it can
 execute offline.
 
-Through Milestone 2, execution is intentionally bound to a complete verified source checkout:
+Through Milestone 3, execution is intentionally bound to a complete verified source checkout:
 the foundation audit, migration framework, and closed DOI registries read immutable root-level
 bundle files. Wheel and source-distribution deployment are not claimed by this local PoC milestone.
 
@@ -25,6 +25,8 @@ From the complete verified repository root:
 
 ```text
 python tools/quality_gate.py
+python -m compileall -q src tests tools
+python -m unittest discover -s tests -t . -p "test_doi_*.py"
 python tools/run_tests.py
 python tools/run_foundation_audit.py
 ```
@@ -35,27 +37,42 @@ no network operation.
 
 ## Milestone boundary
 
-Milestone 2 adds only immutable Sales Credit inputs/results, deterministic New York calendar and
-search reduction, pure evaluation rules, a process-local replay-safe case accumulator, pure
-closure/retention projections, aggregate metrics, and synthetic executable scenarios. It adds no
-SQLite business table, source adapter, portal, API, browser artifact, external call, or DOI rule.
+Milestone 3 adds only immutable DOI records, deterministic source/extraction/evaluation rules,
+registry-backed pure lifecycle reduction, process-local replay/concurrency coordination, pure
+intervention/value/KPI histories, and synthetic executable scenarios. It adds no business SQLite
+table, durable repository, source adapter, portal, API, browser artifact, scheduler, worker,
+external request, customer communication, or business mutation.
 
-The closed Milestone 2 surface includes:
+The closed Milestone 3 surface includes:
 
-- all 16 workflow states and 45 Sales Credit-only decision reasons;
-- dual-identifier discovery with a versioned `OrderSearchRun` and complete native-result parity;
-- independent attribution, evidence, replacement, and placed-value/material-change dimensions;
-- explicit `synthetic:` raw product-source envelopes and `synthetic_` nonbinding rep handles;
-- one-lock exact-byte replay, collision rejection, monotonic case time, and atomic rollback;
-- separate human outcomes plus terminal system closure without fabricated manager authority;
-- minimized closed records with a controlled concise-note code and exact elapsed 90-day purge;
-- identity-free aggregate metrics; and
-- 66 versioned synthetic scenarios with 55 real executable selectors and nine zero safety
-  counters per scenario.
+- exact review/recheck run machines, source-import retries, explicit no-retry finalization, count
+  conservation, and extraction-reservation versus RC-084 serialization;
+- whole-order extraction with source-time coherence, complete manifests, stable/composite line
+  continuity, and missing-versus-observed-UNKNOWN separation;
+- the approved opportunity-preservation policy, including field-specific UNKNOWN containment,
+  independently preserved opportunities, and TR-037 only when no safe conclusion survives;
+- full DS, mixed DS, split, partial quantity, payment, progress, source-absence, geography, ETA,
+  hard-closure, and reversible-closure decisions;
+- exact SKU plus four distinct alternate-product relationship types, immutable product-only
+  revision/observation evidence, and closed compatibility decisions;
+- structured contact, all 64 legal WWC PRESENT partitions, DEDUPE candidate/decision/later-source
+  verification, cause-keyed attention, and hash-bound human provenance;
+- exact opportunity scope and value, hash-bound mutually exclusive scenario evidence, unresolved
+  overlap without double counting, and explicit human scenario selection;
+- verified intervention occurrence, exact result-link scope, append-only value corrections and
+  reversals, exactly-once currency-segmented KPI contributions, and identity-free purge transfer;
+- all 115 supplied transitions with one collected typed-owner legal test and one collected
+  production invalid-from-state test, plus structural false-guard coverage, exact registered
+  effects, replay/collision/predecessor checks, and first-event admission;
+- all 138 supplied reasons and 138 ownership rows with the approved implementation-side overlay,
+  independently collected owning-behavior selectors, and zero legal-route leakage; and
+- deterministic generated scenario, reason, transition, and 94-domain hash-preimage artifacts with nine
+  zero safety counters per scenario.
 
-The eight Milestone 2 hash-domain fixtures and exact preimages are published in
-`docs/milestone2-hash-preimages.md`. Scenario/reason/acceptance ownership is published in
-`docs/milestone2-traceability.md`; both documents are byte-for-byte generated-oracle gated.
+The central DOI hash-domain fixtures and exact preimages are published in
+`docs/milestone3-hash-preimages.md`. Reason ownership, transition coverage, and scenario inventory
+are published in the corresponding `docs/milestone3-*` generated artifacts; executable tests
+reject any byte drift.
 
 The supplied root `README.md` is part of the checksummed specification bundle and remains
 byte-for-byte unchanged. Milestone-specific implementation and verification documentation lives

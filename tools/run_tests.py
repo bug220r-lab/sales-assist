@@ -1,4 +1,4 @@
-"""Run the dependency-free foundation and Shared Domain Engine test suite."""
+"""Run the complete dependency-free repository regression suite."""
 
 from __future__ import annotations
 
@@ -18,7 +18,10 @@ def main(test_names: list[str] | None = None) -> int:
     if names:
         suite = unittest.defaultTestLoader.loadTestsFromNames(names)
     else:
-        suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"))
+        suite = unittest.defaultTestLoader.discover(
+            str(ROOT / "tests"),
+            top_level_dir=str(ROOT),
+        )
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     return 0 if result.wasSuccessful() else 1
 

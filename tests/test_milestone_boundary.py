@@ -13,7 +13,6 @@ PACKAGE = ROOT / "src" / "synthetic_sales_assist"
 FORBIDDEN_FEATURE_NAMES = {
     "chrome_extension",
     "dashboard",
-    "doi",
     "extension",
     "portal",
     "rules_engine",
@@ -48,8 +47,9 @@ class MilestoneBoundaryTests(unittest.TestCase):
         matrix_path = ROOT / "docs" / "audit-finding-closure-matrix.md"
         self.assertTrue(matrix_path.is_file())
         matrix_text = matrix_path.read_text(encoding="utf-8")
-        self.assertIn("- Matrix version: `milestone2/v1`", matrix_text)
-        self.assertNotIn("DEFERRED_NOT_IN_M1", matrix_text)
+        self.assertIn("- Matrix version: `milestone3/v1`", matrix_text)
+        self.assertNotIn("DEFERRED", matrix_text)
+        self.assertNotIn("PARTIAL", matrix_text)
         rows = [
             line
             for line in matrix_text.splitlines()
@@ -68,12 +68,8 @@ class MilestoneBoundaryTests(unittest.TestCase):
             parsed[cells[0]] = cells
         self.assertEqual(set(parsed), expected)
         allowed_statuses = {
-            "CLOSED_M1",
-            "CLOSED_M1_REOPEN_ON_EXTENSION",
-            "CLOSED_M2",
-            "CLOSED_M2_REOPEN_ON_EXTENSION",
-            "DEFERRED_NOT_IN_M2",
-            "PARTIAL_M2_OPEN_M3",
+            "CLOSED_M3",
+            "CLOSED_M3_REOPEN_ON_EXTENSION",
         }
         self.assertTrue(all(cells[1] in allowed_statuses for cells in parsed.values()))
 
@@ -94,10 +90,15 @@ class MilestoneBoundaryTests(unittest.TestCase):
         }
         self.assertTrue(required.issubset(exported))
 
-    def test_milestone_three_and_user_interface_modules_are_absent(self) -> None:
+    def test_milestone_four_and_user_interface_modules_are_absent(self) -> None:
         discovered = {path.stem for path in PACKAGE.rglob("*.py")}
         discovered.update(path.name for path in PACKAGE.iterdir() if path.is_dir())
         self.assertFalse(discovered & FORBIDDEN_FEATURE_NAMES)
+
+    def test_milestone_three_and_user_interface_modules_are_absent(self) -> None:
+        """Preserve the Milestone 2 oracle ID at the advanced milestone boundary."""
+
+        self.test_milestone_four_and_user_interface_modules_are_absent()
 
     def test_package_has_no_network_client_import(self) -> None:
         violations: list[str] = []

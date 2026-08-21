@@ -1,0 +1,1536 @@
+# Synthetic Sales Assist v0.1 — Milestone 3: DOI Rule Pack
+
+Continue in the same Codex chat and the same repository from the exact passing Milestone 2 state.
+
+## Exact base state
+
+```text
+branch = main
+base_commit = 44c4a5b0c782535d2f85e0be5b5f03073c76b8f8
+parent_commit = b9cf39d60bf678b91524b761436fa4e79059b0ac
+reported_full_regression = 481/481 PASS
+reported_quality_gate = 69 files / 0 findings
+```
+
+Before editing:
+
+1. Verify `HEAD` equals the stated base commit.
+2. Derive and record the exact base tree from `HEAD^{tree}`.
+3. Verify worktree and index are clean.
+4. Rerun the complete repository test suite and confirm the Milestone 2 baseline still passes.
+5. Verify every supplied bundle file remains byte-identical.
+6. Reconcile:
+   - 138 DOI reasons;
+   - 138 DOI reason-ownership rows;
+   - 115 DOI transitions.
+7. Confirm all nine safety counters remain zero.
+8. Confirm no DOI business-rule execution module exists before this milestone begins.
+9. Confirm no business SQLite table, portal, API, dashboard, Chrome extension, or external connector exists.
+
+If any precondition differs, stop before modifying files and report the exact discrepancy.
+
+---
+
+# Milestone objective
+
+Implement **Milestone 3 only: the pure deterministic DOI rule pack**.
+
+The milestone must provide a complete, executable, synthetic-only DOI engine over:
+
+- synthetic queue and run inputs;
+- source-import attempts;
+- complete fictional order snapshots;
+- fictional line facts;
+- product relationships and observations;
+- contact / WWC / DEDUPE observations;
+- lifecycle facts;
+- opportunities;
+- human-review requirements;
+- intervention and resulting-order evidence;
+- value/KPI facts.
+
+The implementation must be:
+
+- deterministic;
+- explainable;
+- append-oriented at the logical event boundary;
+- side-effect-free at the rule/reducer boundary;
+- independent from durable business persistence;
+- independent from any browser, portal, or network;
+- incapable of external order mutation or customer communication.
+
+Do not begin Milestone 4 or later.
+
+---
+
+# Binding files to read
+
+Read and follow:
+
+- `AGENTS.md`
+- `specs/SPEC_INDEX.md`
+- `specs/project_scope.md`
+- `specs/synthetic_data_policy.md`
+
+Shared:
+
+- `specs/shared/primitive_types.md`
+- `specs/shared/timestamps.md`
+- `specs/shared/money_quantity.md`
+- `specs/shared/normalization.md`
+- `specs/shared/observed_values.md`
+- `specs/shared/whole_order_completeness.md`
+- `specs/shared/idempotency_runs.md`
+- `specs/shared/privacy_retention.md`
+- `specs/shared/telemetry.md`
+
+DOI:
+
+- `specs/doi/business_rules.md`
+- `specs/doi/data_contracts.md`
+- `specs/doi/reason_registry.json`
+- `specs/doi/reason_ownership.json`
+- `specs/doi/state_transitions.json`
+- `specs/doi/lifecycle_contract.md`
+- `specs/doi/run_ingestion_contract.md`
+- `specs/doi/alternate_products.md`
+- `specs/doi/contact_wwc_dedupe.md`
+- `specs/doi/interventions_kpi.md`
+- `specs/doi/acceptance_tests.md`
+- `specs/doi/synthetic_test_catalog.md`
+
+Advisory:
+
+- `specs/advisory/approved_product_decisions.md`
+- `specs/advisory/pre_milestone0_reconciliation_v1.0.1.md`
+- `specs/advisory/known_audit_findings.md`
+- `specs/advisory/implementation_doctrine.md`
+
+The curated files under `specs/` govern. Sanitized files under `reference/` may clarify detail but may not override the binding authority order.
+
+---
+
+# Hard Milestone 3 boundaries
+
+Do **not**:
+
+- create durable DOI or Sales Credit business SQLite tables;
+- implement a browser, portal, API, dashboard, or Chrome extension;
+- add a production or synthetic source connector;
+- access any file outside this repository;
+- make any network request;
+- implement customer messaging;
+- implement any external business mutation;
+- create real-looking identities or fixtures;
+- alter the completed Sales Credit rule behavior except for shared compatibility fixes that preserve all existing tests;
+- modify supplied files under:
+  - `specs/`
+  - `reference/`
+  - `BUNDLE_MANIFEST.json`
+  - `SHA256SUMS.txt`;
+- preserve a source-derived synthetic-test count merely as a quota;
+- treat a listed test selector as executable proof unless the real test runner collects it.
+
+Permitted:
+
+- immutable DOI-specific models;
+- pure reducers and rule functions;
+- deterministic synthetic fixture builders;
+- an in-memory event/case/run store used solely for tests;
+- generated traceability and collected-test inventories;
+- ADRs for consequential rule-result dimensionality, event reduction, scope identity, concurrency simulation, and occurrence/replay design.
+
+---
+
+# 1. Closed DOI enums and domain types
+
+Implement closed immutable types for the following exact logical domains.
+
+## Runs and extraction
+
+```text
+RunType =
+  RUN_DOI_REVIEW
+  | RECHECK_ORDER
+  | RECHECK_DEDUPE_ORDER
+
+RunStatus =
+  IN_PROGRESS
+  | COMPLETED
+  | COMPLETED_WITH_EXCEPTIONS
+  | FAILED
+
+ExtractionStatus =
+  SUCCEEDED
+  | FAILED
+```
+
+Also implement closed types for:
+
+- run-work origin;
+- source-import-attempt outcome;
+- source change/coherence state;
+- source batch and staged-order status;
+- run terminal result;
+- source-attempt event kind;
+- run event kind;
+- source-rejection outcome;
+- exact accepted-action command kind.
+
+## Case and evaluation
+
+```text
+CaseLifecycleState =
+  ACTIVE
+  | CLOSED_HARD
+  | CLOSED_REVERSIBLE
+
+TerminalClosureReason =
+  SHIPPED
+  | CANCELED
+  | REP_TRANSFERRED
+  | DEDUPE_CONFIRMED
+  | HUMAN_OUT_OF_SCOPE
+
+DOIState =
+  DOI_MONITOR
+  | DOI_OPPORTUNITY
+  | DOI_MANUAL_REVIEW
+  | DOI_EXCLUDED
+
+OrderState =
+  ACTIVE
+  | SHIPPED
+  | CANCELED
+  | UNKNOWN
+
+RepRelation =
+  TARGET_REP_OWNED
+  | OTHER_REP
+  | UNKNOWN
+
+GeographyClass =
+  DOMESTIC_STANDARD
+  | DOMESTIC_SPECIAL_REVIEW
+  | INTERNATIONAL
+  | UNKNOWN
+
+PaymentCondition =
+  NONE_OBSERVED
+  | PRESENT
+  | UNKNOWN
+
+LineActivity =
+  ACTIVE
+  | CANCELED
+  | UNKNOWN
+
+DropShipState =
+  DS
+  | NON_DS
+  | UNKNOWN
+
+LineAvailability =
+  IN_STOCK
+  | DELAYED
+  | UNKNOWN
+
+QuantityAvailability =
+  FULL
+  | NONE
+  | PARTIAL
+  | UNKNOWN
+```
+
+Also implement:
+
+- line-continuity state;
+- continuity proof type;
+- source presence;
+- observed `FindingPresenceV2` from Milestone 1;
+- exact human-review / attention condition set.
+
+## Opportunities
+
+```text
+OpportunityType =
+  FULFILLMENT_SPLIT
+  | DS_SEPARATION
+  | EXACT_SKU_RECHECK
+  | EXACT_MFG_ALTERNATE
+  | MFG_CROSS_REFERENCE
+  | MFG_SUPERSESSION
+  | FUNCTIONAL_ALTERNATE
+  | PARTIAL_QUANTITY_REVIEW
+```
+
+## Alternate research
+
+Implement the closed alternate research, relationship, revision, observation, availability, and validity states required by the binding specifications.
+
+## Contact / WWC / DEDUPE / human facts
+
+Implement closed types for:
+
+- contact state;
+- contact event type;
+- WWC author relation;
+- WWC timing state;
+- WWC projection state;
+- DEDUPE state;
+- human-fact result code;
+- human-fact usage kind;
+- Action Context state and completion trigger;
+- attention condition;
+- structured human provenance.
+
+## Interventions / results / KPI
+
+Implement closed types for:
+
+- intervention type;
+- intervention status;
+- action verification state;
+- value verification state;
+- resulting-order-link state;
+- resulting-order-link-search state;
+- value-event type;
+- KPI contribution state.
+
+Unknown or unregistered enum values fail before model construction.
+
+Codex may organize these types pragmatically. Do not duplicate shared Milestone 1 primitives.
+
+---
+
+# 2. Immutable DOI logical models
+
+Implement immutable DOI-specific logical records.
+
+At minimum:
+
+## Source and run
+
+- `DOISourceBatch`
+- `DOIRun`
+- `DOIRunEvent`
+- `DOISourceImportAttempt`
+- `DOISourceImportAttemptEvent`
+- `DOIStagedOrder`
+- `DOIRejectedSourceRecord`
+- `DOIRunWorkItem`
+- source/run identity references
+- count summary objects
+- explicit no-retry command and receipt
+
+## Case and extraction
+
+- `DOIOrderCase`
+- case/source binding;
+- admission proof;
+- `DOIExtractionAttempt`;
+- `DOIOrderSnapshot`;
+- `DOILineItemSnapshot`;
+- whole-order completeness proof;
+- source-presence/recheck fact;
+- line-continuity proof.
+
+## Evaluation and opportunity
+
+- `DOIEvaluation`
+- `DOIOpportunity`
+- `DOIOpportunityScope`
+- scope components with exact line identity and quantity;
+- relationship-revision binding;
+- alternate-observation binding;
+- human-fact binding;
+- reason set;
+- handling flags;
+- human-review requirements;
+- top-level DOI result;
+- rule-pack/version/hash bindings.
+
+## Product knowledge
+
+- `DOIAlternateRelationship`
+- immutable relationship revision;
+- alternate observation;
+- product-only source/evidence binding;
+- relationship state and predecessor.
+
+## Contact / coordination
+
+- contact event/projection;
+- WWC finding/projection;
+- DEDUPE event/projection;
+- attention SET/CLEAR event and projection;
+- Action Context and events;
+- human fact and correction event.
+
+## Result / intervention / value
+
+- resulting-order-link search;
+- exact resulting-order link;
+- link revision and moved-line mapping component;
+- logical evidence key;
+- verification evidence;
+- intervention;
+- action-verification event;
+- value/correction/reversal event;
+- occurrence guard;
+- retained KPI contribution;
+- nonidentifying KPI bucket.
+
+These are logical in-memory domain records. Milestone 4 will choose the durable relational schema.
+
+Every hash-bearing object must have:
+
+- exact schema/version;
+- exact closed members;
+- domain prefix;
+- one LF separator;
+- canonical preimage;
+- known-answer test;
+- collision/preimage comparison behavior where required.
+
+Reuse the Milestone 1 canonical/hash infrastructure.
+
+---
+
+# 3. Synthetic queue ingestion and source-import rules
+
+Implement pure synthetic source ingestion.
+
+## Source shape
+
+The source is a local in-memory synthetic queue containing:
+
+- fictional Order Number;
+- fictional assignee;
+- row/source reference;
+- coherent source/read metadata.
+
+There is no workbook or cloud adapter.
+
+## In-scope assignee
+
+The in-scope assignee is:
+
+`TARGET_REP`
+
+Classification must be byte-deterministic and use the binding shared trim/case rules. Unsupported Unicode, confusables, malformed cells, or ambiguous assignees fail closed or are classified through the exact registered source reason.
+
+## Duplicate rows
+
+Duplicate in-scope rows for the same exact canonical Order Number:
+
+- merge into one staged order;
+- preserve every allowed source reference;
+- emit the exact registered duplicate reason;
+- create one run work item.
+
+## Assignee conflict
+
+The same Order Number assigned to `TARGET_REP` and a different nonblank assignee:
+
+- creates no staged executable order;
+- creates no work item;
+- performs zero portal reads;
+- produces the exact registered rejected-source result.
+
+## Invalid/out-of-scope rows
+
+Implement every binding source row class using the exact reason registry and ownership rules.
+
+## Coherent source read
+
+A successful source-import attempt must bind:
+
+- source identity;
+- mapping/schema version;
+- structural anchors;
+- finite extent;
+- ordered source rows or exact row digest;
+- before/after revision evidence or content fingerprint;
+- privacy-safe counts.
+
+A source change during import fails the current attempt.
+
+Do not treat unavailable revision support as proof of unchanged content.
+
+---
+
+# 4. Run machines, counts, and failed-source finalization
+
+Implement pure in-memory run reducers for all three RunTypes.
+
+## Run creation
+
+TR-001 creates an `IN_PROGRESS` run with:
+
+- non-null started time;
+- null completion time;
+- null purge deadline;
+- initial null source batch where specified;
+- exact invocation identity and receipt behavior.
+
+## Review run
+
+`RUN_DOI_REVIEW` uses source-import attempts and may stage multiple synthetic orders.
+
+## Rechecks
+
+`RECHECK_ORDER` and `RECHECK_DEDUPE_ORDER`:
+
+- create exactly one run work item;
+- do not require a manager/source-import attempt;
+- preserve the closed recheck semantics from the transition registry.
+
+## Count equations
+
+Implement separate exact count families for:
+
+- source rows;
+- accepted rows;
+- invalid/out-of-scope/conflict rows;
+- staged orders;
+- source attempts;
+- work items `W(run)`;
+- terminal disposition subjects `D(run)`;
+- successful evaluations;
+- order exceptions;
+- blocked orders;
+- portal reads;
+- final run counts.
+
+`D(run)` is a subset of `W(run)`.
+
+Every member of `D(run)` has exactly one terminal disposition.
+
+A systemic pre-read failure may have:
+
+```text
+work_item_count = 1
+normal_evaluation_succeeded_count = 0
+order_exception_count = 0
+blocked_order_count = 0
+portal_read_count = 0
+```
+
+because the work item never became a disposition subject.
+
+## Run terminal results
+
+- `COMPLETED`: zero order exception/block dispositions.
+- `COMPLETED_WITH_EXCEPTIONS`: at least one exception/block disposition; success count may be zero.
+- `FAILED`: only a closed run-global fatal gate.
+
+## Failed source attempt
+
+A terminal failed source-import attempt terminalizes only the attempt.
+
+The parent run remains `IN_PROGRESS` indefinitely until either:
+
+1. a legal next-ordinal retry commits; or
+2. an authorized human explicitly accepts:
+   `FINALIZE_FAILED_SOURCE_IMPORT_NO_RETRY`.
+
+There is no timer, expiry, automatic branch, or background finalizer.
+
+## Explicit no-retry command
+
+Implement the exact command/receipt behavior from the binding contracts:
+
+- closed command shape;
+- accepted human action;
+- greatest retained failed attempt binding;
+- lookup before allocation;
+- exact replay;
+- same-key/different-material conflict;
+- digest/preimage collision conflict;
+- retry-versus-finalization serialization;
+- atomic run failure projection/event result.
+
+## RC-084 run-level gate
+
+Implement the pre-extraction systemic branch:
+
+- a valid run exists;
+- required rules authority becomes unavailable before extraction reservation;
+- TR-004 branch `PRE_EXTRACTION_RULES_UNAVAILABLE`;
+- exact reason `{RC-084}`;
+- no evaluation;
+- zero portal reads;
+- zero disposition subjects/counts;
+- serialization against extraction-occurrence reservation.
+
+Tests must prove both race orders:
+
+- extraction reservation wins;
+- systemic terminalization wins.
+
+Both forbidden outcomes may not commit.
+
+---
+
+# 5. Extraction, line continuity, and whole-order completeness
+
+Implement pure snapshot construction from fictional page/source facts supplied by tests.
+
+No browser or portal is created.
+
+A successful DOI snapshot requires:
+
+- exact requested synthetic Order Number;
+- exact observed order identity;
+- extractor/fixture version;
+- source-observed timestamp;
+- order-level source timestamp coherence;
+- required sections;
+- complete relevant line universe;
+- declared and observed counts;
+- ordered line-manifest entries;
+- duplicate/reordering rules;
+- source references;
+- source-change/coherence proof;
+- whole-order proof hash.
+
+Failure creates:
+
+- no snapshot;
+- no evaluation;
+- a failed extraction attempt;
+- exact reasons;
+- recheck attention where governed.
+
+Missing/unreadable data is extraction failure, not UNKNOWN.
+
+UNKNOWN is legal only when the field was successfully observed but cannot be normalized under its field-specific contract.
+
+## Line continuity
+
+Implement stable line identity and continuity proof using:
+
+- stable synthetic source line ID when available; or
+- a deterministic closed composite proof when permitted.
+
+Unknown stable line ID emits the field-specific reason and blocks only conclusions that require stable continuity.
+
+Do not guess continuity from description alone.
+
+## Source-time coherence
+
+Order-level `source_observed_at` and whole-order-proof `source_observed_at` must canonicalize to the same instant.
+
+Mismatch or unnormalizable source time fails before snapshot success.
+
+---
+
+# 6. DOI top-level evaluator and precedence
+
+Implement one deterministic evaluator returning:
+
+- `DOIState`;
+- exact reason set;
+- zero or more opportunities;
+- handling/coordination flags;
+- human-review requirements;
+- exact scope/value status;
+- closure proposal, if any;
+- explanation;
+- immutable input/output/full-record hashes.
+
+For a complete valid evaluation, precedence is:
+
+```text
+DOI_EXCLUDED
+  > DOI_OPPORTUNITY
+  > DOI_MANUAL_REVIEW
+  > DOI_MONITOR
+```
+
+Interpretation:
+
+- verified hard/reversible closure controls exclusion;
+- any independently safe specific opportunity preserves `DOI_OPPORTUNITY` even when unrelated review flags exist;
+- `DOI_MANUAL_REVIEW` controls only when no safe opportunity exists and uncertainty/non-routine review blocks a monitor result;
+- `DOI_MONITOR` requires a valid active case with no specific opportunity and no blocking review.
+
+Unknown in one field must not erase independent known facts.
+
+The explanation must show:
+
+- all supplied normalized facts;
+- unavailable/unknown facts;
+- rules evaluated;
+- rules fired;
+- reason ownership;
+- opportunities and scope;
+- handling flags;
+- top-level precedence decision;
+- human-review conditions;
+- closure state;
+- rule/version/hash bindings.
+
+---
+
+# 7. Direct-ship logic
+
+Implement exact logic over relevant active merchandise lines.
+
+## Full direct ship
+
+When at least one relevant active line exists and every such line is explicitly DS:
+
+```text
+DOIState = DOI_EXCLUDED
+reasons include RC-019 FULL_DS
+opportunities = none
+```
+
+This evaluation alone does not hard/reversibly close the case or start retention.
+
+An empty relevant-line universe is never FULL_DS.
+
+## Mixed direct ship
+
+When at least one relevant active DS line and one relevant active non-DS line exist:
+
+```text
+DOIState = DOI_OPPORTUNITY
+reasons include:
+  RC-020 MIXED_DS
+  RC-030 DS_SEPARATION_REQUIRED
+
+opportunity type includes:
+  DS_SEPARATION
+```
+
+Continue evaluating non-DS lines for additional safe opportunities.
+
+## Unknown direct-ship state
+
+Emit exact field reason `RC-017 UNKNOWN_LINE_DS_STATE`.
+
+Block only conclusions depending on that line. Preserve opportunities independently proved from other complete known scope.
+
+---
+
+# 8. Fulfillment split, geography, ETA, and partial quantity
+
+## Fulfillment split
+
+A split candidate exists when the complete relevant active non-DS universe proves:
+
+- at least one line `IN_STOCK` with `FULL` quantity availability; and
+- at least one line `DELAYED`.
+
+No minimum value or delay duration exists.
+
+Emit:
+
+- `RC-031 FULFILLMENT_SPLIT_CANDIDATE`;
+- `RC-052 HUMAN_DECISION_REQUIRED`;
+- a `FULFILLMENT_SPLIT` opportunity with exact immutable line/quantity scope.
+
+## Geography handling
+
+For a valid split candidate:
+
+### DOMESTIC_STANDARD
+
+Preserve the opportunity. Do not add AK/HI or international handling solely from geography.
+
+### DOMESTIC_SPECIAL_REVIEW
+
+Add:
+
+- `RC-049 AK_HI_SHIPPING_REVIEW`.
+
+Do not automatically require customer contact solely from this class.
+
+### INTERNATIONAL
+
+Add:
+
+- `RC-050 INTERNATIONAL_ORDER_REVIEW`;
+- `RC-051 CUSTOMER_CONTACT_REQUIRED_BEFORE_SPLIT`.
+
+### UNKNOWN
+
+Preserve the independently proved split opportunity, emit the exact unknown geography reason, and block geography-dependent action readiness. Do not guess a geography-specific handling code.
+
+## Unknown ETA
+
+Emit:
+
+- `RC-115 UNKNOWN_LINE_ETA_STATE`.
+
+Unknown ETA does not suppress a split independently proved from availability, direct-ship state, quantity, and exact scope. It makes only ETA-dependent ranking/impact unavailable.
+
+## Partial quantity
+
+When exact:
+
+```text
+0 < explicitly_available_quantity < active_quantity
+```
+
+emit:
+
+- `RC-032 PARTIAL_QTY_INTERVENTION_REVIEW`;
+- `PARTIAL_QUANTITY_REVIEW` opportunity or handling object as defined by the binding rule pack;
+- exact partial value when Money/Quantity inputs permit it.
+
+Never automatically perform or recommend a committed partial split. Preserve human decision.
+
+---
+
+# 9. Payment, order progression, closures, source disappearance
+
+## Payment
+
+When payment is the sole blocker and no product opportunity exists:
+
+```text
+DOIState = DOI_EXCLUDED
+reason = RC-026 PAYMENT_ISSUE_OUT_OF_SCOPE
+```
+
+This alone does not start retention.
+
+When payment coexists with a product opportunity:
+
+- preserve `DOI_OPPORTUNITY`;
+- include `RC-027 PAYMENT_ISSUE_PRESENT_OUT_OF_SCOPE`;
+- expose payment handling before action.
+
+Unknown payment emits the field-specific unknown reason and blocks only payment-dependent conclusions.
+
+## All in stock / progress
+
+A complete active unshipped order whose relevant active non-DS lines are all explicitly IN_STOCK/FULL yields:
+
+```text
+DOIState = DOI_MANUAL_REVIEW
+reason = RC-028 ORDER_PROGRESS_REVIEW
+```
+
+Do not infer that the order is stuck or should be released.
+
+Where an authorized exact human fact establishes normal progress/no action, support the governed monitor path with `RC-029 NO_ACTION_REQUIRED`.
+
+## Hard closure
+
+Complete facts proving:
+
+- shipped → `RC-021 SHIPPED`, `CLOSED_HARD`;
+- fully canceled → `RC-022 CANCELED`, `CLOSED_HARD`.
+
+## Reversible closure
+
+Complete facts proving:
+
+- other-rep transfer → `RC-023 REP_TRANSFERRED`;
+- verified DEDUPE → `RC-024 DEDUPE_CONFIRMED`;
+- authorized human out of scope → `RC-025 HUMAN_OUT_OF_SCOPE_CLOSED`.
+
+These produce `CLOSED_REVERSIBLE` through the registered legal transitions.
+
+## Source disappearance
+
+Source absence never closes a case. It:
+
+- emits `RC-010 SOURCE_ABSENT_RECHECK_REQUIRED`;
+- adds the exact recheck attention cause;
+- requires one governed read-only recheck path.
+
+A successful exact reappearance/recheck resolves only that cause.
+
+---
+
+# 10. Alternate-product rule pack
+
+Implement the exact hierarchy without collapsing types:
+
+1. `EXACT_SKU_RECHECK`
+2. `EXACT_MFG_ALTERNATE`
+3. `MFG_CROSS_REFERENCE`
+4. `MFG_SUPERSESSION`
+5. `FUNCTIONAL_ALTERNATE`
+
+## Exact SKU recheck
+
+- same canonical ES;
+- improved current availability/lead;
+- not an alternate relationship;
+- opportunity reason `RC-033`.
+
+## Exact MFG alternate
+
+- different ES;
+- identical canonical MFG/OE;
+- valid relationship evidence;
+- reason `RC-034`.
+
+## Manufacturer cross-reference
+
+- explicit cross-reference relationship evidence;
+- reason `RC-035`.
+
+## Supersession
+
+- explicit supersession evidence;
+- reason `RC-036`.
+
+## Functional alternate
+
+- explicit functional relationship evidence;
+- fresh compatibility review;
+- reason `RC-037`;
+- `RC-048 FUNCTIONAL_ALTERNATE_REVALIDATION_REQUIRED` where applicable.
+
+## Common rules
+
+- similar descriptions never establish a relationship;
+- exact SKU is not an alternate;
+- customer approval is required for substitution (`RC-042`);
+- compatibility review where required (`RC-043`);
+- current observation required (`RC-044`);
+- stale observation emits `RC-045`;
+- superseded/invalidated relationship emits `RC-046` / `RC-047`;
+- no exact MFG and no verified alternate remain separate facts (`RC-038`, `RC-039`);
+- manual identification (`RC-040`) blocks alternate and DEDUPE conclusions;
+- exact human no-viable-alternate confirmation emits `RC-041`.
+
+## Relationship/revision behavior
+
+Implement:
+
+- product-only privacy-safe identity;
+- exact relationship natural key;
+- immutable revisions;
+- predecessor guards;
+- exact replay;
+- changed semantic revision append;
+- same-digest/different-bytes collision rejection;
+- active/superseded/invalidated state;
+- observations bound to the exact relationship revision and Action Context.
+
+No case/customer/order identity may enter a durable product-only relationship identity object.
+
+---
+
+# 11. Contact, WWC, DEDUPE, Action Context, and attention
+
+## Contact
+
+Implement structured contact facts only.
+
+Do not infer contact state from unrestricted note text.
+
+Contact facts bind:
+
+- source;
+- occurrence identity;
+- direction;
+- target-rep participation;
+- timing;
+- exact Action Context;
+- source reference;
+- content hash.
+
+## WWC
+
+Implement direct `FindingPresenceV2` with closed nested objects for:
+
+- finding identity;
+- author provenance;
+- marker;
+- observed timestamp;
+- source reference.
+
+Required reason behavior includes:
+
+- `RC-053 WWC_ACTIVE_SELF`;
+- `RC-054 WWC_ACTIVE_OTHER_REP`;
+- `RC-055 WWC_AUTHOR_UNCERTAIN`;
+- `RC-056 TIMING_UNCERTAIN`;
+- `RC-057 HUMAN_COORDINATION_REVIEW_REQUIRED`;
+- `RC-122 UNKNOWN_WWC_PRESENCE` where the field is observed but unnormalizable/unknown.
+
+Test every legal PRESENT combination of governed KNOWN/UNKNOWN author/timing/marker members and focused illegal combinations.
+
+## DEDUPE
+
+Separate:
+
+- source-observed DEDUPE finding;
+- runtime DEDUPE candidate/state;
+- authorized human DEDUPE decision;
+- later verified source note.
+
+A PRESENT source finding requires a constructible canonical observed timestamp. Unnormalizable observed time fails before adapter/snapshot success.
+
+A DEDUPE candidate requires the complete governed conditions and emits:
+
+- `RC-058 DEDUPE_CANDIDATE`.
+
+Incomplete analysis emits:
+
+- `RC-059 DEDUPE_BLOCKED_INCOMPLETE_ANALYSIS`.
+
+Human approval alone yields the waiting-for-verification state. Only later independent verified source evidence may produce `RC-024 DEDUPE_CONFIRMED` and reversible closure.
+
+No path writes a note or mutates an external system.
+
+## Action Context
+
+Implement one closed immutable context binding relevant order/line scope, opportunity, relationship/observation, and human action facts.
+
+Completion triggers remain closed and idempotent.
+
+## Attention
+
+Attention is a cause-keyed set.
+
+Implement immutable SET/CLEAR events for:
+
+- `RECHECK_REQUIRED`;
+- `SOURCE_ABSENT_RECHECK_REQUIRED`;
+- `INTERVENTION_VERIFICATION_REQUIRED`;
+- `RESULTING_ORDER_LINK_REVIEW`;
+- `HUMAN_COORDINATION_REVIEW_REQUIRED`.
+
+CLEAR must reference the exact active SET and may not clear unrelated causes.
+
+---
+
+# 12. Opportunity scope, overlap, and value
+
+Every opportunity must bind exact immutable scope.
+
+## Scope
+
+Scope components include:
+
+- exact line snapshot ID;
+- exact quantity;
+- role in the opportunity;
+- canonical scope ordering;
+- scope hash.
+
+Unproved scope creates no opportunity and no potential value.
+
+## Overlap
+
+Overlapping or mutually exclusive opportunity options remain separate.
+
+If the total potential would double-count or requires a scenario choice:
+
+- do not sum;
+- emit `RC-087 POTENTIAL_OVERLAP_UNRESOLVED`;
+- overall potential is unavailable until an explicit scenario selection exists.
+
+## Potential value
+
+Use exact Money and Quantity.
+
+If exact calculation is not possible:
+
+- emit `RC-085 VALUE_CALCULATION_UNAVAILABLE`;
+- preserve the opportunity;
+- mark the value unavailable.
+
+Currency errors use the exact registered reasons. Mixed currency aggregation is prohibited.
+
+---
+
+# 13. Interventions, resulting-order links, verification, and KPI
+
+Implement pure immutable histories and in-memory reducers.
+
+## Opportunity versus intervention
+
+An opportunity does not prove action.
+
+An intervention exists only after exact verified action evidence.
+
+Intervention types:
+
+- `FULFILLMENT_SPLIT`;
+- `PRODUCT_SUBSTITUTION`;
+- `DS_SEPARATION`.
+
+## Action verification
+
+Implement:
+
+- system-verified action;
+- authorized human-verified action;
+- unverified action;
+- duplicate occurrence;
+- conflict;
+- exact replay.
+
+Use the exact reason registry, including:
+
+- action verification required;
+- system/human verified;
+- value unverified;
+- occurrence conflicts;
+- partial/full reversal reasons.
+
+Do not infer an intervention from a recommendation, click, or opportunity.
+
+## Value
+
+Maintain separate append-only logical state for:
+
+- initial verified value;
+- correction;
+- partial reversal;
+- full reversal.
+
+Rules:
+
+- estimated/ranged/rounded human amounts are rejected;
+- system-grounded exact evidence controls when it conflicts with human evidence while detail exists;
+- unverified value contributes zero realized amount;
+- duplicate action/evidence fingerprints are suppressed;
+- corrections/reversals never rewrite prior history.
+
+## Resulting-order links
+
+Implement separate models for:
+
+- search state:
+  - NOT_FOUND
+  - AMBIGUOUS
+- exact link state:
+  - AUTO_LINKED
+  - HUMAN_CONFIRMED
+  - AMBIGUOUS
+- mapping revisions;
+- moved-line components.
+
+An exact link requires:
+
+- non-null child synthetic Order Number;
+- exact natural key;
+- exact evidence;
+- exact mapping scope.
+
+Temporal proximity or same fictional customer alone is insufficient.
+
+Rep verification is scoped:
+
+- split → resulting-order-level target rep;
+- substitution → replacement-line-level target rep;
+- parent-order rep cannot substitute for line-level proof.
+
+Ambiguity/conflict prevents realized split/substitution value.
+
+## KPI
+
+Implement pure retained contribution and nonidentifying aggregate logic.
+
+Rules:
+
+- exactly once per verified intervention occurrence;
+- exact action date;
+- currency segmented;
+- mixed currencies never summed;
+- unverified action date produces no KPI contribution;
+- purge finalization transfers exact current contribution to a nonidentifying bucket;
+- reconciliation mismatch rolls back the simulated finalization/deletion result;
+- no case/order/link drill-through identity survives in the aggregate object.
+
+Durable transaction implementation is deferred to Milestone 4.
+
+---
+
+# 14. Lifecycle and all 115 transitions
+
+Implement a registry-backed pure transition dispatcher/reducer.
+
+Requirements:
+
+- every registered transition ID is recognized;
+- every unregistered transition is rejected;
+- transition input declares exact from-state, event/command, guard facts, and expected target;
+- false guard rejects before append;
+- successful transition returns:
+  - immutable event;
+  - updated projection;
+  - reason set;
+  - persistence-neutral effects;
+- prior state remains unchanged on rejection;
+- exact replay is idempotent;
+- same transition occurrence with different material conflicts;
+- event sequence/predecessor conflicts fail closed;
+- malformed lifecycle event schema emits/reports the registered schema-invalid condition without adding an unregistered transition.
+
+## Coverage requirement
+
+For every one of the 115 transitions:
+
+- at least one real collected legal-path test;
+- at least one focused illegal-guard/from-state test, where semantically applicable;
+- exact reason/event ownership traceability;
+- actual collected test IDs in the generated inventory.
+
+Do not create a fake test-count assertion. Derive the inventory from the real runner.
+
+Persistence-only effects may be represented as immutable transition-effect objects in this milestone. Milestone 4 will persist them.
+
+---
+
+# 15. Reason ownership and executable oracle reconciliation
+
+The implemented DOI rule pack must preserve:
+
+```text
+reasons = 138
+ownership rows = 138
+transitions = 115
+```
+
+Requirements:
+
+- every reason ID is closed and typed;
+- every emitted reason is legal for the exact owner/site/transition;
+- every ownership row resolves to at least one real collected executable DOI test before Milestone 3 commits;
+- RC-084 has executable tests for both:
+  - evaluation-level site;
+  - pre-extraction run-level TR-004 site;
+- no phantom selector-qualified test reference remains;
+- every generated selector/parameter ID is stable and collected;
+- no reason is added or removed merely to fit an internal implementation design;
+- all 23 R01-added UNKNOWN reasons have field-specific accepted/unknown/NA/error tests;
+- multiple independent UNKNOWN reasons use exact set union.
+
+Create a machine-generated reason/ownership/oracle reconciliation report from actual tests.
+
+---
+
+# 16. Mandatory audit-finding closure
+
+Update the existing 19-row closure matrix.
+
+Milestone 3 must provide executable closure for all DOI-consumed findings, including:
+
+- fixture/object hash preimage consistency;
+- source-time equality;
+- timestamp/quantity contracts;
+- bounded generated attempt IDs;
+- product-only source object namespaces;
+- privacy canaries and precedence;
+- DEDUPE observed-time constructability;
+- Order Number source preservation;
+- per-domain version/null/conflict/boundary coverage;
+- phantom selector removal;
+- nested finding schemas;
+- finding registry hash laws;
+- all WWC PRESENT partitions;
+- work-item versus disposition-subject equations;
+- extraction-reservation versus systemic-terminalization serialization;
+- RC-084 dual legal emission sites.
+
+A finding is closed only by:
+
+- implementation artifact;
+- real collected tests;
+- ADR where consequential;
+- traceability entry.
+
+Document assertions alone are not closure.
+
+---
+
+# 17. Synthetic DOI fixture/scenario catalog
+
+Create deterministic synthetic fixture builders and scenarios using only reserved identities.
+
+At minimum cover:
+
+## Source/run
+
+- valid review run;
+- duplicates merged;
+- invalid Order Number;
+- out-of-scope assignee;
+- assignee conflict;
+- source changed;
+- source inaccessible;
+- exact retry;
+- retry conflict;
+- failed attempt waiting indefinitely;
+- explicit no-retry finalization;
+- retry wins race;
+- finalization wins race;
+- RC-084 pre-extraction failure;
+- recheck run types;
+- systemic failure with one work item and zero disposition counts.
+
+## Extraction
+
+- complete ordinary order;
+- large complete order;
+- zero relevant lines explicitly proved;
+- wrong order identity;
+- missing section;
+- line-count mismatch;
+- duplicate line;
+- source changed mid-read;
+- source-time mismatch;
+- unnormalizable required timestamp;
+- UNKNOWN individual field versus missing field;
+- stable and composite line continuity.
+
+## Core rules
+
+- full DS;
+- mixed DS;
+- split;
+- partial quantity;
+- payment only;
+- payment + opportunity;
+- all in stock progress review;
+- monitor/no action;
+- shipped;
+- canceled;
+- rep transfer;
+- human out of scope;
+- source absence;
+- every geography class;
+- unknown ETA;
+- all field-specific UNKNOWN partitions;
+- multi-UNKNOWN containment;
+- overlapping opportunities.
+
+## Alternates
+
+- exact SKU;
+- exact MFG;
+- cross-reference;
+- supersession;
+- functional;
+- stale observation;
+- superseded/invalidated relationship;
+- no exact MFG;
+- no verified alternate;
+- manual identification;
+- no viable alternate human confirmed;
+- compatibility approved/rejected/more evidence.
+
+## Contact / WWC / DEDUPE
+
+- all contact directions/states;
+- self/other/uncertain WWC;
+- active/expired/uncertain timing;
+- every legal WWC PRESENT partition;
+- malformed nested finding;
+- DEDUPE candidate;
+- DEDUPE incomplete;
+- approved awaiting verification;
+- rejected;
+- confirmed from later verified source fact;
+- attention coexistence and exact clear.
+
+## Intervention / result / KPI
+
+- unverified action;
+- system verified;
+- human verified;
+- exact replay;
+- occurrence conflict;
+- value verified;
+- value conflict;
+- correction;
+- partial reversal;
+- full reversal;
+- result link auto/human;
+- not found;
+- ambiguous;
+- mapping conflict/resolution;
+- split rep verified/unverified;
+- exact KPI contribution;
+- duplicate suppression;
+- mixed-currency rejection;
+- action-date unavailable;
+- purge finalization and rollback.
+
+## Transitions
+
+- collected legal case for every transition;
+- focused invalid case for every state/guard family.
+
+Every scenario declares:
+
+- scenario ID;
+- synthetic inputs;
+- expected top-level state;
+- exact reasons;
+- opportunities and scope;
+- review/attention conditions;
+- closure;
+- transition/event effects;
+- value state;
+- expected safety counters.
+
+Actual scenario and test counts are derived from the runner.
+
+---
+
+# 18. Documentation and traceability
+
+Create:
+
+- DOI rule-pack README;
+- DOI domain model map;
+- transition implementation matrix;
+- reason/owner/oracle reconciliation report;
+- opportunity and precedence matrix;
+- lifecycle/event reducer documentation;
+- synthetic scenario inventory from actual collected tests;
+- exact hash-preimage document;
+- updated audit-finding closure matrix.
+
+Create ADRs only where consequential, expected areas:
+
+- DOI result dimensionality and precedence;
+- run-control serialization model;
+- transition reducer/event-effect strategy;
+- opportunity-scope and overlap identity;
+- product-only relationship identity/revision;
+- intervention occurrence/replay;
+- KPI aggregation/finalization.
+
+Do not create bureaucracy for ordinary module organization.
+
+---
+
+# 19. Milestone boundary update
+
+Permit only:
+
+- DOI immutable models;
+- pure DOI rules;
+- pure run/source reducers;
+- pure lifecycle reducers;
+- in-memory DOI event/state store for tests;
+- synthetic DOI fixtures;
+- DOI traceability/docs/tests.
+
+Continue to reject:
+
+- business SQLite tables;
+- persistence repositories;
+- portal or API code;
+- dashboard;
+- Chrome extension/manifest;
+- external source connector;
+- network code;
+- any production identifier or domain;
+- modifications to supplied specifications;
+- Milestone 4 implementation.
+
+---
+
+# Required verification
+
+Run at minimum:
+
+1. quality gate;
+2. compileall;
+3. all DOI scoped tests;
+4. all Milestone 1 shared-domain tests;
+5. all Milestone 2 Sales Credit tests;
+6. complete repository suite;
+7. foundation audit;
+8. synthetic-identity firewall;
+9. prohibited-input scan;
+10. secret scan;
+11. localhost-only network checks;
+12. milestone-boundary checks;
+13. reason/ownership/transition reconciliation audit;
+14. collected scenario/test inventory audit;
+15. lifecycle transition coverage audit;
+16. hash-preimage known-answer audit;
+17. replay/concurrency/fault-injection suites.
+
+All supplied specification bytes remain unchanged.
+
+All nine safety counters remain zero.
+
+Runtime network calls remain zero.
+
+---
+
+# Same-tree commit gate
+
+1. Finish every Milestone 3 candidate file.
+2. Run scoped and complete gates.
+3. Record the candidate tree.
+4. Rerun the complete final gate on that exact tree.
+5. Commit only when every result passes.
+6. Verify the commit tree equals the gated candidate tree.
+7. Verify worktree/index clean.
+8. Do not begin Milestone 4.
+
+---
+
+# Completion report
+
+At completion report:
+
+- base commit and derived base tree;
+- gated candidate tree;
+- final commit and tree;
+- exact created/modified/deleted inventory;
+- DOI module inventory;
+- enum/model inventory;
+- run-machine and source-ingestion results;
+- whole-order/extraction results;
+- top-level precedence results;
+- direct-ship/split/partial/payment/closure results;
+- alternate-product results;
+- contact/WWC/DEDUPE results;
+- opportunity/scope/overlap results;
+- intervention/result-link/KPI results;
+- transition coverage:
+  - 115/115 recognized;
+  - legal-path collected tests;
+  - invalid-family collected tests;
+- reason/ownership reconciliation:
+  - 138/138 reasons;
+  - 138/138 ownership;
+  - zero illegal emissions;
+  - zero phantom oracle references;
+- actual collected scenario and test IDs/counts;
+- audit-finding closure status;
+- every test command/result;
+- complete repository test count;
+- Sales Credit regression result;
+- business SQLite table count, required zero;
+- portal/API/dashboard/extension inventory, required zero;
+- runtime network count, required zero;
+- safety-counter values, all required zero;
+- supplied-file integrity;
+- worktree/index status;
+- any genuine binding contradiction.
+
+Finish exactly:
+
+```text
+MILESTONE_3_DOI_RULE_PACK = PASS
+```
+
+or:
+
+```text
+MILESTONE_3_DOI_RULE_PACK = BLOCKED
+```
+
+Stop after Milestone 3.

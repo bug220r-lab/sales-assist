@@ -132,7 +132,7 @@ class Milestone2BoundaryTests(unittest.TestCase):
                     violations.append(f"{name}:{node.lineno}:clock")
         self.assertEqual(violations, [])
 
-    def test_no_milestone_three_persistence_or_user_interface_artifact_exists(self) -> None:
+    def test_no_milestone_four_persistence_or_user_interface_artifact_exists(self) -> None:
         migrations = ROOT / "migrations"
         self.assertEqual(
             {path.name for path in migrations.iterdir() if path.is_file()},
@@ -143,7 +143,6 @@ class Milestone2BoundaryTests(unittest.TestCase):
             "browser",
             "chrome_extension",
             "dashboard",
-            "doi",
             "extension",
             "portal",
         }
