@@ -47,7 +47,7 @@ class MilestoneBoundaryTests(unittest.TestCase):
         matrix_path = ROOT / "docs" / "audit-finding-closure-matrix.md"
         self.assertTrue(matrix_path.is_file())
         matrix_text = matrix_path.read_text(encoding="utf-8")
-        self.assertIn("- Matrix version: `milestone3/v1`", matrix_text)
+        self.assertIn("- Matrix version: `milestone4/v1`", matrix_text)
         self.assertNotIn("DEFERRED", matrix_text)
         self.assertNotIn("PARTIAL", matrix_text)
         rows = [
@@ -68,8 +68,8 @@ class MilestoneBoundaryTests(unittest.TestCase):
             parsed[cells[0]] = cells
         self.assertEqual(set(parsed), expected)
         allowed_statuses = {
-            "CLOSED_M3",
-            "CLOSED_M3_REOPEN_ON_EXTENSION",
+            "CLOSED_M4",
+            "CLOSED_M4_REOPEN_ON_EXTENSION",
         }
         self.assertTrue(all(cells[1] in allowed_statuses for cells in parsed.values()))
 
@@ -90,15 +90,20 @@ class MilestoneBoundaryTests(unittest.TestCase):
         }
         self.assertTrue(required.issubset(exported))
 
-    def test_milestone_four_and_user_interface_modules_are_absent(self) -> None:
+    def test_milestone_five_and_user_interface_modules_are_absent(self) -> None:
         discovered = {path.stem for path in PACKAGE.rglob("*.py")}
         discovered.update(path.name for path in PACKAGE.iterdir() if path.is_dir())
         self.assertFalse(discovered & FORBIDDEN_FEATURE_NAMES)
 
+    def test_milestone_four_and_user_interface_modules_are_absent(self) -> None:
+        """Preserve the Milestone 3 boundary oracle name."""
+
+        self.test_milestone_five_and_user_interface_modules_are_absent()
+
     def test_milestone_three_and_user_interface_modules_are_absent(self) -> None:
         """Preserve the Milestone 2 oracle ID at the advanced milestone boundary."""
 
-        self.test_milestone_four_and_user_interface_modules_are_absent()
+        self.test_milestone_five_and_user_interface_modules_are_absent()
 
     def test_package_has_no_network_client_import(self) -> None:
         violations: list[str] = []
@@ -167,10 +172,17 @@ class MilestoneBoundaryTests(unittest.TestCase):
                 self.assertFalse(path.is_symlink())
 
     def test_no_business_migration_or_user_interface_artifact_exists(self) -> None:
+        """Preserve the pre-Milestone-4 oracle ID at the advanced boundary."""
+
         migrations = ROOT / "migrations"
         self.assertEqual(
             {path.name for path in migrations.iterdir() if path.is_file()},
-            {"0001_foundation.sql"},
+            {
+                "0001_foundation.sql",
+                "0002_shared_persistence.sql",
+                "0003_sales_credit_persistence.sql",
+                "0004_doi_persistence.sql",
+            },
         )
         implementation_roots = (ROOT / "src", ROOT / "tests", ROOT / "tools")
         forbidden_suffixes = {".html", ".js", ".jsx", ".ts", ".tsx"}

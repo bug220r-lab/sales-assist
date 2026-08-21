@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "synthetic-sales-assist"
 version = "0.1.0"
-description = "Synthetic-only Sales Assist foundation, shared domain, and Sales Credit rules"
+description = "Synthetic-only Sales Assist rule packs, SQLite persistence, and local CLI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
@@ -19,6 +19,7 @@ dev = [
 
 [project.scripts]
 ssa-foundation-audit = "synthetic_sales_assist.foundation_audit:main"
+synthetic-sales-assist = "synthetic_sales_assist.cli.__main__:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

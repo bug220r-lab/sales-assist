@@ -18,16 +18,21 @@ class FoundationAuditTests(unittest.TestCase):
 
     def test_complete_audit_passes(self) -> None:
         self.assertEqual(self.report["status"], "PASS")
-        self.assertEqual(self.report["milestone"], 0)
+        self.assertEqual(self.report["milestone"], 4)
 
     def test_no_external_or_business_capability_exists(self) -> None:
         self.assertEqual(self.report["external_system_calls_required"], 0)
         self.assertEqual(self.report["business_rule_modules"], 0)
 
-    def test_no_extension_is_created_during_milestone_zero(self) -> None:
+    def test_no_extension_is_created_through_milestone_four(self) -> None:
         inventory = self.report["chrome_permission_inventory"]
         self.assertEqual(inventory["manifest_count"], 0)
         self.assertEqual(inventory["extension_artifacts_created"], 0)
+
+    def test_no_extension_is_created_during_milestone_zero(self) -> None:
+        """Preserve the foundation audit selector at the advanced boundary."""
+
+        self.test_no_extension_is_created_through_milestone_four()
 
     def test_all_safety_counters_are_zero(self) -> None:
         counters = self.report["safety_counters"]

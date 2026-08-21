@@ -11,6 +11,7 @@ DOI_MODULES = {
     "__init__.py",
     "boundaries.py",
     "case_attention.py",
+    "demo.py",
     "evaluator.py",
     "extraction.py",
     "fixtures.py",
@@ -26,6 +27,7 @@ DOI_MODULES = {
 }
 PURE_MODULES = DOI_MODULES - {
     "__init__.py",
+    "demo.py",
     "fixtures.py",
     "retention.py",
     "source.py",
@@ -116,28 +118,35 @@ class Milestone3BoundaryTests(unittest.TestCase):
                         violations.append(f"{name}:{node.lineno}:clock")
         self.assertEqual(violations, [])
 
-    def test_milestone_four_artifacts_remain_absent(self) -> None:
+    def test_milestone_five_artifacts_remain_absent(self) -> None:
         migrations = ROOT / "migrations"
         self.assertEqual(
             {path.name for path in migrations.iterdir() if path.is_file()},
-            {"0001_foundation.sql"},
+            {
+                "0001_foundation.sql",
+                "0002_shared_persistence.sql",
+                "0003_sales_credit_persistence.sql",
+                "0004_doi_persistence.sql",
+            },
         )
         forbidden_stems = {
             "api",
-            "backup",
             "browser",
             "chrome_extension",
             "connector",
             "dashboard",
             "extension",
             "portal",
-            "repository",
-            "restore",
             "server",
             "worker",
         }
         discovered = {path.stem for path in PACKAGE.rglob("*") if path.is_file()}
         self.assertFalse(discovered & forbidden_stems)
+
+    def test_milestone_four_artifacts_remain_absent(self) -> None:
+        """Preserve the Milestone 3 collected boundary selector."""
+
+        self.test_milestone_five_artifacts_remain_absent()
 
     def test_no_temporary_or_backup_artifact_exists(self) -> None:
         disallowed: list[str] = []

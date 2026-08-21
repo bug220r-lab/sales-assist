@@ -37,9 +37,15 @@ class MigrationTests(unittest.TestCase):
         return temporary
 
     def test_initial_migration_is_atomic_hash_bound_and_neutral(self) -> None:
+        temporary = self.temporary_migration_directory()
+        foundation_directory = Path(temporary.name)
+        foundation_source = MIGRATIONS_DIRECTORY / "0001_foundation.sql"
+        (foundation_directory / foundation_source.name).write_bytes(
+            foundation_source.read_bytes()
+        )
         applied = apply_migrations(
             self.connection,
-            MIGRATIONS_DIRECTORY,
+            foundation_directory,
             repository_root=PROJECT_ROOT,
             clock=lambda: FIXED_TIME,
         )
@@ -76,6 +82,10 @@ class MigrationTests(unittest.TestCase):
         )
 
     def test_exact_reapplication_is_a_noop(self) -> None:
+        inventory = discover_migrations(
+            MIGRATIONS_DIRECTORY,
+            repository_root=PROJECT_ROOT,
+        )
         first = apply_migrations(
             self.connection,
             MIGRATIONS_DIRECTORY,
@@ -87,12 +97,12 @@ class MigrationTests(unittest.TestCase):
             repository_root=PROJECT_ROOT,
         )
 
-        self.assertEqual(first, (1,))
+        self.assertEqual(first, tuple(item.version for item in inventory))
         self.assertEqual(second, ())
         count = self.connection.execute(
             f"SELECT COUNT(*) FROM {MIGRATION_LEDGER_TABLE}"
         ).fetchone()
-        self.assertEqual(count, (1,))
+        self.assertEqual(count, (len(inventory),))
 
     def test_source_tamper_after_application_is_rejected(self) -> None:
         temporary = self.temporary_migration_directory()

@@ -1,4 +1,4 @@
-"""Executable, offline Milestone 0 commit gate and inventory report."""
+"""Executable, offline repository safety, integrity, and capability audit."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from synthetic_sales_assist.audit import audit_bundle
-from synthetic_sales_assist.persistence.migrations import apply_migrations
+from synthetic_sales_assist.persistence.migrations import apply_migrations, discover_migrations
 from synthetic_sales_assist.safety.chrome import (
     ALLOWED_CHROME_HOST_PATTERNS,
     validate_chrome_permissions,
@@ -180,6 +180,8 @@ def _chrome_report(root: Path) -> dict[str, object]:
 def _counter_and_migration_report(root: Path) -> tuple[dict[str, object], dict[str, object]]:
     counters = zero_safety_counters()
     assert_safety_counters_zero(counters)
+    inventory = discover_migrations(root / "migrations", repository_root=root)
+    expected_versions = tuple(item.version for item in inventory)
     with sqlite3.connect(":memory:") as connection:
         first = apply_migrations(
             connection,
@@ -197,7 +199,17 @@ def _counter_and_migration_report(root: Path) -> tuple[dict[str, object], dict[s
             ).fetchall()
         )
         foreign_keys = connection.execute("PRAGMA foreign_keys").fetchone()
-    _require(first == (1,) and second == (), "MIGRATION_REPLAY_FAILURE")
+        schema_objects = tuple(
+            connection.execute(
+                """
+                SELECT type, name
+                FROM sqlite_master
+                WHERE name NOT LIKE 'sqlite_%'
+                ORDER BY type, name
+                """
+            ).fetchall()
+        )
+    _require(first == expected_versions and second == (), "MIGRATION_REPLAY_FAILURE")
     _require(persisted == counters, "PERSISTED_SAFETY_COUNTER_MISMATCH")
     _require(foreign_keys == (1,), "SQLITE_FOREIGN_KEYS_DISABLED")
     counter_report = {
@@ -211,7 +223,18 @@ def _counter_and_migration_report(root: Path) -> tuple[dict[str, object], dict[s
         "applied_versions": list(first),
         "replay_applied_versions": list(second),
         "foreign_keys_enabled": True,
-        "business_tables": 0,
+        "latest_schema_version": expected_versions[-1],
+        "migration_checksums": {
+            item.path.name: item.sha256 for item in inventory
+        },
+        "table_count": sum(1 for kind, _ in schema_objects if kind == "table"),
+        "index_count": sum(1 for kind, _ in schema_objects if kind == "index"),
+        "trigger_count": sum(1 for kind, _ in schema_objects if kind == "trigger"),
+        "business_tables": sum(
+            1
+            for kind, name in schema_objects
+            if kind == "table" and (name.startswith("sc_") or name.startswith("doi_"))
+        ),
     }
     return counter_report, migration_report
 
@@ -223,9 +246,9 @@ def run_foundation_audit(root: Path) -> dict[str, object]:
     bundle = audit_bundle(root)
     counters, migrations = _counter_and_migration_report(root)
     return {
-        "schema_version": "synthetic-sales-assist-foundation-audit/v1",
+        "schema_version": "synthetic-sales-assist-repository-audit/v2",
         "status": "PASS",
-        "milestone": 0,
+        "milestone": 4,
         "bundle": bundle.to_dict(),
         "identity_firewall": _identity_report(),
         "prohibited_input_scan": _prohibited_input_report(root),
@@ -253,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
         report = run_foundation_audit(args.root)
     except Exception as error:
         failure = {
-            "schema_version": "synthetic-sales-assist-foundation-audit/v1",
+            "schema_version": "synthetic-sales-assist-repository-audit/v2",
             "status": "FAIL",
             "error": type(error).__name__,
         }

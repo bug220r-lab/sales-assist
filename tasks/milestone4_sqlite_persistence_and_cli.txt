@@ -1,0 +1,999 @@
+# Synthetic Sales Assist v0.1 — Milestone 4
+# SQLite Persistence, Repository Layer, Telemetry, Backup/Restore, and First-Testable CLI
+
+Continue in the same Codex chat and repository from the exact passing Milestone 3 state.
+
+## Exact base state
+
+```text
+branch = main
+base_commit = e302b21bedbf1bc8c59861ec735d8fbd164a4db3
+base_tree = 002f9660f117f42d9047fc6e2b98f344449c0123
+parent_commit = 44c4a5b0c782535d2f85e0be5b5f03073c76b8f8
+reported_full_regression = 1,184/1,184 PASS
+reported_doi_tests = 697/697 PASS
+reported_domain_tests = 118/118 PASS
+reported_sales_credit_tests = 287/287 PASS
+reported_safety_boundary_tests = 55/55 PASS
+```
+
+Milestone 3 produced:
+
+- 138/138 DOI reasons;
+- 138/138 ownership rows;
+- 115/115 recognized transitions;
+- 115/115 collected legal-path selectors;
+- 115/115 invalid-family selectors;
+- 307 synthetic DOI scenarios;
+- 290 distinct collected DOI scenario selectors;
+- 94 DOI hash known-answer domains;
+- all 19 prior audit findings executable-release-closed;
+- zero runtime network calls;
+- zero business SQLite tables;
+- no portal, API, dashboard, or Chrome extension.
+
+## Pre-edit verification
+
+Before changing files:
+
+1. Verify `HEAD` equals the stated base commit.
+2. Verify `HEAD^{tree}` equals the stated base tree.
+3. Verify the index is clean.
+4. Verify the worktree is clean except for the one explicitly permitted bootstrap file:
+   `tasks/milestone4_sqlite_persistence_and_cli.txt`.
+   If that file exists, treat it as the user-supplied Milestone 4 instruction and include it in
+   the Milestone 4 commit. No other pre-existing modified or untracked path is permitted.
+5. Rerun the complete existing repository suite and reconcile the reported counts.
+6. Verify every protected supplied file remains byte-identical:
+   - `specs/`
+   - `reference/`
+   - `BUNDLE_MANIFEST.json`
+   - `SHA256SUMS.txt`
+7. Confirm all nine binding safety counters remain zero.
+8. Confirm no business persistence tables or repositories exist.
+9. Confirm no portal, API, dashboard, Chrome extension, or external connector exists.
+10. Confirm no non-loopback runtime request occurs.
+11. Record the exact pre-edit inventory and base tree.
+
+If any binding precondition differs—other than the explicitly permitted untracked Milestone 4
+instruction file—stop before modifying files and report the exact discrepancy.
+
+---
+
+# Milestone objective
+
+Implement **Milestone 4 only**:
+
+- durable SQLite persistence for the shared domain engine;
+- durable Sales Credit persistence;
+- durable DOI persistence;
+- transactional repositories and unit-of-work boundaries;
+- migration, verification, integrity, backup, restore, and recovery tooling;
+- persisted telemetry;
+- a first-testable command-line interface driven only by existing synthetic scenarios.
+
+At the end of this milestone, the user must be able to run synthetic Sales Credit and DOI scenarios from PowerShell, persist the results, inspect history, verify exact replay, inspect metrics, back up the database, restore it, and verify database health.
+
+Do not implement Milestone 5 or later.
+
+---
+
+# Binding files and implementation evidence
+
+Read and follow:
+
+- `AGENTS.md`
+- `specs/SPEC_INDEX.md`
+- all files under `specs/shared/`
+- all files under `specs/sales_credit/`
+- all files under `specs/doi/`
+- all files under `specs/advisory/`
+- Milestone 1 ADRs and hash-preimage documentation
+- Milestone 2 Sales Credit traceability and hash-preimage documentation
+- Milestone 3 DOI product decision, traceability, transition, scenario, hash, and audit-closure documentation
+- `docs/audit-finding-closure-matrix.md`
+- existing migration framework and `migrations/0001_foundation.sql`
+
+Curated specifications govern. Repository-authored implementation evidence governs internal design only where it does not change binding business behavior.
+
+---
+
+# Engineering doctrine
+
+Codex owns the physical SQLite design.
+
+Do not stop merely to ask:
+
+- how many physical tables to use;
+- whether a logical relation uses a join table or checked nullable foreign keys;
+- which indexes to create;
+- how repositories are split;
+- how units of work are organized;
+- which SQLite locking/journal strategy to use;
+- how table and column names are organized.
+
+Choose the simplest sound design, document consequential choices in ADRs, and prove the binding invariants with tests.
+
+Stop only if two plausible choices would change:
+
+- Sales Credit or DOI outcomes;
+- reason/transition semantics;
+- human authority;
+- evidence/completeness meaning;
+- replay identity visible across versions;
+- privacy or retention meaning;
+- realized value or KPI accounting;
+- authorized survivors after purge.
+
+---
+
+# Hard Milestone 4 boundaries
+
+Do **not**:
+
+- create the synthetic web portal;
+- create a web API or server;
+- create a dashboard;
+- create a Chrome extension or manifest;
+- add an external connector;
+- make a network request;
+- access a file outside this repository except:
+  - the explicitly selected local database path;
+  - an explicitly selected backup/restore path;
+- use a real organization, customer, employee, order, product, message, or source record;
+- modify protected supplied specification/reference files;
+- change completed Sales Credit or DOI rule behavior;
+- create a production hostname, route, selector, credential, session, or browser permission;
+- begin Milestone 5.
+
+Permitted:
+
+- SQLite business tables;
+- migration files;
+- repository and unit-of-work modules;
+- local filesystem database/backup files;
+- a CLI;
+- deterministic synthetic demo aliases mapped to existing collected scenarios;
+- persistence/telemetry/backup documentation;
+- Windows helper scripts that invoke the CLI without networking.
+
+---
+
+# 1. Database location and filesystem safety
+
+The active database must not default to the Git repository or a OneDrive-synchronized directory.
+
+Use an application data root under the current user's local application-data directory, equivalent to:
+
+```text
+%LOCALAPPDATA%\SyntheticSalesAssist\
+```
+
+Recommended layout:
+
+```text
+%LOCALAPPDATA%\SyntheticSalesAssist\
+├── data\
+│   └── synthetic_sales_assist.sqlite3
+├── logs\
+├── backups\
+├── runtime\
+└── exports\
+```
+
+Requirements:
+
+- no administrator privileges;
+- deterministic path resolution;
+- optional explicit `--data-dir` override for testing and isolated instances;
+- override must resolve to a local filesystem path;
+- reject network shares, UNC paths, URLs, device paths, and traversal;
+- repository tests use isolated temporary directories;
+- never write runtime database/log/backup files into `specs/`, `reference/`, fixtures, or Git-tracked paths;
+- `.gitignore` covers local runtime artifacts;
+- active database file is not synchronized by default.
+
+Document the path policy.
+
+---
+
+# 2. SQLite connection and integrity policy
+
+Use Python's standard-library SQLite unless an already-installed approved dependency provides a clear benefit without network installation.
+
+Required connection behavior:
+
+- `PRAGMA foreign_keys = ON`;
+- explicit transaction boundaries;
+- bounded busy timeout;
+- deterministic row/text handling;
+- no implicit autocommit for multi-step business operations;
+- startup schema-version verification;
+- application/version metadata;
+- transactional migration application;
+- rollback on migration failure;
+- `foreign_key_check`;
+- `quick_check` for ordinary health;
+- `integrity_check` for explicit deep verification.
+
+Codex may choose and document:
+
+- rollback journal versus WAL;
+- connection-per-operation versus managed connection;
+- writer serialization;
+- read transaction strategy;
+- index plan;
+- trigger use.
+
+Create an ADR for the selected SQLite concurrency/journal/transaction strategy.
+
+Tests must prove:
+
+- foreign keys are active on every application connection;
+- concurrent reads are safe;
+- concurrent writers preserve idempotency and event ordering;
+- no partial transaction survives injected failure;
+- a database opened with an unsupported future schema version fails closed.
+
+---
+
+# 3. Migration design
+
+Retain `0001_foundation.sql`.
+
+Create one or more versioned Milestone 4 migrations beginning after 0001.
+
+Migrations must create the complete business persistence required for the existing logical models.
+
+Requirements:
+
+- fresh database upgrade from version 0 through the latest;
+- upgrade from the exact Milestone 0 foundation state;
+- each migration recorded exactly once;
+- replay is a no-op;
+- migration checksum drift is detected;
+- failed migration rolls back;
+- schema inventory is deterministic;
+- all tables, indexes, triggers, and constraints are documented;
+- no Sales Credit/DOI cross-domain foreign key unless a shared neutral object explicitly owns the relationship;
+- no table or trigger grants external-system capability.
+
+Create:
+
+- schema inventory generator;
+- migration verification report;
+- migration tests;
+- a database schema diagram or logical map.
+
+Do not hand-edit a database to satisfy tests.
+
+---
+
+# 4. Shared persistence primitives
+
+Persist the Milestone 1 shared primitives needed for durable business behavior.
+
+At minimum support:
+
+- schema/application metadata;
+- version bindings;
+- hash bindings and canonical material where collision comparison requires it;
+- processing commands;
+- idempotency natural keys/tokens;
+- retained command receipts;
+- structured domain failures appropriate for audit history;
+- processing-stage telemetry;
+- safety counters;
+- migration receipts;
+- backup receipts.
+
+Rules:
+
+- no unrestricted arbitrary metadata;
+- no prohibited identity-like content;
+- exact replay returns the prior durable result;
+- same key with changed material fails;
+- same digest with different canonical bytes fails;
+- lookup occurs before new result/event allocation;
+- no caller-controlled timestamp substitutes for trusted commit time where the contract requires trusted time.
+
+---
+
+# 5. Sales Credit durable persistence
+
+Implement durable repositories for the completed Milestone 2 logical behavior.
+
+Persist enough normalized structure to support:
+
+- synthetic interactions;
+- search runs and attempted identifiers;
+- native result-set completeness;
+- order snapshots;
+- line-item snapshots;
+- evidence events;
+- one logical active case per canonical synthetic Order Number;
+- case/interaction/snapshot/evidence relationships;
+- attribution classification;
+- order-value status;
+- workflow state;
+- replacement-parent relationship;
+- manager outcomes;
+- closed minimized audit records;
+- processing/replay receipts;
+- telemetry.
+
+Binding invariants:
+
+- multiple interactions may attach to one case;
+- multiple immutable snapshots may attach to one case;
+- prior snapshots and evidence are never overwritten;
+- exactly one current projection per case;
+- system classification and manager outcome are separate;
+- manager outcome exact replay is idempotent;
+- conflicting outcome replay fails;
+- one occurrence cannot produce duplicate totals or outcomes;
+- placed value remains exact Money;
+- fictional email/phone and active-only excerpts are not copied into closed minimized audit records;
+- closure projection is atomic with the logical minimization transaction;
+- simulated 90-day purge eligibility is exact;
+- actual purge tests delete the governed active detail and retain only the allowed minimized record/aggregate;
+- purge retry is idempotent;
+- purge failure rolls back.
+
+Create repository APIs that return domain types, not raw unvalidated dictionaries.
+
+---
+
+# 6. DOI durable persistence
+
+Implement durable repositories for the completed Milestone 3 logical behavior.
+
+The physical table decomposition is Codex-owned, but persistence must cover every durable logical history needed by the rule pack.
+
+At minimum cover these logical groups.
+
+## Source and run
+
+- source batches;
+- run projection;
+- immutable run events;
+- source-import attempts;
+- immutable attempt events;
+- staged orders;
+- rejected source records;
+- source/run references;
+- run work items;
+- explicit no-retry finalization command receipts;
+- count summaries;
+- nonidentifying source-import aggregate where governed.
+
+## Case and extraction
+
+- order cases;
+- case/source bindings;
+- admission proofs;
+- extraction attempts;
+- immutable order snapshots;
+- immutable line snapshots;
+- whole-order completeness proof;
+- line-continuity proof;
+- source-presence/recheck facts.
+
+## Evaluation and opportunity
+
+- immutable evaluations;
+- input/output/full-record hashes;
+- reason sets;
+- evaluation bindings;
+- opportunities;
+- opportunity scopes/components;
+- handling/review facts;
+- rule/version bindings.
+
+## Product knowledge
+
+- alternate relationships;
+- immutable relationship revisions;
+- alternate observations;
+- product-only evidence/source bindings.
+
+## Contact / WWC / DEDUPE / attention / human state
+
+- Action Contexts and events;
+- human facts and corrections;
+- contact events/projections;
+- WWC events/projections;
+- DEDUPE events/projections;
+- attention SET/CLEAR histories and current projection.
+
+## Result / intervention / value
+
+- resulting-order searches;
+- links;
+- link events;
+- link revisions;
+- moved-line mapping components;
+- logical evidence keys;
+- verification evidence and proof references;
+- interventions;
+- action-verification events;
+- value/correction/reversal events;
+- occurrence guards.
+
+## KPI and retention
+
+- retained per-intervention contribution;
+- nonidentifying aggregate daily bucket;
+- retention deadlines;
+- purge/finalization state needed to complete one atomic operation;
+- no durable identity tombstone after successful purge.
+
+Binding invariants:
+
+- immutable records reject update;
+- mutable projections are rebuildable or verifiably consistent with event history;
+- exact stream sequence and predecessor constraints;
+- exact replay is idempotent;
+- same occurrence with changed material fails;
+- every opportunity scope references retained immutable line facts;
+- no realized intervention without verified action;
+- no realized value without exact verified evidence;
+- corrections/reversals append without rewriting prior history;
+- duplicate action/evidence/value occurrence is suppressed;
+- overlapping potential is not double-counted;
+- KPI is exactly once and currency-segmented;
+- source-import failure does not automatically terminalize its parent run;
+- RC-084 pre-extraction terminalization and extraction reservation cannot both commit;
+- hard closures cannot reopen;
+- reversible reopen cancels only the exact active deadline;
+- source disappearance does not close a case;
+- case purge deletes the complete governed identity graph atomically;
+- permitted aggregate survivor contains no order/case/customer/link identity or drill-through hash.
+
+---
+
+# 7. Append-only and projection enforcement
+
+Use schema constraints, triggers, repository guards, or an equivalent sound design to enforce:
+
+- immutable events;
+- immutable snapshots;
+- immutable evaluations;
+- immutable evidence;
+- immutable relationship revisions;
+- immutable value history;
+- immutable closed audit records where specified.
+
+Tests must attempt direct SQL updates and repository updates and prove rejection.
+
+Projection updates must use:
+
+- expected prior state/version;
+- exact transition/event;
+- one transaction;
+- readback verification.
+
+Create a projection-rebuild or projection-verification tool for at least:
+
+- Sales Credit current case projection;
+- DOI run projection;
+- DOI case lifecycle projection;
+- DOI attention projection;
+- DOI intervention/value projection.
+
+The tool may verify rather than overwrite by default.
+
+---
+
+# 8. Transactional service boundaries
+
+Implement application services or units of work for complete business operations.
+
+At minimum:
+
+## Sales Credit
+
+- persist interaction/search result;
+- append order snapshot and evaluation result;
+- attach multiple interactions to one case;
+- record manager outcome;
+- close/minimize case;
+- purge eligible closed detail.
+
+## DOI
+
+- invoke run;
+- import source attempt;
+- accept retry;
+- explicit no-retry finalization;
+- reserve/complete extraction;
+- append snapshot/evaluation/opportunities;
+- apply lifecycle transition;
+- set/clear attention cause;
+- append relationship revision/observation;
+- record human fact;
+- record contact/WWC/DEDUPE event;
+- verify intervention action;
+- append value/correction/reversal;
+- search/link resulting order;
+- finalize KPI and purge case.
+
+Each operation must be:
+
+- atomic;
+- idempotent where the domain requires it;
+- conflict detecting;
+- rollback tested;
+- fault-injection tested;
+- concurrency tested where a race is meaningful.
+
+Do not expose these services through a network API yet.
+
+---
+
+# 9. Persisted telemetry
+
+Persist per-processing-operation telemetry:
+
+- operation ID;
+- rule pack;
+- scenario/demo alias;
+- start/end trusted timestamps;
+- extraction/synthetic-input duration;
+- validation duration;
+- normalization duration;
+- rule duration;
+- database duration;
+- total duration;
+- result class;
+- human-review flag;
+- fail-closed flag;
+- replay flag;
+- conflict flag;
+- rule/version bindings;
+- safety-counter snapshot;
+- error code without prohibited payload.
+
+Aggregate queries must provide:
+
+- total processed;
+- success count/rate;
+- failed-closed count/rate;
+- human-review count/rate;
+- exact replay count;
+- conflict count;
+- median latency;
+- P95 latency;
+- throughput;
+- database error count;
+- backup/restore status;
+- database size;
+- safety counters.
+
+Do not store unrestricted input payloads in telemetry.
+
+---
+
+# 10. First-testable CLI
+
+Create a documented CLI entry point:
+
+```powershell
+python -m synthetic_sales_assist.cli
+```
+
+The exact command contract must include:
+
+```text
+doctor
+db init
+db status
+db verify
+db backup <path>
+db restore <path> --confirm
+demo list
+demo run <alias>
+order show <synthetic-order-id>
+case history <synthetic-order-id>
+run show <synthetic-run-id>
+metrics summary
+```
+
+All commands should support a stable machine-readable mode such as `--json`.
+
+## `doctor`
+
+Report:
+
+- app version;
+- Python version;
+- data directory;
+- database path;
+- schema version;
+- migration status;
+- quick-check result;
+- foreign-key-check result;
+- safety counters;
+- network policy;
+- extension inventory, still zero;
+- worktree/build version where available.
+
+## `db init`
+
+- create directories safely;
+- create or migrate the database;
+- be idempotent;
+- report exact schema version.
+
+## `db status`
+
+Report path, size, schema version, counts, last backup receipt, and health summary.
+
+## `db verify`
+
+Run:
+
+- migration inventory/checksums;
+- quick check;
+- optional `--deep` integrity check;
+- foreign-key check;
+- projection verification;
+- receipt/hash consistency;
+- safety-counter verification.
+
+## `demo list`
+
+List stable demonstration aliases, their rule pack, description, and expected high-level result.
+
+Required aliases:
+
+```text
+sales-credit-target-rep
+sales-credit-human-review
+doi-fulfillment-split
+doi-full-ds
+doi-manual-review
+doi-overlap
+malformed-input
+```
+
+Map each alias to an existing collected synthetic scenario. Do not create business behavior different from the existing tests.
+
+## `demo run`
+
+Run the selected scenario through:
+
+- validation;
+- rule engine;
+- transactional persistence;
+- telemetry;
+- human-readable explanation.
+
+Support an optional bounded request key for explicit replay tests.
+
+Human-readable output must include:
+
+- scenario;
+- synthetic order/interaction IDs;
+- rule pack;
+- top-level result/workflow state;
+- reasons;
+- opportunities;
+- human-review requirement;
+- persisted run/evaluation/case IDs;
+- exact replay/conflict status;
+- processing duration;
+- database path.
+
+`--json` outputs a stable closed schema.
+
+## Inspection commands
+
+`order show`, `case history`, and `run show` provide a privacy-safe, fictional audit view.
+
+Do not dump raw database rows or unrestricted excerpts.
+
+## `metrics summary`
+
+Show the persisted aggregate metrics in both human and JSON forms.
+
+---
+
+# 11. Backup and restore
+
+Use SQLite's online backup API, `VACUUM INTO`, or an equally safe SQLite-supported mechanism.
+
+Do not copy an open database file byte-for-byte as the primary backup method.
+
+Each backup must include:
+
+- backup file;
+- sidecar metadata or embedded receipt;
+- source database schema version;
+- application version;
+- source database SHA-256 after a consistent backup boundary where meaningful;
+- backup SHA-256;
+- created-at timestamp;
+- row/table summary;
+- quick-check and foreign-key-check status.
+
+Backup path rules:
+
+- local filesystem only;
+- reject URL, UNC/network share, device path, and traversal;
+- create parent directory only when explicitly safe;
+- never overwrite an existing backup without explicit `--overwrite`.
+
+Restore requirements:
+
+1. Verify backup file and receipt.
+2. Open the backup separately.
+3. Run quick/integrity and foreign-key checks.
+4. Verify schema compatibility.
+5. Create an automatic pre-restore backup of the active database.
+6. Restore into a temporary file.
+7. Verify the temporary restored database.
+8. Atomically replace the active database.
+9. Reopen and verify the active database.
+10. Roll back to the pre-restore backup if any post-swap verification fails.
+
+Restore requires `--confirm`.
+
+Tests cover:
+
+- empty/new DB;
+- populated DB;
+- corrupt backup;
+- wrong checksum;
+- unsupported future schema;
+- interrupted restore;
+- exact restore;
+- restore followed by exact replay;
+- active database remains valid after rejected restore.
+
+---
+
+# 12. Retention and purge execution
+
+Implement real SQLite retention/purge for synthetic data.
+
+Use controllable trusted test clocks.
+
+## Sales Credit
+
+- exact closure minimization;
+- 90-day eligibility boundary;
+- governed active-detail deletion;
+- minimized record retained until its own eligibility;
+- idempotent purge;
+- rollback on injected failure.
+
+## DOI
+
+- calendar-90 deadlines in the governed timezone;
+- exact hard/reversible closure behavior;
+- reopen cancellation of the exact active deadline;
+- source-attempt/rejected-source retention;
+- case KPI finalization and identity-graph deletion in one transaction;
+- no durable tombstone;
+- identity-free aggregate survivor only;
+- fault injection at every major finalization/deletion step;
+- restart/retry;
+- concurrent purge idempotency;
+- residual identity scan.
+
+The CLI may expose a test-only/local command under an explicitly synthetic developer namespace if needed, but do not add it to the required public command list unless documented.
+
+---
+
+# 13. Concurrency and fault injection
+
+Create deterministic tests for at least:
+
+- two exact concurrent demo runs with one request key;
+- same key/different material;
+- SQLite busy/retry behavior;
+- two source retries competing for the next ordinal;
+- retry versus explicit no-retry finalization;
+- extraction reservation versus RC-084 terminalization;
+- duplicate evaluation append;
+- duplicate intervention/action occurrence;
+- duplicate KPI contribution;
+- concurrent purge;
+- backup during read/write activity;
+- restore rejected while an operation is active, unless the design safely coordinates it.
+
+Fault injection must cover:
+
+- after first insert;
+- before event append;
+- after event append before projection;
+- after projection before receipt;
+- before commit;
+- during KPI finalization;
+- during case purge;
+- during backup receipt;
+- during restore swap.
+
+Every injected failure leaves the database valid and either fully before or fully after the intended operation.
+
+---
+
+# 14. Performance and resource smoke test
+
+Add a Milestone 4 persistence benchmark using existing synthetic scenarios.
+
+At minimum:
+
+- 1,000 persisted mixed rule-pack evaluations;
+- exact replay subset;
+- read/history queries;
+- metrics aggregation;
+- backup and verification.
+
+Report:
+
+- total duration;
+- median/P95 end-to-end duration;
+- database-only median/P95;
+- throughput;
+- database size;
+- peak Python process memory if measurable without adding a dependency;
+- counts by rule pack/result;
+- safety counters.
+
+Do not require a specific performance threshold beyond preventing pathological regressions. Record a baseline for Milestones 5–8.
+
+---
+
+# 15. Documentation and user-test artifacts
+
+Create:
+
+- persistence architecture document;
+- schema inventory;
+- migration verification document;
+- repository/service map;
+- CLI reference;
+- backup/restore guide;
+- data-location guide;
+- retention/purge verification document;
+- Milestone 4 benchmark report;
+- manual acceptance guide aligned with the required CLI;
+- updated DEVELOPMENT instructions;
+- ADRs for:
+  - SQLite transaction/journal/concurrency strategy;
+  - physical persistence decomposition;
+  - backup/restore atomicity;
+  - projection verification/rebuild;
+  - any consequential retention implementation choice.
+
+Do not create an ADR for ordinary table names or helper classes.
+
+---
+
+# 16. Milestone boundary update
+
+Permit only:
+
+- SQLite migrations;
+- persistence/repository/unit-of-work code;
+- local CLI;
+- Windows local helper scripts;
+- local database, backup, telemetry, and verification tooling;
+- persistence tests/docs/ADRs.
+
+Continue to reject:
+
+- portal/server/API routes;
+- dashboard UI;
+- Chrome extension/manifest;
+- external connectors;
+- production domains/identifiers;
+- network code;
+- modifications to protected specifications;
+- Milestone 5 implementation.
+
+---
+
+# Required verification
+
+Run at minimum:
+
+1. quality gate;
+2. compileall;
+3. migration scoped tests;
+4. shared persistence tests;
+5. Sales Credit persistence tests;
+6. DOI persistence tests;
+7. CLI tests;
+8. backup/restore tests;
+9. retention/purge tests;
+10. concurrency and fault-injection tests;
+11. telemetry tests;
+12. 1,000-operation benchmark;
+13. all Milestone 1 domain tests;
+14. all Milestone 2 Sales Credit tests;
+15. all Milestone 3 DOI tests;
+16. complete repository suite;
+17. foundation audit;
+18. synthetic-identity firewall;
+19. prohibited-input scan;
+20. secret scan;
+21. localhost/no-network checks;
+22. Chrome permission inventory, required zero manifests;
+23. milestone-boundary checks;
+24. protected-file hash/diff check;
+25. schema inventory and SQLite integrity verification.
+
+All protected specification bytes remain unchanged.
+
+All nine safety counters remain zero.
+
+Runtime network calls remain zero.
+
+---
+
+# Same-tree commit gate
+
+1. Finish every Milestone 4 candidate file.
+2. Run scoped and complete gates.
+3. Record the candidate tree.
+4. Rerun the final complete gate on that exact tree.
+5. Commit only if every result passes.
+6. Verify commit tree equals gated candidate tree.
+7. Verify worktree and index clean.
+8. Do not begin Milestone 5.
+
+Runtime database and backup files must remain untracked.
+
+---
+
+# Completion report
+
+At completion report:
+
+- base commit/tree;
+- gated candidate tree;
+- final commit/tree;
+- exact created/modified/deleted inventory;
+- migration inventory and checksums;
+- full SQLite schema inventory;
+- table/index/trigger counts;
+- repository/service inventory;
+- append-only enforcement results;
+- projection verification results;
+- idempotency/replay/conflict results;
+- concurrency/fault-injection results;
+- Sales Credit persistence results;
+- DOI persistence results;
+- retention/purge results;
+- backup/restore results;
+- CLI command inventory;
+- manual demo results for every required alias;
+- telemetry and metric results;
+- 1,000-operation benchmark;
+- complete test commands/counts/results;
+- domain/Sales Credit/DOI regression counts;
+- database path policy;
+- runtime DB tracked-file count, required zero;
+- portal/API/dashboard/extension inventory, required zero;
+- runtime network calls, required zero;
+- all safety counters, required zero;
+- protected-file integrity;
+- worktree/index status;
+- any genuine binding contradiction.
+
+Finish exactly:
+
+```text
+MILESTONE_4_SQLITE_PERSISTENCE_AND_CLI = PASS
+```
+
+or:
+
+```text
+MILESTONE_4_SQLITE_PERSISTENCE_AND_CLI = BLOCKED
+```
+
+Stop after Milestone 4.

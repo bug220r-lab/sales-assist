@@ -25,8 +25,8 @@ _MIGRATION_FILENAME = re.compile(
     r"\A(?P<version>[0-9]{4})_(?P<name>[a-z][a-z0-9_]*)\.sql\Z",
     re.ASCII,
 )
-_TRANSACTION_CONTROL = re.compile(
-    r"(?im)^\s*(?:BEGIN|COMMIT|END|ROLLBACK|SAVEPOINT|RELEASE)\b"
+_TOP_LEVEL_TRANSACTION_CONTROL = re.compile(
+    r"(?i)\A\s*(?:BEGIN|COMMIT|END|ROLLBACK|SAVEPOINT|RELEASE)\b"
 )
 _UNSAFE_SQL_CAPABILITY = re.compile(
     r"(?im)^\s*(?:ATTACH|DETACH|VACUUM|PRAGMA)\b|\bload_extension\s*\("
@@ -107,7 +107,11 @@ def discover_migrations(
             raise MigrationDefinitionError("migration encoding is not canonical UTF-8") from exc
         if not _has_sql_content(sql):
             raise MigrationDefinitionError("migration contains no SQL")
-        if _TRANSACTION_CONTROL.search(sql) or _UNSAFE_SQL_CAPABILITY.search(sql):
+        statements = tuple(_iter_statements(sql))
+        if (
+            any(_TOP_LEVEL_TRANSACTION_CONTROL.search(statement) for statement in statements)
+            or _UNSAFE_SQL_CAPABILITY.search(sql)
+        ):
             raise MigrationDefinitionError(
                 "migration contains prohibited transaction or I/O control"
             )
