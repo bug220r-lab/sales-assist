@@ -6,11 +6,16 @@ import hashlib
 import sqlite3
 from datetime import datetime, timezone
 
-from synthetic_sales_assist.domain.canonical import canonical_json_bytes
+from synthetic_sales_assist.domain.canonical import (
+    canonical_json_bytes,
+    domain_hash,
+    parse_canonical_json_bytes,
+)
 from synthetic_sales_assist.domain.identities import (
     EvidenceId,
     EvaluationId,
     OrderId,
+    RepId,
     SnapshotId,
 )
 from synthetic_sales_assist.domain.numeric import Money
@@ -40,6 +45,7 @@ from synthetic_sales_assist.sales_credit.models import (
     ManagerOutcome,
     OrderValueStatus,
     ReplacementStatus,
+    SalesCreditReason,
     SalesCreditEvaluation,
     WorkflowState,
 )
@@ -93,6 +99,75 @@ def _money_from_row(
         )
     except (TypeError, ValueError) as exc:
         raise SalesCreditRepositoryError("PERSISTED_MONEY_INVALID") from exc
+
+
+def _manager_outcome_from_row(row: sqlite3.Row) -> ManagerOutcome:
+    try:
+        material = bytes(row["canonical_bytes"])
+        binding = domain_hash(ManagerOutcome.HASH_DOMAIN, material)
+        if binding.sha256 != str(row["material_sha256"]):
+            raise SalesCreditRepositoryError("MANAGER_OUTCOME_HASH_MISMATCH")
+        value = parse_canonical_json_bytes(
+            material,
+            expected_members={
+                "active_note",
+                "actor",
+                "approved_amount",
+                "controlled_reason",
+                "decided_at",
+                "occurrence_id",
+                "outcome",
+                "recorded_at",
+                "schema_version",
+            },
+        )
+        if type(value) is not dict:
+            raise SalesCreditRepositoryError("MANAGER_OUTCOME_MATERIAL_INVALID")
+        approved_value = value["approved_amount"]
+        approved = (
+            None if approved_value is None else Money.from_json_value(approved_value)
+        )
+        controlled_value = value["controlled_reason"]
+        outcome = ManagerOutcome(
+            occurrence_id=EvidenceId(str(value["occurrence_id"])),
+            outcome=HumanOutcomeType(str(value["outcome"])),
+            decided_at=CanonicalTimestamp(str(value["decided_at"])),
+            actor=RepId(str(value["actor"])),
+            recorded_at=CanonicalTimestamp(str(value["recorded_at"])),
+            approved_amount=approved,
+            controlled_reason=(
+                None
+                if controlled_value is None
+                else SalesCreditReason(str(controlled_value))
+            ),
+            active_note=(
+                None if value["active_note"] is None else str(value["active_note"])
+            ),
+            schema_version=str(value["schema_version"]),
+        )
+    except SalesCreditRepositoryError:
+        raise
+    except (TypeError, ValueError, KeyError) as exc:
+        raise SalesCreditRepositoryError(
+            "MANAGER_OUTCOME_MATERIAL_INVALID"
+        ) from exc
+    if (
+        outcome.canonical_bytes() != material
+        or outcome.occurrence_id.value != str(row["occurrence_id"])
+        or outcome.outcome.value != str(row["outcome"])
+        or outcome.decided_at.value != str(row["decided_at"])
+        or outcome.recorded_at.value != str(row["recorded_at"])
+        or outcome.actor.value != str(row["actor_id"])
+        or outcome.approved_amount
+        != _money_from_row(
+            row["approved_minor_units"],
+            row["approved_currency"],
+            row["approved_registry_version"],
+            row["approved_scale"],
+        )
+    ):
+        raise SalesCreditRepositoryError("MANAGER_OUTCOME_PROJECTION_MISMATCH")
+    return outcome
 
 
 def _purge_at(closed_at: CanonicalTimestamp) -> CanonicalTimestamp:
@@ -1688,6 +1763,25 @@ class SalesCreditRepository:
             created_at=CanonicalTimestamp(str(row["created_at"])),
             updated_at=CanonicalTimestamp(str(row["updated_at"])),
         )
+
+    def manager_outcomes(
+        self,
+        order_id: OrderId,
+        *,
+        limit: int,
+    ) -> tuple[ManagerOutcome, ...]:
+        """Return bounded outcomes after exact canonical/projection reconciliation."""
+
+        if type(order_id) is not OrderId or type(limit) is not int or limit < 1:
+            raise SalesCreditRepositoryError("MANAGER_OUTCOME_READ_INVALID")
+        rows = self.connection.execute(
+            "SELECT * FROM sc_manager_outcomes WHERE order_id=? "
+            "ORDER BY decided_at, occurrence_id LIMIT ?",
+            (order_id.value, limit + 1),
+        ).fetchall()
+        if len(rows) > limit:
+            raise SalesCreditRepositoryError("MANAGER_OUTCOME_READ_LIMIT_EXCEEDED")
+        return tuple(_manager_outcome_from_row(row) for row in rows)
 
     def case_history(self, order_id: OrderId) -> tuple[StoredSalesCreditEvent, ...]:
         if type(order_id) is not OrderId:

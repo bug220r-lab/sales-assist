@@ -44,8 +44,10 @@ from synthetic_sales_assist.persistence.telemetry import (
     ProcessingResultClass,
     ProcessingTelemetry,
     RulePack,
+    TelemetryError,
     record_processing_telemetry,
 )
+from synthetic_sales_assist.safety.identity import is_reserved_identity
 from synthetic_sales_assist.sales_credit.accumulator import CaseMutation
 from synthetic_sales_assist.sales_credit.evaluator import (
     KNOWN_OTHER_REP_CATALOG,
@@ -159,9 +161,13 @@ class DurableDemoAuditBackend:
         schema_version: str,
         database_error: bool = False,
         error_code: str | None = None,
-    ) -> None:
+        operation_id: str | None = None,
+    ) -> ProcessingTelemetry:
         telemetry = ProcessingTelemetry(
-            operation_id=f"SYN-EVIDENCE-M4-OPERATION-{uuid.uuid4().hex.upper()}",
+            operation_id=(
+                operation_id
+                or f"SYN-EVIDENCE-M4-OPERATION-{uuid.uuid4().hex.upper()}"
+            ),
             rule_pack=rule_pack,
             demo_alias=alias,
             started_at=started_at,
@@ -183,12 +189,132 @@ class DurableDemoAuditBackend:
             catalog_version=DEMO_CATALOG_VERSION,
             error_code=error_code,
         )
+        if operation_id is None:
+            with self.database.write() as connection:
+                record_processing_telemetry(connection, telemetry)
+            return telemetry
         with self.database.write() as connection:
-            record_processing_telemetry(connection, telemetry)
+            retained = self._processing_telemetry(connection, operation_id)
+            if retained is None:
+                record_processing_telemetry(connection, telemetry)
+                return telemetry
+            expected = replace(
+                telemetry,
+                started_at=retained.started_at,
+                ended_at=retained.ended_at,
+                extraction_ns=(
+                    telemetry.extraction_ns
+                    if alias == "malformed-input"
+                    else retained.extraction_ns
+                ),
+                validation_ns=retained.validation_ns,
+                rule_ns=(
+                    telemetry.rule_ns
+                    if alias == "malformed-input"
+                    else retained.rule_ns
+                ),
+                database_ns=retained.database_ns,
+                total_ns=retained.total_ns,
+            )
+            if retained != expected:
+                raise TelemetryError("TELEMETRY_CONFLICT")
+            return retained
 
-    def run_demo(self, alias: str, request_key: str | None) -> DemoRunView:
+    @staticmethod
+    def _processing_telemetry(
+        connection: sqlite3.Connection,
+        operation_id: str,
+    ) -> ProcessingTelemetry | None:
+        rows = connection.execute(
+            "SELECT operation_id, rule_pack, demo_alias, started_at, ended_at, "
+            "extraction_ns, validation_ns, normalization_ns, rule_ns, "
+            "database_ns, total_ns, result_class, human_review, fail_closed, "
+            "replay, conflict, database_error, rule_version, schema_version, "
+            "catalog_version, error_code FROM processing_telemetry "
+            "WHERE operation_id=? LIMIT 2",
+            (operation_id,),
+        ).fetchall()
+        counter_rows = connection.execute(
+            "SELECT counter_name, counter_value FROM telemetry_safety_counters "
+            "WHERE operation_id=? ORDER BY counter_name",
+            (operation_id,),
+        ).fetchall()
+        if not rows:
+            if counter_rows:
+                raise TelemetryError("TELEMETRY_RETAINED_INVALID")
+            return None
+        if len(rows) != 1:
+            raise TelemetryError("TELEMETRY_RETAINED_INVALID")
+        row = rows[0]
+        required_text_indexes = (0, 1, 3, 4, 11, 17, 18)
+        optional_text_indexes = (2, 19, 20)
+        if (
+            any(type(row[index]) is not str for index in required_text_indexes)
+            or any(
+                row[index] is not None and type(row[index]) is not str
+                for index in optional_text_indexes
+            )
+            or any(
+                type(row[index]) is not int or row[index] < 0
+                for index in range(5, 11)
+            )
+            or any(
+                type(row[index]) is not int or row[index] not in {0, 1}
+                for index in range(12, 17)
+            )
+            or any(
+                type(counter[0]) is not str or type(counter[1]) is not int
+                for counter in counter_rows
+            )
+        ):
+            raise TelemetryError("TELEMETRY_RETAINED_INVALID")
+        try:
+            return ProcessingTelemetry(
+                operation_id=row[0],
+                rule_pack=RulePack(row[1]),
+                demo_alias=row[2],
+                started_at=CanonicalTimestamp(row[3]),
+                ended_at=CanonicalTimestamp(row[4]),
+                extraction_ns=row[5],
+                validation_ns=row[6],
+                normalization_ns=row[7],
+                rule_ns=row[8],
+                database_ns=row[9],
+                total_ns=row[10],
+                result_class=ProcessingResultClass(row[11]),
+                human_review=bool(row[12]),
+                fail_closed=bool(row[13]),
+                replay=bool(row[14]),
+                conflict=bool(row[15]),
+                database_error=bool(row[16]),
+                rule_version=row[17],
+                schema_version=row[18],
+                catalog_version=row[19],
+                error_code=row[20],
+                safety_counters=tuple(
+                    (counter[0], counter[1]) for counter in counter_rows
+                ),
+            )
+        except (TelemetryError, TypeError, ValueError):
+            raise TelemetryError("TELEMETRY_RETAINED_INVALID") from None
+
+    def run_demo(
+        self,
+        alias: str,
+        request_key: str | None,
+        *,
+        telemetry_operation_id: str | None = None,
+        replay_override: bool | None = None,
+    ) -> DemoRunView:
         descriptor = demo_descriptor(alias)
         request_key = validate_request_key(request_key)
+        if telemetry_operation_id is not None and not is_reserved_identity(
+            telemetry_operation_id,
+            expected_namespace="EVIDENCE",
+        ):
+            raise DemoError("DEMO_TELEMETRY_OPERATION_INVALID")
+        if replay_override is not None and type(replay_override) is not bool:
+            raise DemoError("DEMO_TELEMETRY_REPLAY_INVALID")
         schema_version = self._ensure_initialized()
         started_at = _timestamp(self.database.clock())
         started = time.perf_counter_ns()
@@ -284,6 +410,8 @@ class DurableDemoAuditBackend:
                     schema_version=schema_version,
                     started=started,
                     started_at=started_at,
+                    telemetry_operation_id=telemetry_operation_id,
+                    replay_override=replay_override,
                 )
             else:
                 raise DemoError("DEMO_ALIAS_UNKNOWN")
@@ -301,11 +429,12 @@ class DurableDemoAuditBackend:
                 database_ns=database_ns,
                 total_ns=total_ns,
                 human_review=False,
-                replay=False,
+                replay=False if replay_override is None else replay_override,
                 result_class=ProcessingResultClass.CONFLICT,
                 rule_version="m4/conflict",
                 schema_version=schema_version,
                 error_code="IDEMPOTENCY_KEY_MATERIAL_CONFLICT",
+                operation_id=telemetry_operation_id,
             )
             raise DemoError("IDEMPOTENCY_KEY_MATERIAL_CONFLICT") from None
         except _DATABASE_ERRORS:
@@ -323,12 +452,13 @@ class DurableDemoAuditBackend:
                     database_ns=database_ns,
                     total_ns=total_ns,
                     human_review=False,
-                    replay=False,
+                    replay=False if replay_override is None else replay_override,
                     result_class=ProcessingResultClass.ERROR,
                     rule_version="m4/database-error",
                     schema_version=schema_version,
                     database_error=True,
                     error_code="DEMO_DATABASE_ERROR",
+                    operation_id=telemetry_operation_id,
                 )
             except (DatabaseError, sqlite3.DatabaseError):
                 pass
@@ -336,7 +466,7 @@ class DurableDemoAuditBackend:
 
         ended_at = _timestamp(self.database.clock())
         total_ns = time.perf_counter_ns() - started
-        self._record_telemetry(
+        telemetry = self._record_telemetry(
             alias=alias,
             rule_pack=RulePack(descriptor.rule_pack),
             started_at=started_at,
@@ -347,7 +477,9 @@ class DurableDemoAuditBackend:
             database_ns=database_ns,
             total_ns=total_ns,
             human_review=view.human_review_required,
-            replay=view.exact_replay,
+            replay=(
+                view.exact_replay if replay_override is None else replay_override
+            ),
             result_class=(
                 ProcessingResultClass.HUMAN_REVIEW
                 if view.human_review_required
@@ -355,8 +487,13 @@ class DurableDemoAuditBackend:
             ),
             rule_version=rule_version,
             schema_version=schema_version,
+            operation_id=telemetry_operation_id,
         )
-        return replace(view, processing_duration_ns=total_ns)
+        return replace(
+            view,
+            exact_replay=telemetry.replay,
+            processing_duration_ns=telemetry.total_ns,
+        )
 
     def _run_malformed(
         self,
@@ -367,6 +504,8 @@ class DurableDemoAuditBackend:
         schema_version: str,
         started: int,
         started_at: CanonicalTimestamp,
+        telemetry_operation_id: str | None,
+        replay_override: bool | None,
     ) -> DemoRunView:
         validation_started = time.perf_counter_ns()
         try:
@@ -399,7 +538,7 @@ class DurableDemoAuditBackend:
         database_ns = time.perf_counter_ns() - database_started
         ended_at = _timestamp(self.database.clock())
         total_ns = time.perf_counter_ns() - started
-        self._record_telemetry(
+        telemetry = self._record_telemetry(
             alias=alias,
             rule_pack=RulePack.DOI,
             started_at=started_at,
@@ -410,11 +549,12 @@ class DurableDemoAuditBackend:
             database_ns=database_ns,
             total_ns=total_ns,
             human_review=False,
-            replay=replay,
+            replay=replay if replay_override is None else replay_override,
             result_class=ProcessingResultClass.FAILED_CLOSED,
             rule_version="doi-malformed-input/v1",
             schema_version=schema_version,
             error_code="INVALID_ORDER_NUMBER",
+            operation_id=telemetry_operation_id,
         )
         return DemoRunView(
             scenario=alias,
@@ -428,9 +568,9 @@ class DurableDemoAuditBackend:
             run_id=None,
             evaluation_id=None,
             case_id=None,
-            exact_replay=replay,
+            exact_replay=telemetry.replay,
             conflict=False,
-            processing_duration_ns=total_ns,
+            processing_duration_ns=telemetry.total_ns,
         )
 
     def order_show(self, synthetic_order_id: str) -> AuditView:

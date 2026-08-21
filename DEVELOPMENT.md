@@ -1,15 +1,17 @@
-# Milestone 4 development
+# Milestone 5 development
 
 This repository contains the synthetic-only safety foundation, immutable Shared Domain Engine,
 Sales Credit rule pack, DOI rule pack, and local SQLite persistence and command-line interface.
-It has no server, API, portal, dashboard, browser extension, production connector, scheduler, or
-external network client. Milestone 5 has not begun.
+Milestone 5 adds one standard-library HTTP service, closed local API, generic synthetic portal,
+scenario library, and Windows lifecycle scripts. The listener and runtime requests are
+loopback-only. There is no dashboard/control center, browser extension or manifest, production
+connector, scheduler, external network client, remote asset, or external telemetry.
 
 ## Requirements
 
 - Python 3.12 or newer
 - Git
-- no network service, production connector, credential, or external data source
+- no production connector, credential, or external data source
 
 Runtime code uses only the Python standard library. Optional development tools are declared in
 `pyproject.toml`; the release gates execute offline. Run commands from a complete verified source
@@ -87,6 +89,9 @@ python -m unittest discover -s tests -t . -p "test_*persistence*.py"
 python -m unittest discover -s tests -t . -p "test_*cli*.py"
 python -m unittest discover -s tests -t . -p "test_sales_credit_*.py"
 python -m unittest discover -s tests -t . -p "test_doi_*.py"
+python -m unittest tests.test_milestone5_application
+python -m unittest tests.test_milestone5_portal tests.test_milestone5_security
+python -m unittest tests.test_milestone5_lifecycle tests.test_milestone5_boundary
 python tools/run_tests.py
 python tools/run_foundation_audit.py
 ```
@@ -99,15 +104,16 @@ python tools/generate_milestone4_artifacts.py
 ```
 
 The final audit verifies the supplied bundle, protected bytes, repository safety scans, synthetic
-identity firewall, loopback-only policy, zero Chrome manifests, zero runtime network operations,
-and all nine zero safety counters.
+identity firewall, loopback-only policy, zero Chrome manifests, zero external/non-loopback runtime
+network operations, and all nine zero safety counters.
 
 ## Milestone boundary
 
-Milestone 4 adds only local SQLite migrations, typed repositories and transactional services,
-persisted telemetry, integrity/projection verification, retention purge, backup/restore, benchmark
-tooling, and the local CLI. The pure Milestone 1-3 engines remain authoritative for business
-behavior; persistence does not create a new reason, ownership row, transition, or rule outcome.
+Milestone 5 adds only the socket-neutral application boundary, loopback service/API, generic
+synthetic portal and static assets, scenario selection/evaluation, Windows lifecycle scripts, and
+their tests/docs. The pure Milestone 1-3 engines remain authoritative for business behavior; the
+portal does not create a new reason, ownership row, transition, or rule outcome. Schema remains
+version 4 with exactly the four Milestone 4 migrations.
 
 The four migrations are applied transactionally and checksum-bound. WAL mode, `FULL` synchronous
 writes, foreign keys on every connection, bounded busy handling, connection-per-operation units of
@@ -116,4 +122,4 @@ maintenance coordination are binding implementation choices documented in ADRs 0
 
 The supplied `specs/`, `reference/`, `BUNDLE_MANIFEST.json`, `SHA256SUMS.txt`, and checksummed
 root `README.md` remain byte-for-byte unchanged. Milestone-specific implementation and
-verification material lives under `docs/`, `migrations/`, `src/`, `tests/`, and `tools/`.
+verification material lives under `docs/`, `scripts/`, `src/`, `tests/`, and `tools/`.

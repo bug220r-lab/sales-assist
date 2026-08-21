@@ -248,7 +248,7 @@ def run_foundation_audit(root: Path) -> dict[str, object]:
     return {
         "schema_version": "synthetic-sales-assist-repository-audit/v2",
         "status": "PASS",
-        "milestone": 4,
+        "milestone": 5,
         "bundle": bundle.to_dict(),
         "identity_firewall": _identity_report(),
         "prohibited_input_scan": _prohibited_input_report(root),

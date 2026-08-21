@@ -23,6 +23,18 @@ class PathPolicyError(ValueError):
     """A runtime path is not an explicitly local, nonsynchronized location."""
 
 
+def assert_real_local_directory(path: Path) -> None:
+    """Reject a missing, non-directory, symlink, or Windows reparse directory."""
+
+    try:
+        metadata = path.lstat()
+    except OSError as exc:
+        raise PathPolicyError("CONTROLLED_DIRECTORY_UNAVAILABLE") from exc
+    attributes = getattr(metadata, "st_file_attributes", 0)
+    if not path.is_dir() or path.is_symlink() or attributes & 0x400:
+        raise PathPolicyError("CONTROLLED_DIRECTORY_REPARSE_POINT")
+
+
 def _existing_ancestor_is_reparse_point(path: Path) -> bool:
     candidate = path
     while True:
@@ -104,15 +116,20 @@ class DataPaths:
     database: Path
 
     def ensure_directories(self) -> None:
-        for path in (
+        controlled = (
             self.root,
             self.data,
             self.logs,
             self.backups,
             self.runtime,
             self.exports,
-        ):
-            path.mkdir(parents=True, exist_ok=True)
+        )
+        for index, path in enumerate(controlled):
+            try:
+                path.mkdir(parents=index == 0, exist_ok=True)
+            except OSError as exc:
+                raise PathPolicyError("CONTROLLED_DIRECTORY_CREATE_FAILED") from exc
+            assert_real_local_directory(path)
 
 
 def resolve_data_paths(
@@ -149,6 +166,7 @@ __all__ = [
     "DATABASE_FILENAME",
     "DataPaths",
     "PathPolicyError",
+    "assert_real_local_directory",
     "resolve_data_paths",
     "validate_local_path",
 ]

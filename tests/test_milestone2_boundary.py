@@ -132,7 +132,7 @@ class Milestone2BoundaryTests(unittest.TestCase):
                     violations.append(f"{name}:{node.lineno}:clock")
         self.assertEqual(violations, [])
 
-    def test_no_milestone_five_or_user_interface_artifact_exists(self) -> None:
+    def test_sales_credit_rule_pack_has_no_portal_or_user_interface_dependency(self) -> None:
         migrations = ROOT / "migrations"
         self.assertEqual(
             {path.name for path in migrations.iterdir() if path.is_file()},
@@ -151,18 +151,18 @@ class Milestone2BoundaryTests(unittest.TestCase):
             "extension",
             "portal",
         }
-        discovered_names = {
-            path.stem
-            for root in (ROOT / "src", ROOT / "tests", ROOT / "tools")
-            for path in root.rglob("*")
-            if path.is_file()
-        }
+        discovered_names = {path.stem for path in PACKAGE.rglob("*") if path.is_file()}
         self.assertFalse(discovered_names & forbidden_names)
+
+    def test_no_milestone_five_or_user_interface_artifact_exists(self) -> None:
+        """Preserve the collected selector as the Sales Credit package boundary."""
+
+        self.test_sales_credit_rule_pack_has_no_portal_or_user_interface_dependency()
 
     def test_no_milestone_four_persistence_or_user_interface_artifact_exists(self) -> None:
         """Preserve the Milestone 3 oracle name at the advanced boundary."""
 
-        self.test_no_milestone_five_or_user_interface_artifact_exists()
+        self.test_sales_credit_rule_pack_has_no_portal_or_user_interface_dependency()
 
     def test_candidate_contains_no_temporary_or_backup_artifact(self) -> None:
         disallowed: list[str] = []

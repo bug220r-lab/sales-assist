@@ -1,0 +1,827 @@
+# Synthetic Sales Assist v0.1 — Milestone 5
+# Localhost Service, Synthetic Portal, Scenario Library, and Browser-Visible Evaluation
+
+# Milestone 4 acceptance gate
+
+The Milestone 4 gate is satisfied by the user's visible CLI smoke testing plus the
+checksum-bound automated operator-acceptance report.
+
+```text
+M4_MANUAL_ACCEPTANCE = PASS
+M4_OPERATOR_ACCEPTANCE_AUTOMATED = PASS
+```
+
+Automated operator-acceptance evidence:
+
+- Markdown report SHA-256:
+  `aa8d0b76e1a95d39524a0471bd919f6858e8f68cf057a8d471afb10d635215d8`
+- JSON report SHA-256:
+  `8978bf2d3b3e7124555e44f988aa8628ccac7fc01ba707a4e130aaa3789257df`
+- Full suite: `1,327/1,327 PASS`
+- Replay, conflict, backup/atomic restore, and fresh-process persistence: PASS
+- All nine safety counters: zero
+- Runtime network calls: zero
+- Repository remained at the exact M4 commit/tree and clean
+
+The user also directly exercised the CLI, initialized and verified schema version 4,
+ran the canonical Sales Credit and DOI demonstrations, observed exact replay, and reviewed
+persisted metrics and zero safety counters.
+
+---
+
+# Exact base state
+
+```text
+branch = main
+base_commit = 52b9a241d5ae7f3227c519dad18c2b3e9eab66ac
+base_tree = af0e8f165a743a3c09ee20fbc84db900fbfbee20
+parent_commit = e302b21bedbf1bc8c59861ec735d8fbd164a4db3
+reported_full_regression = 1,327/1,327 PASS
+reported_schema_version = 4
+reported_migrations = 0001_foundation.sql@5693cfe9868f10868d134bd042ccc26271126be9eae847a214c26f57216d6638; 0002_shared_persistence.sql@5e6f5ea08a4cfd5ec6241da60c49721d99c246fa1e4251d44293a1487e749e31; 0003_sales_credit_persistence.sql@fd22b13f73d389422405bf222313e34a4aa5995f6b28610a222108a3da813395; 0004_doi_persistence.sql@5799e5fe3b0e1c9ffae948f6c6b0a820556a9a0d200b29d7c5751e80c475b09d
+reported_schema_inventory = 79 tables total; 68 business tables; 20 indexes; 61 triggers; 160 SQLite schema objects
+reported_cli_commands = doctor; db init; db status; db verify; db backup; db restore; demo list; demo run; order show; case history; run show; metrics summary
+reported_benchmark = 1,000 persisted operations in 249.448 seconds; 4.409734 calls/second; median/P95 end-to-end 226.490/545.653 ms; median/P95 database 122.693/183.574 ms; 100 exact replays; 75 history queries; database size 78,577,664 bytes; peak traced Python memory 4,427,992 bytes; safety counters all zero
+manual_acceptance = M4_MANUAL_ACCEPTANCE = PASS
+```
+
+## Pre-edit verification
+
+Before modifying files:
+
+1. Verify `HEAD` equals the stated base commit.
+2. Verify `HEAD^{tree}` equals the stated base tree.
+3. Verify the index is clean.
+4. Verify the worktree is clean except for the one explicitly permitted bootstrap file:
+   `tasks/milestone5_synthetic_portal_and_api.txt`.
+5. Verify the complete Milestone 4 suite still passes.
+6. Run the Milestone 4 CLI `doctor`, `db status`, and `db verify` against an isolated local test data directory.
+7. Verify every protected supplied file remains byte-identical.
+8. Verify all nine safety counters remain zero.
+9. Verify no portal, server/API route, dashboard, Chrome extension, manifest, or external connector exists.
+10. Verify no non-loopback runtime request occurs.
+11. Record the exact pre-edit inventory, base tree, schema version, and migration checksums.
+
+If any precondition differs—other than the explicitly permitted task file—stop before editing.
+
+---
+
+# Milestone objective
+
+Implement **Milestone 5 only**:
+
+- a loopback-only local application service;
+- a generic synthetic order/interaction portal;
+- a scenario library backed by existing Milestone 2 and Milestone 3 synthetic scenarios;
+- closed local API schemas;
+- browser-visible Sales Credit and DOI evaluation;
+- persisted history through the Milestone 4 service/repository layer;
+- Windows start/stop/status/reset scripts;
+- browser-route, DOM-contract, startup, shutdown, and security tests.
+
+This is the first browser-visible proof of concept.
+
+Do not begin Milestone 6 or Milestone 7.
+
+---
+
+# Binding project evidence
+
+Read and follow:
+
+- `AGENTS.md`
+- `specs/SPEC_INDEX.md`
+- all binding files under `specs/`
+- Milestone 1 domain ADRs and hash-preimage documentation
+- Milestone 2 Sales Credit traceability and tests
+- Milestone 3 DOI traceability, transition, scenario, and product-decision documentation
+- Milestone 4 persistence architecture, schema inventory, CLI, backup, telemetry, and manual acceptance evidence
+- Milestone 4 automated operator-acceptance report hashes recorded in this task
+- the repository-authored Milestone 4 manual-acceptance evidence file created during this milestone
+- `docs/audit-finding-closure-matrix.md`
+- the repository copy of the approved portal UX contract if provided alongside this task
+
+The portal must call existing application services. It must not reimplement business rules or bypass repositories.
+
+
+During this milestone create:
+
+`docs/acceptance/milestone4-acceptance.md`
+
+It must record:
+
+- the exact M4 commit/tree;
+- `M4_MANUAL_ACCEPTANCE = PASS`;
+- `M4_OPERATOR_ACCEPTANCE_AUTOMATED = PASS`;
+- both report SHA-256 values;
+- the user's visible smoke-test scope;
+- automated replay/conflict/backup/restore/fresh-process results;
+- all nine safety counters zero;
+- runtime network calls zero.
+
+This evidence file is repository-authored implementation documentation; it must not modify the
+supplied specification bundle.
+
+---
+
+# Engineering doctrine
+
+Codex may choose:
+
+- an already-installed lightweight web framework;
+- standard-library HTTP/WSGI if no suitable framework is installed;
+- HTML templating strategy;
+- static-asset organization;
+- route/module organization;
+- local session/UI-state approach;
+- CSS component structure.
+
+Do not download dependencies from the internet.
+
+Create an ADR only for consequential choices involving:
+
+- local service lifecycle;
+- closed API versioning;
+- DOM extraction contract;
+- anti-CSRF/local-action model;
+- single-instance and process ownership.
+
+---
+
+# Hard Milestone 5 boundaries
+
+Do **not**:
+
+- create a Chrome extension or extension manifest;
+- create the final analytics/control-center dashboard;
+- add any external hostname or non-loopback bind;
+- add a production/system adapter;
+- access any real organization or customer data;
+- use external CDN fonts, scripts, CSS, images, analytics, or telemetry;
+- add generic browser automation;
+- add external order mutation;
+- change Sales Credit or DOI business outcomes;
+- modify protected specifications;
+- begin Milestone 6.
+
+Permitted:
+
+- local API;
+- local portal;
+- local static assets;
+- synthetic scenario creation/selection;
+- local evaluation actions;
+- persisted local history;
+- browser-visible explanation;
+- local health/status endpoints;
+- Windows helper scripts.
+
+---
+
+# 1. Local service and origin policy
+
+Recommended origin:
+
+```text
+http://127.0.0.1:8765/
+```
+
+Requirements:
+
+- bind only to `127.0.0.1` by default;
+- explicit loopback host allowlist:
+  - `127.0.0.1`
+  - `localhost`
+  - `::1`
+- reject `0.0.0.0`, LAN IPs, hostnames, URLs, and external interfaces;
+- bounded configurable port;
+- no automatic alternate-port search without reporting the selected port;
+- no external requests;
+- no remote assets;
+- health endpoint;
+- graceful shutdown endpoint protected by local process ownership or equivalent;
+- single-instance runtime receipt;
+- exact app/schema/build version reporting;
+- database health check before accepting evaluations;
+- startup failure if migrations, safety counters, schema, or integrity checks fail.
+
+The service may expose JSON APIs and HTML pages from one process.
+
+---
+
+# 2. Closed local API
+
+Create a versioned, closed API under a stable prefix such as:
+
+```text
+/api/v1/
+```
+
+At minimum provide:
+
+```text
+GET  /health
+GET  /api/v1/scenarios
+POST /api/v1/scenarios/{alias}/instantiate
+GET  /api/v1/orders
+GET  /api/v1/orders/{synthetic_order_id}
+POST /api/v1/orders/{synthetic_order_id}/evaluate
+GET  /api/v1/orders/{synthetic_order_id}/history
+GET  /api/v1/interactions/{synthetic_interaction_id}
+GET  /api/v1/runs/{synthetic_run_id}
+GET  /api/v1/metrics/summary
+GET  /api/v1/system/status
+```
+
+Equivalent resource design is acceptable if documented.
+
+Requirements:
+
+- closed request/response schemas;
+- exact schema/version member;
+- synthetic IDs only;
+- unknown/extra members rejected;
+- bounded payloads;
+- no unrestricted metadata;
+- no raw SQL;
+- no file paths from callers;
+- no database row dumps;
+- no debug trace leakage;
+- stable JSON error envelope;
+- trusted processing times and persisted IDs;
+- idempotency/request-key support where evaluation requires it;
+- exact replay and conflict visibility;
+- correct HTTP status classes;
+- all responses contain only fictional privacy-safe values.
+
+Portal forms/actions must call these APIs or the same application service boundary, never a duplicate rule implementation.
+
+---
+
+# 3. Scenario library
+
+Create a browser page:
+
+```text
+/scenarios
+```
+
+Requirements:
+
+- Sales Credit and DOI groups;
+- stable scenario alias;
+- short fictional description;
+- expected high-level result;
+- complexity/edge-case label;
+- complete/incomplete/malformed variant;
+- button to instantiate a fresh fictional record;
+- no real names, products, order numbers, notes, or domains.
+
+At minimum expose the seven Milestone 4 demo aliases:
+
+```text
+sales-credit-target-rep
+sales-credit-human-review
+doi-fulfillment-split
+doi-full-ds
+doi-manual-review
+doi-overlap
+malformed-input
+```
+
+Also expose selected existing collected scenarios sufficient to demonstrate:
+
+- long order;
+- cancellation/replacement;
+- exact replay;
+- direct ship;
+- partial quantity;
+- unknown-field containment;
+- overlapping opportunities;
+- DEDUPE review;
+- malformed/incomplete extraction.
+
+Instantiation must use existing tested fixture builders. Do not create alternate business results.
+
+---
+
+# 4. Order and interaction pages
+
+## Order list
+
+Create:
+
+```text
+/orders
+```
+
+Show fictional records only:
+
+- synthetic Order Number;
+- source scenario;
+- order status;
+- relevant line count;
+- most recent DOI state;
+- Sales Credit workflow state where applicable;
+- human-review badge;
+- updated time;
+- link to detail.
+
+Support local deterministic filtering and pagination only if needed. No external search.
+
+## Order detail
+
+Create:
+
+```text
+/orders/{SYN-ORDER-*}
+```
+
+Required layout:
+
+1. `SYNTHETIC DATA ONLY` banner.
+2. Localhost/build/schema status.
+3. Order header and factual summary.
+4. Complete line-item table.
+5. Structured fictional interaction/note history.
+6. Whole-order completeness panel.
+7. Prior persisted evaluations.
+8. Latest explanation.
+9. Read-only local evaluation area.
+
+The line table must:
+
+- render every relevant line;
+- use stable synthetic line IDs;
+- show canonical fictional product IDs;
+- show Quantity, exact Money, availability, ETA, DS state, and activity;
+- expose a visible final line-universe marker;
+- support long orders by extending the page rather than hiding rows;
+- not use virtualized hidden rows for the extraction contract;
+- preserve exact rendered count.
+
+## Interaction detail
+
+Create a fictional Sales Credit interaction view with:
+
+- synthetic interaction ID;
+- direction;
+- timestamp and precision;
+- target-rep participation;
+- identifier kind;
+- evidence classification;
+- linked case/order;
+- no unrestricted message body.
+
+---
+
+# 5. Explicit machine-readable DOM contract
+
+Publish and implement a versioned DOM contract for Milestone 6.
+
+At minimum define stable attributes:
+
+```text
+data-ssa-page-kind
+data-ssa-schema-version
+data-ssa-order-id
+data-ssa-interaction-id
+data-ssa-field
+data-ssa-line-id
+data-ssa-line-index
+data-ssa-completeness
+data-ssa-manifest-digest
+```
+
+Also embed one closed canonical JSON representation:
+
+```html
+<script type="application/json" id="ssa-synthetic-order-payload">
+```
+
+Requirements:
+
+- DOM and embedded payload represent the same canonical facts;
+- mismatch mode is testable and fails closed;
+- no executable script inside data payload;
+- payload size bounded;
+- no arbitrary HTML;
+- stable member ordering where hash-bearing;
+- published schema version;
+- exact manifest digest;
+- no real/production identifier;
+- no mutation-control identity mixed into source facts.
+
+Create:
+
+- DOM contract document;
+- JSON schema or equivalent closed validator;
+- known-answer example;
+- malformed/mismatch examples;
+- tests proving DOM/payload equivalence.
+
+Milestone 6 will independently extract allowlisted DOM/payload fields. The portal must not assume the future extension trusts arbitrary JSON.
+
+---
+
+# 6. Whole-order completeness presentation
+
+Every synthetic order page must expose:
+
+- requested synthetic order ID;
+- observed synthetic order ID;
+- declared relevant line count;
+- rendered relevant line count;
+- ordered line-manifest digest;
+- fixture/schema version;
+- source-observed timestamp;
+- completeness state:
+  - `COMPLETE`
+  - `INCOMPLETE`
+  - `MALFORMED`
+
+A successful `COMPLETE` page requires exact identity/count/manifest coherence.
+
+Test modes must include:
+
+- ordinary complete;
+- large complete order;
+- explicit zero relevant lines;
+- missing required section;
+- identity mismatch;
+- duplicate line;
+- declared/rendered mismatch;
+- stale/source-changed representation;
+- DOM/payload mismatch;
+- malformed value;
+- observed UNKNOWN individual field;
+- backend evaluation failure.
+
+The browser-visible result must distinguish incomplete extraction from observed UNKNOWN.
+
+---
+
+# 7. Evaluation interaction
+
+The portal may expose a local `Evaluate` control.
+
+It must:
+
+- be clearly labeled as local synthetic evaluation;
+- never mutate source facts;
+- call the existing evaluation service;
+- support a bounded request key;
+- display loading, replay, conflict, success, human-review, and fail-closed states;
+- persist through the Milestone 4 repositories;
+- show exact rule pack/version;
+- show reasons and explanations;
+- show opportunities and exact line scope;
+- show value availability;
+- show persisted synthetic run/case/snapshot/evaluation IDs;
+- show processing time;
+- never create a manager outcome or intervention merely by evaluating.
+
+Add an explicit confirmation for any local synthetic human-decision action introduced later. Milestone 5 does not need to add such actions.
+
+---
+
+# 8. Processing result view
+
+Create a reusable result component showing:
+
+- Sales Credit workflow or DOI top-level state;
+- exact reasons;
+- fired rules;
+- human-review requirement;
+- DOI opportunities and scope;
+- aggregate potential status;
+- handling/coordination flags;
+- closure/lifecycle state;
+- replay/conflict status;
+- persisted IDs;
+- processing stages and total duration;
+- link to history;
+- safe structured error where applicable.
+
+Unknown facts must be visible without guessed values.
+
+Overlapping DOI opportunities remain separate and aggregate potential remains unavailable until the existing rule engine records a scenario selection.
+
+---
+
+# 9. History views
+
+Expose persisted privacy-safe history from Milestone 4:
+
+- immutable snapshots;
+- evaluations;
+- reason sets;
+- workflow/lifecycle transitions;
+- source/run events;
+- attention causes;
+- intervention/value histories where present;
+- manager outcomes where present;
+- telemetry;
+- exact replay/conflict receipts.
+
+Do not display:
+
+- raw database dumps;
+- unrestricted logs;
+- fictional contact values unless required by the specific synthetic detail page;
+- internal canonical preimages by default;
+- file-system paths;
+- secrets or stack traces.
+
+Provide a developer-only local detail toggle only if it remains safe and documented.
+
+---
+
+# 10. Windows lifecycle scripts
+
+Implement or finish:
+
+```text
+scripts/start.ps1
+scripts/stop.ps1
+scripts/status.ps1
+scripts/reset-demo.ps1
+```
+
+Use the existing Milestone 4 backup/restore CLI/scripts.
+
+## start.ps1
+
+Must:
+
+1. resolve the approved local Python/runtime;
+2. create `%LOCALAPPDATA%\SyntheticSalesAssist\` directories;
+3. acquire a single-instance lock;
+4. run/verify migrations;
+5. run fast DB health checks;
+6. bind to loopback only;
+7. start the service;
+8. wait for health PASS;
+9. write PID/runtime receipt;
+10. open `/scenarios` in the default browser;
+11. print exact version, paths, PID, and port.
+
+## stop.ps1
+
+Must stop only the owned process and never kill unrelated Python processes.
+
+## status.ps1
+
+Must report running/stopped, PID, origin, version, schema, DB path/size, safety counters, and last health status.
+
+## reset-demo.ps1
+
+Requires explicit confirmation, creates a backup, stops the app, clears only configured synthetic runtime data, reinitializes, verifies, and never touches source/Git/specifications.
+
+Scripts must be tested without administrator rights.
+
+---
+
+# 11. Visual and accessibility requirements
+
+Use a modern generic internal-tool appearance:
+
+- blue/teal/charcoal palette;
+- no copied company UI;
+- no logo or trademark;
+- visible synthetic/localhost banner;
+- responsive layout;
+- keyboard navigable;
+- semantic HTML;
+- accessible labels;
+- focus indication;
+- sufficient contrast;
+- no external fonts or assets;
+- no unnecessary animation;
+- narrow layout compatible with future side-panel width.
+
+Do not optimize aesthetics at the expense of deterministic DOM structure.
+
+---
+
+# 12. Security requirements
+
+Implement and test:
+
+- loopback host validation;
+- strict Host-header policy;
+- bounded request bodies;
+- no path traversal;
+- no arbitrary file serving;
+- no directory listing;
+- no template injection;
+- no reflected raw input;
+- HTML escaping;
+- safe JSON embedding;
+- local-action CSRF/origin policy;
+- secure response headers appropriate for localhost;
+- Content Security Policy using local/self assets only;
+- no remote code;
+- no analytics;
+- no websocket unless required and documented;
+- safe errors;
+- no debug server exposure;
+- no source-map leakage of prohibited content.
+
+All nine safety counters remain zero.
+
+---
+
+# 13. Tests
+
+At minimum add:
+
+## Service/API
+
+- health;
+- startup schema failure;
+- DB corruption failure;
+- non-loopback bind rejection;
+- Host-header rejection;
+- API schema validation;
+- unknown/extra member rejection;
+- synthetic-ID rejection;
+- exact replay;
+- conflict;
+- safe error envelope;
+- route not found;
+- body-size bound.
+
+## Portal
+
+- scenario list;
+- instantiate each required alias;
+- order list/detail;
+- interaction detail;
+- evaluation;
+- history;
+- long order;
+- zero-line proof;
+- every malformed/incomplete mode;
+- HTML escaping;
+- no external asset;
+- accessibility smoke checks;
+- stable DOM contract.
+
+## Windows scripts
+
+- start;
+- second start rejected;
+- status;
+- stop;
+- stale runtime receipt;
+- occupied port;
+- unsupported schema;
+- corrupt DB;
+- reset with/without confirmation.
+
+## Regression
+
+- all Milestone 1 tests;
+- all Sales Credit tests;
+- all DOI tests;
+- all Milestone 4 persistence/CLI tests;
+- complete suite;
+- foundation audit;
+- safety and network scans;
+- protected-file integrity.
+
+Actual browser automation may use an installed local tool. If none exists, use deterministic HTTP/HTML parser tests plus a documented manual acceptance checklist. Do not download a browser test dependency.
+
+---
+
+# 14. Manual acceptance deliverable
+
+Create `docs/milestone5-manual-acceptance.md` and include a user checklist covering:
+
+- start/status/stop;
+- scenario library;
+- each required alias;
+- complete/large/malformed pages;
+- persistence across refresh;
+- replay/conflict;
+- history;
+- database health;
+- reset;
+- zero external network;
+- zero extension inventory.
+
+Automated PASS does not replace the later user-run checklist.
+
+---
+
+# 15. Milestone boundary update
+
+Permit only:
+
+- local service/API;
+- synthetic portal;
+- local static assets;
+- Windows service lifecycle scripts;
+- portal/API tests/docs/ADRs.
+
+Continue to reject:
+
+- Chrome extension or manifest;
+- final dashboard/control-center routes;
+- external connector;
+- external network code;
+- production identifiers;
+- protected spec changes;
+- Milestone 6 implementation.
+
+---
+
+# Required verification
+
+Run at minimum:
+
+1. quality gate;
+2. compileall;
+3. local service/API scoped tests;
+4. portal/DOM contract tests;
+5. startup/shutdown/status/reset tests;
+6. security tests;
+7. Milestone 4 CLI/persistence tests;
+8. Sales Credit regression;
+9. DOI regression;
+10. complete suite;
+11. foundation audit;
+12. synthetic identity scan;
+13. prohibited-input scan;
+14. secret scan;
+15. localhost/no-network checks;
+16. protected-file check;
+17. extension inventory, required zero;
+18. milestone-boundary check;
+19. manual-acceptance document validation.
+
+All protected specification bytes remain unchanged.
+
+Runtime external network calls remain zero.
+
+---
+
+# Same-tree commit gate
+
+1. Finish all Milestone 5 candidate files.
+2. Record candidate tree.
+3. Run scoped and complete gates.
+4. Rerun the complete final gate on that exact tree.
+5. Commit only if every gate passes.
+6. Verify commit tree equals gated tree.
+7. Verify clean worktree/index.
+8. Do not begin Milestone 6.
+
+Runtime DB, logs, PID receipts, and backups remain untracked.
+
+---
+
+# Completion report
+
+Report:
+
+- base commit/tree;
+- gated candidate tree;
+- final commit/tree;
+- exact inventory;
+- service/framework choice and ADR;
+- origin and route inventory;
+- API schema versions;
+- DOM contract version;
+- scenario/page inventory;
+- Windows script inventory;
+- security-header/CSP result;
+- startup/shutdown results;
+- required alias results;
+- completeness/malformed mode results;
+- persistence/replay/history results;
+- complete test commands/counts/results;
+- Sales Credit/DOI/M4 regression counts;
+- portal manual acceptance document;
+- Chrome extension/manifest count, required zero;
+- dashboard route count, required zero;
+- external network count, required zero;
+- safety counters, required zero;
+- protected-file integrity;
+- worktree/index status;
+- any genuine binding contradiction.
+
+Finish exactly:
+
+```text
+MILESTONE_5_SYNTHETIC_PORTAL_AND_LOCAL_API = PASS
+```
+
+or:
+
+```text
+MILESTONE_5_SYNTHETIC_PORTAL_AND_LOCAL_API = BLOCKED
+```
+
+Stop after Milestone 5.

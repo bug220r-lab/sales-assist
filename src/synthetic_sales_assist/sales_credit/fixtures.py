@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from dataclasses import dataclass
 from datetime import date
@@ -61,6 +62,7 @@ from synthetic_sales_assist.sales_credit.retention import NoOrderClosedAuditReco
 
 
 _FIXTURE_NAME = re.compile(r"\A[A-Za-z][A-Za-z0-9:._-]{0,95}\Z", re.ASCII)
+_INSTANCE_KEY = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}\Z", re.ASCII)
 
 
 @dataclass(frozen=True, slots=True, repr=False)
@@ -298,8 +300,117 @@ def milestone2_case_mutation() -> CaseMutation:
     )
 
 
+def milestone5_case_fixture(alias: str, instance_key: str) -> CaseMutation:
+    """Build one fresh source-bound Sales Credit case without evaluating it."""
+
+    if alias not in {
+        "sales-credit-target-rep",
+        "sales-credit-human-review",
+        "sales-credit-cancellation-replacement",
+    }:
+        raise KeyError(alias)
+    if type(instance_key) is not str or _INSTANCE_KEY.fullmatch(instance_key) is None:
+        raise ValueError("SALES_CREDIT_FIXTURE_INSTANCE_INVALID")
+    instance = hashlib.sha256(instance_key.encode("ascii")).hexdigest().upper()[:16]
+    order_id = OrderId(f"SYN-ORDER-M5-SC-{instance}")
+    interaction = InteractionRecord(
+        interaction_id=InteractionId(f"SYN-INTERACTION-M5-SC-{instance}"),
+        source_ref=EvidenceId(f"SYN-EVIDENCE-M5-SC-INTERACTION-SOURCE-{instance}"),
+        recorded_at=CanonicalTimestamp("2026-08-20T16:00:00Z"),
+        timestamp_precision=TimestampPrecision.EXACT,
+        review_window_start=date(2026, 8, 20),
+        review_window_end=date(2026, 9, 3),
+        workflow_state=WorkflowState.AWAITING_SOURCE_REVIEW,
+        provenance=VersionBinding(
+            "sales_credit_interaction_source",
+            "sales-credit-interaction-source/v1",
+        ),
+        email=f"m5-{instance.lower()}@example.test",
+    )
+    captured_at = CanonicalTimestamp("2026-08-21T16:00:00Z")
+    parser = VersionBinding("sales_credit_parser", "sales-credit-parser/v1")
+    source_ref = EvidenceId(f"SYN-EVIDENCE-M5-SC-ORDER-SOURCE-{instance}")
+    line = LineItemSnapshot.create(
+        line_id=EvidenceId(f"SYN-EVIDENCE-M5-SC-LINE-{instance}-0001"),
+        sku_id=SkuId(f"SYN-SKU-M5-SC-{instance}-0001"),
+        quantity=Quantity(2),
+        line_value=_usd(2_500),
+        raw_es_number="synthetic: ES#000123",
+        canonical_es_number="123",
+        raw_mfg_oe_number="synthetic: ab-001 / c",
+        canonical_mfg_oe_number="AB-001 / C",
+        observed_availability="IN_STOCK",
+        observed_eta=CanonicalTimestamp("2026-08-22T16:00:00Z"),
+    )
+    canceled = alias == "sales-credit-cancellation-replacement"
+    snapshot = OrderSnapshot(
+        snapshot_id=SnapshotId(f"SYN-SNAPSHOT-M5-SC-{instance}"),
+        order_id=order_id,
+        source_ref=source_ref,
+        captured_at=captured_at,
+        parser=parser,
+        extraction_status=SnapshotStatus.VALID,
+        lifecycle_status=(
+            OrderLifecycleStatus.CANCELED if canceled else OrderLifecycleStatus.ACTIVE
+        ),
+        notes_scan_status=NotesScanStatus.COMPLETE,
+        placed_at=CanonicalTimestamp("2026-08-21T15:00:00Z"),
+        placed_at_precision=TimestampPrecision.EXACT,
+        raw_order_status="canceled" if canceled else "active",
+        raw_order_rep=(
+            "synthetic_unrecognized_rep"
+            if alias == "sales-credit-human-review"
+            else "target_rep"
+        ),
+        current_value=_usd(12_345),
+        placed_value=_usd(12_345),
+        customer_ids=(CustomerId(f"SYN-CUSTOMER-M5-SC-{instance}"),),
+        lines=(line,),
+        material_changes=(),
+        provenance=order_provenance_binding(
+            source_ref=source_ref,
+            captured_at=captured_at,
+            parser=parser,
+        ),
+        canceled_at=(
+            CanonicalTimestamp("2026-08-21T15:30:00Z") if canceled else None
+        ),
+    )
+    search_run = OrderSearchRun(
+        run_id=RunId(f"SYN-RUN-M5-SC-{instance}"),
+        trigger=SearchTriggerType.NORMAL,
+        interactions=(interaction,),
+        native_result_sets=(
+            NativeSearchResultSet(
+                identifier=SearchIdentifier(
+                    SearchIdentifierKind.EMAIL,
+                    f"m5-{instance.lower()}@example.test",
+                ),
+                completeness=SearchCompleteness.COMPLETE,
+                order_ids=(order_id,),
+            ),
+        ),
+        adapter=VersionBinding(
+            "sales_credit_search_adapter",
+            "sales-credit-search-adapter/v1",
+        ),
+        started_at=CanonicalTimestamp("2026-08-21T16:15:00Z"),
+        completed_at=CanonicalTimestamp("2026-08-21T16:30:00Z"),
+    )
+    return CaseMutation(
+        command_id=EvidenceId(f"SYN-EVIDENCE-M5-SC-COMMAND-{instance}"),
+        order_id=order_id,
+        occurred_at=CanonicalTimestamp("2026-08-21T17:00:00Z"),
+        interactions=(interaction,),
+        snapshots=(snapshot,),
+        evaluation=None,
+        discovery_run=search_run,
+    )
+
+
 __all__ = [
     "HashOracleFixture",
     "milestone2_case_mutation",
     "milestone2_hash_fixtures",
+    "milestone5_case_fixture",
 ]

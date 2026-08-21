@@ -25,11 +25,13 @@ from synthetic_sales_assist.doi.knowledge import DOIExactSKUObservation, exact_s
 from synthetic_sales_assist.doi.models import (
     AlternateAvailability,
     AlternateObservationState,
+    AlternateResearchState,
     ContinuityProofType,
     DOIEvaluation,
     DOIEvaluationInput,
     DOILineItemSnapshot,
     DOIOrderSnapshot,
+    DOIState,
     DedupeFinding,
     DedupeState,
     DropShipState,
@@ -39,6 +41,7 @@ from synthetic_sales_assist.doi.models import (
     LineContinuityProof,
     LineContinuityState,
     OrderState,
+    OpportunityType,
     PaymentCondition,
     QuantityAvailability,
     RepRelation,
@@ -90,10 +93,18 @@ DEMO_OBSERVED_AT = CanonicalTimestamp("2026-08-20T14:15:16Z")
 
 
 @dataclass(frozen=True, slots=True)
+class DOIApplicationOracle:
+    state: DOIState
+    reasons: tuple[str, ...]
+    opportunities: tuple[OpportunityType, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class DOIDemoDefinition:
     alias: str
     scenario_key: str
     description: str
+    application_oracle: DOIApplicationOracle | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,6 +115,53 @@ class DOIDemoExecution:
     run_start: RunStartResult
     snapshot: DOIOrderSnapshot
     evaluation: DOIEvaluation
+
+
+@dataclass(frozen=True, slots=True)
+class DOIDemoFixture:
+    """One immutable synthetic source instance before rule evaluation."""
+
+    definition: DOIDemoDefinition
+    scenario: DOISyntheticScenario
+    instance_key: str
+    run_start: RunStartResult
+    request: DOIEvaluationInput
+
+    @property
+    def snapshot(self) -> DOIOrderSnapshot:
+        return self.request.snapshot
+
+    def evaluate(self) -> DOIDemoExecution:
+        evaluation = evaluate_doi(self.request)
+        expected_state = self.scenario.expected_top_level_state
+        expected_reasons = tuple(reason.code for reason in self.scenario.expected_reasons)
+        expected_opportunities = self.scenario.expected_opportunities
+        oracle = self.definition.application_oracle
+        if oracle is not None:
+            expected_state = oracle.state
+            expected_reasons = oracle.reasons
+            expected_opportunities = oracle.opportunities
+        if expected_state is None or evaluation.state is not expected_state:
+            raise RuntimeError("DOI_DEMO_SCENARIO_RECONCILIATION_FAILED")
+        if tuple(
+            reason.code for reason in evaluation.reasons.reasons
+        ) != expected_reasons:
+            raise RuntimeError("DOI_DEMO_SCENARIO_RECONCILIATION_FAILED")
+        if tuple(
+            sorted(
+                (item.opportunity_type for item in evaluation.opportunities),
+                key=lambda item: item.value,
+            )
+        ) != expected_opportunities:
+            raise RuntimeError("DOI_DEMO_SCENARIO_RECONCILIATION_FAILED")
+        return DOIDemoExecution(
+            self.definition,
+            self.scenario,
+            self.instance_key,
+            self.run_start,
+            self.snapshot,
+            evaluation,
+        )
 
 
 DOI_DEMOS = (
@@ -128,7 +186,58 @@ DOI_DEMOS = (
         "Two independently valid overlapping opportunities remain separate.",
     ),
 )
-_DEMO_BY_ALIAS = {definition.alias: definition for definition in DOI_DEMOS}
+DOI_APPLICATION_FIXTURES = (
+    DOIDemoDefinition(
+        "doi-long-order",
+        "LARGE_AND_ZERO_RELEVANT_ORDERS",
+        "A complete long synthetic order preserves every relevant line.",
+        DOIApplicationOracle(
+            DOIState.DOI_OPPORTUNITY,
+            ("RC-031", "RC-052"),
+            (OpportunityType.FULFILLMENT_SPLIT,),
+        ),
+    ),
+    DOIDemoDefinition(
+        "doi-partial-quantity",
+        "PARTIAL_QUANTITY_REVIEW",
+        "A partially available quantity is presented as a review opportunity.",
+        DOIApplicationOracle(
+            DOIState.DOI_OPPORTUNITY,
+            ("RC-032", "RC-052"),
+            (OpportunityType.PARTIAL_QUANTITY_REVIEW,),
+        ),
+    ),
+    DOIDemoDefinition(
+        "doi-unknown-containment",
+        "FULFILLMENT_SPLIT_WITH_UNRELATED_UNKNOWN",
+        "An unrelated unknown fact does not erase a proved fulfillment split.",
+        DOIApplicationOracle(
+            DOIState.DOI_OPPORTUNITY,
+            ("RC-016", "RC-031", "RC-052"),
+            (OpportunityType.FULFILLMENT_SPLIT,),
+        ),
+    ),
+    DOIDemoDefinition(
+        "doi-dedupe-review",
+        "DEDUPE_CANDIDATE_INCOMPLETE_AND_REJECTED",
+        "A synthetic DEDUPE source finding remains a governed review decision.",
+        DOIApplicationOracle(
+            DOIState.DOI_MONITOR,
+            ("RC-038", "RC-039", "RC-058"),
+            (),
+        ),
+    ),
+    DOIDemoDefinition(
+        "doi-zero-lines",
+        "LARGE_AND_ZERO_RELEVANT_ORDERS",
+        "A complete synthetic order explicitly proves zero relevant lines.",
+        DOIApplicationOracle(DOIState.DOI_MONITOR, (), ()),
+    ),
+)
+_DEMO_BY_ALIAS = {
+    definition.alias: definition
+    for definition in (*DOI_DEMOS, *DOI_APPLICATION_FIXTURES)
+}
 _SCENARIO_BY_KEY = {scenario.scenario_key: scenario for scenario in scenario_catalog()}
 _INSTANCE_KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$", re.ASCII)
 
@@ -169,6 +278,9 @@ def _line(
     availability: object = LineAvailability.DELAYED,
     quantity_availability: object = QuantityAvailability.NONE,
     explicitly_available: int = 0,
+    ordered_quantity: int = 2,
+    active_quantity: int = 2,
+    canceled_quantity: int = 0,
 ) -> DOILineItemSnapshot:
     stable_id = EvidenceId(
         f"SYN-EVIDENCE-DOI-DEMO-STABLE-LINE-{instance}-{index:04d}"
@@ -191,9 +303,9 @@ def _line(
             else known_fact(availability)
         ),
         eta=known_fact(DEMO_OBSERVED_AT),
-        ordered_quantity=known_fact(Quantity(2)),
-        active_quantity=known_fact(Quantity(2)),
-        canceled_quantity=known_fact(Quantity(0)),
+        ordered_quantity=known_fact(Quantity(ordered_quantity)),
+        active_quantity=known_fact(Quantity(active_quantity)),
+        canceled_quantity=known_fact(Quantity(canceled_quantity)),
         explicitly_available_quantity=known_fact(Quantity(explicitly_available)),
         quantity_availability=known_fact(quantity_availability),
         es_number=known_fact(
@@ -219,6 +331,8 @@ def _snapshot(
     lines: tuple[DOILineItemSnapshot, ...],
     suffix: str,
     instance: str,
+    *,
+    dedupe_present: bool = False,
 ) -> DOIOrderSnapshot:
     order = _order_id(instance)
     source = _order_source(order, instance)
@@ -277,7 +391,7 @@ def _snapshot(
         source_refs=(source,),
         coherence_state="COHERENT",
         change_detection_state="UNCHANGED",
-        empty_universe_proved=False,
+        empty_universe_proved=not lines,
     )
     return DOIOrderSnapshot(
         snapshot_id=DoiSnapshotId(
@@ -309,9 +423,13 @@ def _snapshot(
             finding_id=EvidenceId(
                 f"SYN-EVIDENCE-DOI-DEMO-DEDUPE-{instance}-{suffix}"
             ),
-            presence=FindingPresenceV2.NOT_PRESENT,
-            observed_at=None,
-            state=DedupeState.NOT_PRESENT,
+            presence=(
+                FindingPresenceV2.PRESENT
+                if dedupe_present
+                else FindingPresenceV2.NOT_PRESENT
+            ),
+            observed_at=DEMO_OBSERVED_AT if dedupe_present else None,
+            state=DedupeState.SOURCE_PRESENT if dedupe_present else DedupeState.NOT_PRESENT,
             source=source,
         ),
         lines=lines,
@@ -324,13 +442,16 @@ def _input(
     instance: str,
     *,
     alternate_candidates: tuple[object, ...] = (),
+    alternate_research_state: AlternateResearchState = AlternateResearchState.NOT_STARTED,
+    dedupe_present: bool = False,
 ) -> DOIEvaluationInput:
     return DOIEvaluationInput(
         evaluation_id=EvaluationId(
             f"SYN-EVALUATION-DOI-DEMO-{instance}-{suffix}"
         ),
-        snapshot=_snapshot(lines, suffix, instance),
+        snapshot=_snapshot(lines, suffix, instance, dedupe_present=dedupe_present),
         evaluated_at=DEMO_OBSERVED_AT,
+        alternate_research_state=alternate_research_state,
         alternate_candidates=alternate_candidates,  # type: ignore[arg-type]
     )
 
@@ -354,10 +475,10 @@ def _split_lines(
     )
 
 
-def _evaluation(
+def _request(
     definition: DOIDemoDefinition,
     instance: str,
-) -> tuple[DOIOrderSnapshot, DOIEvaluation]:
+) -> DOIEvaluationInput:
     source = _order_source(_order_id(instance), instance)
     if definition.alias == "doi-fulfillment-split":
         request = _input(
@@ -449,9 +570,111 @@ def _evaluation(
         )
         if request.snapshot.hash_binding() != base.snapshot.hash_binding():
             raise RuntimeError("DOI_DEMO_OVERLAP_INPUT_DRIFT")
+    elif definition.alias == "doi-long-order":
+        lines = tuple(
+            _line(
+                index,
+                source,
+                snapshot_suffix="LONG-ORDER",
+                instance=instance,
+                availability=(
+                    LineAvailability.IN_STOCK
+                    if index % 2
+                    else LineAvailability.DELAYED
+                ),
+                quantity_availability=(
+                    QuantityAvailability.FULL
+                    if index % 2
+                    else QuantityAvailability.NONE
+                ),
+                explicitly_available=2 if index % 2 else 0,
+            )
+            for index in range(1, 65)
+        )
+        request = _input(lines, "LONG-ORDER", instance)
+    elif definition.alias == "doi-partial-quantity":
+        request = _input(
+            (
+                _line(
+                    1,
+                    source,
+                    snapshot_suffix="PARTIAL-QUANTITY",
+                    instance=instance,
+                    availability=LineAvailability.IN_STOCK,
+                    quantity_availability=QuantityAvailability.PARTIAL,
+                    explicitly_available=1,
+                    ordered_quantity=3,
+                    active_quantity=3,
+                ),
+            ),
+            "PARTIAL-QUANTITY",
+            instance,
+        )
+    elif definition.alias == "doi-unknown-containment":
+        lines = (*_split_lines("UNKNOWN-CONTAINMENT", instance),)
+        request = _input(
+            (
+                *lines,
+                _line(
+                    3,
+                    source,
+                    snapshot_suffix="UNKNOWN-CONTAINMENT",
+                    instance=instance,
+                    availability=unknown_fact("RC-016"),
+                    quantity_availability=QuantityAvailability.NONE,
+                ),
+            ),
+            "UNKNOWN-CONTAINMENT",
+            instance,
+        )
+    elif definition.alias == "doi-dedupe-review":
+        request = _input(
+            (
+                _line(
+                    1,
+                    source,
+                    snapshot_suffix="DEDUPE-REVIEW",
+                    instance=instance,
+                ),
+            ),
+            "DEDUPE-REVIEW",
+            instance,
+            alternate_research_state=AlternateResearchState.COMPLETE,
+            dedupe_present=True,
+        )
+    elif definition.alias == "doi-zero-lines":
+        request = _input((), "ZERO-LINES", instance)
     else:
         raise KeyError(definition.alias)
-    return request.snapshot, evaluate_doi(request)
+    return request
+
+
+def build_doi_demo_fixture(
+    alias: str,
+    *,
+    instance_key: str = "default",
+) -> DOIDemoFixture:
+    """Build a source-bound demo instance without executing business rules."""
+
+    definition = _DEMO_BY_ALIAS.get(alias)
+    if definition is None:
+        raise KeyError(alias)
+    instance = _instance_token(instance_key)
+    scenario = _SCENARIO_BY_KEY[definition.scenario_key]
+    request = _request(definition, instance)
+    control = InMemoryDOIRunControl()
+    run_start = control.begin_recheck_run(
+        run_id=request.snapshot.run_id.value,
+        invocation_id=RunInvocationId(
+            InteractionId(
+                f"SYN-INTERACTION-DOI-DEMO-RUN-{instance}-{alias.upper()}"
+            )
+        ),
+        run_type=RunType.RECHECK_ORDER,
+        order_id=request.snapshot.order_id.value,
+        accepted_at=DEMO_OBSERVED_AT,
+    )
+    return DOIDemoFixture(definition, scenario, instance_key, run_start, request)
 
 
 def execute_doi_demo(
@@ -461,51 +684,18 @@ def execute_doi_demo(
 ) -> DOIDemoExecution:
     """Execute one stable alias through the real evaluator and run-control boundaries."""
 
-    definition = _DEMO_BY_ALIAS.get(alias)
-    if definition is None:
-        raise KeyError(alias)
-    instance = _instance_token(instance_key)
-    scenario = _SCENARIO_BY_KEY[definition.scenario_key]
-    snapshot, evaluation = _evaluation(definition, instance)
-    control = InMemoryDOIRunControl()
-    run_start = control.begin_recheck_run(
-        run_id=evaluation.run_id.value,
-        invocation_id=RunInvocationId(
-            InteractionId(
-                f"SYN-INTERACTION-DOI-DEMO-RUN-{instance}-{alias.upper()}"
-            )
-        ),
-        run_type=RunType.RECHECK_ORDER,
-        order_id=evaluation.order_id.value,
-        accepted_at=DEMO_OBSERVED_AT,
-    )
-    if (
-        evaluation.state is not scenario.expected_top_level_state
-        or tuple(reason.code for reason in evaluation.reasons.reasons)
-        != tuple(reason.code for reason in scenario.expected_reasons)
-        or tuple(
-            sorted(
-                {item.opportunity_type for item in evaluation.opportunities},
-                key=lambda item: item.value,
-            )
-        )
-        != scenario.expected_opportunities
-    ):
-        raise RuntimeError("DOI_DEMO_SCENARIO_RECONCILIATION_FAILED")
-    return DOIDemoExecution(
-        definition,
-        scenario,
-        instance_key,
-        run_start,
-        snapshot,
-        evaluation,
-    )
+    fixture = build_doi_demo_fixture(alias, instance_key=instance_key)
+    return fixture.evaluate()
 
 
 __all__ = [
     "DEMO_OBSERVED_AT",
+    "DOI_APPLICATION_FIXTURES",
+    "DOIApplicationOracle",
     "DOI_DEMOS",
     "DOIDemoDefinition",
     "DOIDemoExecution",
+    "DOIDemoFixture",
+    "build_doi_demo_fixture",
     "execute_doi_demo",
 ]

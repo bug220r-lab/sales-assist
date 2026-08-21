@@ -50,6 +50,8 @@ from synthetic_sales_assist.domain.identities import EvidenceId, RunId
 from synthetic_sales_assist.domain.timestamps import CanonicalTimestamp
 from synthetic_sales_assist.persistence.database import SQLiteDatabase
 from synthetic_sales_assist.persistence.doi_repository import (
+    DOIInterventionHistoryRecord,
+    DOIOwnerEventRecord,
     DOIRepository,
     PersistenceResult,
     ProjectionVerification,
@@ -659,6 +661,42 @@ class DOIPersistenceService:
     def get_case(self, order_id: str):  # type: ignore[no-untyped-def]
         with self.database.read() as connection:
             return DOIRepository(connection).get_case(order_id)
+
+    def evaluation_recorded_at(
+        self,
+        *,
+        case_id: str,
+        evaluation_id: str,
+    ) -> CanonicalTimestamp | None:
+        with self.database.read() as connection:
+            return DOIRepository(connection).evaluation_recorded_at(
+                case_id=case_id,
+                evaluation_id=evaluation_id,
+            )
+
+    def case_owner_events(
+        self,
+        *,
+        case_id: str,
+        limit: int,
+    ) -> tuple[DOIOwnerEventRecord, ...]:
+        with self.database.read() as connection:
+            return DOIRepository(connection).case_owner_events(
+                case_id=case_id,
+                limit=limit,
+            )
+
+    def case_interventions(
+        self,
+        *,
+        case_id: str,
+        limit: int,
+    ) -> tuple[DOIInterventionHistoryRecord, ...]:
+        with self.database.read() as connection:
+            return DOIRepository(connection).case_interventions(
+                case_id=case_id,
+                limit=limit,
+            )
 
     def run_history(self, run_id: str):  # type: ignore[no-untyped-def]
         with self.database.read() as connection:

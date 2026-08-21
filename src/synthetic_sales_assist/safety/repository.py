@@ -28,10 +28,13 @@ TEXT_SUFFIXES = frozenset(
         ".css",
         ".editorconfig",
         ".gitignore",
+        ".htm",
+        ".html",
         ".ini",
         ".js",
         ".json",
         ".md",
+        ".ps1",
         ".py",
         ".sql",
         ".toml",
@@ -48,6 +51,7 @@ IMPLEMENTATION_ROOTS = (
     "docs",
     "migrations",
     "pyproject.toml",
+    "scripts",
     "src",
     "tests",
     "tools",
@@ -64,11 +68,42 @@ PROHIBITED_ARTIFACT_SUFFIXES = frozenset(
         ".jpg",
         ".key",
         ".log",
+        ".map",
         ".pem",
         ".png",
         ".sqlite",
         ".sqlite3",
         ".webp",
+    }
+)
+
+AUTHORED_M5_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M5"
+AUTHORED_M5_PORTAL_ROOTS = (
+    "src/synthetic_sales_assist/portal",
+    "src/synthetic_sales_assist/static",
+)
+AUTHORED_M5_PORTAL_SUFFIXES = frozenset({".css", ".htm", ".html", ".js"})
+AUTHORED_M5_SCRIPT_PATHS = frozenset(
+    {
+        "scripts/lifecycle-common.ps1",
+        "scripts/reset-demo.ps1",
+        "scripts/start.ps1",
+        "scripts/status.ps1",
+        "scripts/stop.ps1",
+    }
+)
+MAX_AUTHORED_M5_ASSET_BYTES = 512 * 1024
+FORBIDDEN_CAPABILITY_PATH_PARTS = frozenset(
+    {
+        "automation",
+        "browser",
+        "chrome_extension",
+        "connector",
+        "control-center",
+        "control_center",
+        "dashboard",
+        "extension",
+        "milestone6",
     }
 )
 
@@ -163,6 +198,33 @@ def _read_text(path: Path) -> str | None:
         return None
 
 
+def _is_beneath(relative: str, roots: tuple[str, ...]) -> bool:
+    return any(relative == root or relative.startswith(root + "/") for root in roots)
+
+
+def _is_approved_m5_portal_source(relative: str, path: Path, text: str) -> bool:
+    if not _is_beneath(relative, AUTHORED_M5_PORTAL_ROOTS):
+        return False
+    if path.suffix.lower() not in AUTHORED_M5_PORTAL_SUFFIXES | {".py"}:
+        return False
+    if path.stat().st_size > MAX_AUTHORED_M5_ASSET_BYTES:
+        return False
+    return AUTHORED_M5_MARKER in text[:8192]
+
+
+def _is_approved_m5_script(relative: str, path: Path, text: str) -> bool:
+    return (
+        relative in AUTHORED_M5_SCRIPT_PATHS
+        and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES
+        and AUTHORED_M5_MARKER in text[:4096]
+    )
+
+
+def _has_forbidden_capability_path(relative: str) -> bool:
+    parts = tuple(part.lower() for part in Path(relative).parts)
+    return any(part in FORBIDDEN_CAPABILITY_PATH_PARTS for part in parts)
+
+
 def scan_secret_material(root: Path) -> tuple[RepositoryFinding, ...]:
     """Scan all repository text for high-confidence credential material."""
 
@@ -207,10 +269,28 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
         if path.is_symlink() or not _is_within(root, path):
             findings.add(RepositoryFinding("linked_or_external_path", relative, 0))
             continue
-        if path.suffix.lower() in PROHIBITED_ARTIFACT_SUFFIXES:
-            findings.add(RepositoryFinding("prohibited_artifact_type", relative, 0))
+        if path.name.lower() == "manifest.json":
+            findings.add(RepositoryFinding("extension_manifest", relative, 0))
+            continue
+        if _has_forbidden_capability_path(relative):
+            findings.add(RepositoryFinding("prohibited_capability_path", relative, 0))
             continue
         text = _read_text(path)
+        suffix = path.suffix.lower()
+        approved_portal = (
+            text is not None and _is_approved_m5_portal_source(relative, path, text)
+        )
+        approved_portal_asset = approved_portal and suffix in AUTHORED_M5_PORTAL_SUFFIXES
+        approved_script = text is not None and _is_approved_m5_script(relative, path, text)
+        if relative.startswith("scripts/") and suffix == ".ps1" and not approved_script:
+            findings.add(RepositoryFinding("unapproved_lifecycle_script", relative, 0))
+            continue
+        if suffix in AUTHORED_M5_PORTAL_SUFFIXES and not approved_portal_asset:
+            findings.add(RepositoryFinding("unapproved_portal_asset", relative, 0))
+            continue
+        if suffix in PROHIBITED_ARTIFACT_SUFFIXES and not approved_portal_asset:
+            findings.add(RepositoryFinding("prohibited_artifact_type", relative, 0))
+            continue
         if text is None:
             continue
         for match in URL_PATTERN.finditer(text):
@@ -228,8 +308,13 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
                         "non_synthetic_email", relative, _line_number(text, match.start())
                     )
                 )
-        for match in CAPTURED_HTML_PATTERN.finditer(text):
-            findings.add(
-                RepositoryFinding("captured_html", relative, _line_number(text, match.start()))
-            )
+        if not approved_portal:
+            for match in CAPTURED_HTML_PATTERN.finditer(text):
+                findings.add(
+                    RepositoryFinding(
+                        "captured_html",
+                        relative,
+                        _line_number(text, match.start()),
+                    )
+                )
     return tuple(sorted(findings))

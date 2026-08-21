@@ -327,6 +327,18 @@ class SalesCreditPersistenceService:
         with self.database.read() as connection:
             return SalesCreditRepository(connection).case_history(order_id)
 
+    def manager_outcomes(
+        self,
+        order_id: OrderId,
+        *,
+        limit: int,
+    ) -> tuple[ManagerOutcome, ...]:
+        with self.database.read() as connection:
+            return SalesCreditRepository(connection).manager_outcomes(
+                order_id,
+                limit=limit,
+            )
+
     def verify_projections(self) -> ProjectionVerification:
         with self.database.read() as connection:
             return verify_sales_credit_projections(connection)

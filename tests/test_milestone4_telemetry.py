@@ -130,6 +130,50 @@ class Milestone4TelemetryTests(unittest.TestCase):
         self.assertEqual(tuple(row), ("ERROR", 1, "DEMO_DATABASE_ERROR"))
         self.assertEqual(summary.database_error_count, 1)
 
+    def test_optional_malformed_operation_id_reuses_exact_telemetry(self) -> None:
+        database = SQLiteDatabase(self.root / "malformed-recovery.sqlite3")
+        database.initialize()
+        backend = DurableDemoAuditBackend(database)
+        operation_id = "SYN-EVIDENCE-M5-OPERATION-MALFORMED-RECOVERY"
+
+        first = backend.run_demo(
+            "malformed-input",
+            "malformed-recovery",
+            telemetry_operation_id=operation_id,
+            replay_override=False,
+        )
+        recovered = backend.run_demo(
+            "malformed-input",
+            "malformed-recovery",
+            telemetry_operation_id=operation_id,
+            replay_override=False,
+        )
+        self.assertFalse(first.exact_replay)
+        self.assertFalse(recovered.exact_replay)
+        self.assertEqual(
+            recovered.processing_duration_ns,
+            first.processing_duration_ns,
+        )
+
+        default_first = backend.run_demo("malformed-input", "malformed-default")
+        default_replay = backend.run_demo("malformed-input", "malformed-default")
+        self.assertFalse(default_first.exact_replay)
+        self.assertTrue(default_replay.exact_replay)
+
+        with database.read() as connection:
+            counts = tuple(
+                int(value)
+                for value in connection.execute(
+                    "SELECT "
+                    "(SELECT COUNT(*) FROM structured_domain_failures), "
+                    "(SELECT COUNT(*) FROM processing_telemetry), "
+                    "(SELECT COUNT(*) FROM processing_telemetry "
+                    " WHERE operation_id=?)",
+                    (operation_id,),
+                ).fetchone()
+            )
+        self.assertEqual(counts, (2, 3, 1))
+
 
 if __name__ == "__main__":
     unittest.main()

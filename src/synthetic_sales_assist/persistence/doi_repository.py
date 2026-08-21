@@ -77,6 +77,7 @@ from synthetic_sales_assist.domain.canonical import (
     HashBinding,
     canonical_json_bytes,
     domain_hash,
+    parse_canonical_json_bytes,
 )
 from synthetic_sales_assist.domain.identities import EvidenceId
 from synthetic_sales_assist.domain.observed import (
@@ -129,6 +130,21 @@ class PurgeResult:
     deleted: bool
     finalized_contribution_count: int
     deleted_run_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class DOIOwnerEventRecord:
+    stream_family: str
+    event_id: str
+    projection_state: str
+    occurred_at: CanonicalTimestamp
+    transition_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class DOIInterventionHistoryRecord:
+    intervention: DOIIntervention
+    created_at: CanonicalTimestamp
 
 
 @dataclass(frozen=True, slots=True)
@@ -2935,6 +2951,165 @@ class DOIRepository:
             return None
         return decode_payload(_stored_bytes(row[0]), DOIOrderCase)
 
+    def evaluation_recorded_at(
+        self,
+        *,
+        case_id: str,
+        evaluation_id: str,
+    ) -> CanonicalTimestamp | None:
+        row = self.connection.execute(
+            "SELECT a.record_domain, a.record_sha256, a.record_canonical_bytes, "
+            "a.record_payload, a.created_at FROM doi_case_artifacts a "
+            "WHERE a.case_id=? AND a.artifact_kind='EVALUATION' "
+            "AND a.artifact_id=?",
+            (case_id, evaluation_id),
+        ).fetchone()
+        if row is None:
+            return None
+        evaluation = decode_payload(_stored_bytes(row[3]), DOIEvaluation)
+        _verify_binding(row, 0, evaluation)
+        if evaluation.evaluation_id.value != evaluation_id:
+            raise DOIPersistenceIntegrityError("DOI_EVALUATION_ARTIFACT_MISMATCH")
+        case = self.connection.execute(
+            "SELECT 1 FROM doi_cases WHERE case_id=? AND order_id=?",
+            (case_id, evaluation.order_id.to_json_value()),
+        ).fetchone()
+        if case is None:
+            raise DOIPersistenceIntegrityError("DOI_EVALUATION_ARTIFACT_MISMATCH")
+        return CanonicalTimestamp(str(row[4]))
+
+    def case_owner_events(
+        self,
+        *,
+        case_id: str,
+        limit: int,
+    ) -> tuple[DOIOwnerEventRecord, ...]:
+        if type(case_id) is not str or type(limit) is not int or limit < 1:
+            raise DOIPersistenceError("DOI_OWNER_HISTORY_READ_INVALID")
+        rows = self.connection.execute(
+            "SELECT e.stream_family, e.stream_id, e.event_id, e.sequence_no, "
+            "e.transition_id, e.projection_state, e.predecessor_sha256, "
+            "e.occurred_at, e.record_domain, e.record_sha256, "
+            "e.record_canonical_bytes, e.record_payload FROM doi_owner_events e "
+            "JOIN doi_owner_streams s ON s.stream_family=e.stream_family "
+            "AND s.stream_id=e.stream_id WHERE s.case_id=? AND "
+            "e.stream_family IN ('CASE', 'LIFECYCLE', 'ATTENTION') "
+            "ORDER BY e.occurred_at, e.stream_family, e.sequence_no LIMIT ?",
+            (case_id, limit + 1),
+        ).fetchall()
+        if len(rows) > limit:
+            raise DOIPersistenceError("DOI_OWNER_HISTORY_READ_LIMIT_EXCEEDED")
+        result: list[DOIOwnerEventRecord] = []
+        expected = {
+            "event_canonical_b64",
+            "event_domain",
+            "event_id",
+            "event_payload_b64",
+            "event_sha256",
+            "occurred_at",
+            "projected_state",
+            "stream_family",
+            "stream_id",
+            "transition_id",
+        }
+        for row in rows:
+            canonical = _stored_bytes(row[10])
+            payload = _stored_bytes(row[11])
+            if (
+                str(row[8]) != "doi-owner-event-envelope/v1"
+                or domain_hash(str(row[8]), canonical).sha256 != str(row[9])
+                or payload != canonical
+            ):
+                raise DOIPersistenceIntegrityError("DOI_OWNER_EVENT_BINDING_MISMATCH")
+            try:
+                value = parse_canonical_json_bytes(
+                    canonical,
+                    expected_members=expected,
+                )
+                if type(value) is not dict:
+                    raise ValueError
+                event_canonical = base64.b64decode(
+                    str(value["event_canonical_b64"]),
+                    validate=True,
+                )
+                base64.b64decode(str(value["event_payload_b64"]), validate=True)
+                event_binding = domain_hash(str(value["event_domain"]), event_canonical)
+            except (TypeError, ValueError, KeyError):
+                raise DOIPersistenceIntegrityError(
+                    "DOI_OWNER_EVENT_MATERIAL_INVALID"
+                ) from None
+            transition = None if row[4] is None else str(row[4])
+            if (
+                value["stream_family"] != str(row[0])
+                or value["stream_id"] != str(row[1])
+                or value["event_id"] != str(row[2])
+                or value["transition_id"] != transition
+                or value["projected_state"] != str(row[5])
+                or value["occurred_at"] != str(row[7])
+                or value["event_sha256"] != event_binding.sha256
+            ):
+                raise DOIPersistenceIntegrityError(
+                    "DOI_OWNER_EVENT_PROJECTION_MISMATCH"
+                )
+            result.append(
+                DOIOwnerEventRecord(
+                    stream_family=str(row[0]),
+                    event_id=str(row[2]),
+                    projection_state=str(row[5]),
+                    occurred_at=CanonicalTimestamp(str(row[7])),
+                    transition_id=transition,
+                )
+            )
+        return tuple(result)
+
+    def case_interventions(
+        self,
+        *,
+        case_id: str,
+        limit: int,
+    ) -> tuple[DOIInterventionHistoryRecord, ...]:
+        if type(case_id) is not str or type(limit) is not int or limit < 1:
+            raise DOIPersistenceError("DOI_INTERVENTION_HISTORY_READ_INVALID")
+        rows = self.connection.execute(
+            "SELECT i.case_id, i.intervention_id, i.opportunity_id, "
+            "i.intervention_type, i.status, i.action_occurred_at, a.created_at, "
+            "a.record_domain, a.record_sha256, a.record_canonical_bytes, "
+            "a.record_payload FROM doi_interventions i JOIN doi_case_artifacts a "
+            "ON a.artifact_pk=i.record_artifact_pk WHERE i.case_id=? "
+            "AND a.artifact_kind='INTERVENTION' "
+            "ORDER BY a.created_at, i.intervention_id LIMIT ?",
+            (case_id, limit + 1),
+        ).fetchall()
+        if len(rows) > limit:
+            raise DOIPersistenceError("DOI_INTERVENTION_HISTORY_LIMIT_EXCEEDED")
+        result: list[DOIInterventionHistoryRecord] = []
+        for row in rows:
+            intervention = decode_payload(_stored_bytes(row[10]), DOIIntervention)
+            _verify_binding(row, 7, intervention)
+            action_at = (
+                None
+                if intervention.action_occurred_at is None
+                else intervention.action_occurred_at.value
+            )
+            if (
+                str(row[0]) != case_id
+                or str(row[1]) != intervention.intervention_id.value
+                or str(row[2]) != intervention.opportunity_id.value
+                or str(row[3]) != intervention.intervention_type.value
+                or str(row[4]) != intervention.status.value
+                or row[5] != action_at
+            ):
+                raise DOIPersistenceIntegrityError(
+                    "DOI_INTERVENTION_HISTORY_PROJECTION_MISMATCH"
+                )
+            result.append(
+                DOIInterventionHistoryRecord(
+                    intervention=intervention,
+                    created_at=CanonicalTimestamp(str(row[6])),
+                )
+            )
+        return tuple(result)
+
     def append_owner_event(
         self,
         *,
@@ -4681,6 +4856,8 @@ class DOIRepository:
 
 
 __all__ = [
+    "DOIInterventionHistoryRecord",
+    "DOIOwnerEventRecord",
     "DOIPersistenceConflict",
     "DOIPersistenceError",
     "DOIPersistenceIntegrityError",
