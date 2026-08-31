@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 SOURCE = ROOT / "src"
 POWERSHELL = shutil.which("pwsh") or shutil.which("powershell")
+WINDOWS_POWERSHELL = shutil.which("powershell")
 RECEIPT_SCHEMA = "synthetic-sales-assist-runtime-receipt/v1"
 API_SCHEMA = "synthetic-sales-assist-api/v1"
 RECEIPT_MEMBERS = {
@@ -59,8 +60,13 @@ class Milestone5LifecycleTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory(prefix="synthetic-sales-assist-m5-lifecycle-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
+        self.host_env = dict(os.environ)
         self.env = dict(os.environ)
         self.env.pop("PYTHONPATH", None)
+        path_without_python = self.root / "path-without-python"
+        path_without_python.mkdir()
+        self.env["PATH"] = str(path_without_python)
+        self.env["SSA_PYTHON"] = os.path.abspath(sys.executable)
 
     def tearDown(self) -> None:
         if (self.root / "runtime" / "service.json").exists():
@@ -72,16 +78,21 @@ class Milestone5LifecycleTests(unittest.TestCase):
         *arguments: str,
         timeout: int = 30,
         data_dir: Path | str | None = None,
+        env: dict[str, str] | None = None,
+        python_path: str | None = None,
+        powershell_path: str | None = None,
     ) -> subprocess.CompletedProcess[str]:
         command = self._script_command(
             script,
             *arguments,
             data_dir=data_dir,
+            python_path=python_path,
+            powershell_path=powershell_path,
         )
         return subprocess.run(
             command,
             cwd=SOURCE,
-            env=self.env,
+            env=self.env if env is None else env,
             check=False,
             capture_output=True,
             text=True,
@@ -93,21 +104,24 @@ class Milestone5LifecycleTests(unittest.TestCase):
         script: str,
         *arguments: str,
         data_dir: Path | str | None = None,
+        python_path: str | None = None,
+        powershell_path: str | None = None,
     ) -> list[str]:
-        return [
-            str(POWERSHELL),
+        command = [
+            str(POWERSHELL if powershell_path is None else powershell_path),
             "-NoProfile",
             "-NonInteractive",
             "-ExecutionPolicy",
             "Bypass",
             "-File",
             str(SCRIPTS / script),
-            "-PythonPath",
-            sys.executable,
             "-DataDir",
             str(self.root if data_dir is None else data_dir),
-            *arguments,
         ]
+        if python_path is not None:
+            command.extend(("-PythonPath", python_path))
+        command.extend(arguments)
+        return command
 
     def _json(self, result: subprocess.CompletedProcess[str]) -> dict[str, object]:
         lines = [line for line in result.stdout.splitlines() if line.strip()]
@@ -164,6 +178,22 @@ class Milestone5LifecycleTests(unittest.TestCase):
         python_path: str,
         *arguments: str,
     ) -> subprocess.CompletedProcess[str]:
+        return self._run(
+            script,
+            *arguments,
+            python_path=python_path,
+            timeout=20,
+        )
+
+    def _run_common_command(
+        self,
+        command: str,
+        *,
+        env: dict[str, str] | None = None,
+        timeout: int = 20,
+    ) -> subprocess.CompletedProcess[str]:
+        supplied_env = dict(self.env if env is None else env)
+        supplied_env["SSA_LIFECYCLE_COMMON"] = str(SCRIPTS / "lifecycle-common.ps1")
         return subprocess.run(
             [
                 str(POWERSHELL),
@@ -171,21 +201,297 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "-NonInteractive",
                 "-ExecutionPolicy",
                 "Bypass",
-                "-File",
-                str(SCRIPTS / script),
-                "-PythonPath",
-                python_path,
-                "-DataDir",
-                str(self.root),
-                *arguments,
+                "-Command",
+                ". $env:SSA_LIFECYCLE_COMMON; " + command,
             ],
             cwd=SOURCE,
-            env=self.env,
+            env=supplied_env,
             check=False,
             capture_output=True,
             text=True,
-            timeout=20,
+            timeout=timeout,
         )
+
+    def _build_python_probe_stub(
+        self,
+        directory: Path,
+        major: int,
+        minor: int,
+        implementation: str = "cpython",
+    ) -> Path:
+        if WINDOWS_POWERSHELL is None:
+            self.skipTest("Windows PowerShell is required to compile a probe stub")
+        directory.mkdir(parents=True, exist_ok=True)
+        executable = directory / "python.exe"
+        source = (
+            "using System;\n"
+            "using System.Diagnostics;\n"
+            "public static class Program {\n"
+            "  public static int Main(string[] args) {\n"
+            "    string path = Process.GetCurrentProcess().MainModule.FileName;\n"
+            f'    Console.WriteLine("SSA_PYTHON_PROBE_V1|{major}|{minor}|'
+            f'{implementation}|" '
+            "+ path + \"|\" + path);\n"
+            "    return 0;\n"
+            "  }\n"
+            "}\n"
+        )
+        environment = dict(self.host_env)
+        environment["SSA_STUB_OUTPUT"] = str(executable)
+        environment["SSA_STUB_SOURCE"] = source
+        result = subprocess.run(
+            [
+                str(WINDOWS_POWERSHELL),
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "Add-Type -TypeDefinition $env:SSA_STUB_SOURCE -Language CSharp "
+                "-OutputAssembly $env:SSA_STUB_OUTPUT -OutputType ConsoleApplication",
+            ],
+            cwd=SOURCE,
+            env=environment,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        self.assertTrue(executable.is_file())
+        return executable
+
+    def test_ssa_python_fallback_requires_an_absolute_existing_path(self) -> None:
+        candidates = (
+            ("python.exe", "PYTHON_PATH_ABSOLUTE_REQUIRED"),
+            (str(self.root / "missing" / "python.exe"), "PYTHON_PATH_NOT_FOUND"),
+        )
+        for candidate, error_code in candidates:
+            with self.subTest(error_code=error_code):
+                environment = dict(self.env)
+                environment["SSA_PYTHON"] = candidate
+                result = self._run("status.ps1", env=environment)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(error_code, result.stderr)
+
+    def test_ssa_python_rejects_wrong_name_and_non_python_executable(self) -> None:
+        wrong_name = self.root / "not-python.exe"
+        wrong_name.write_bytes(b"not-an-executable")
+        environment = dict(self.env)
+        environment["SSA_PYTHON"] = str(wrong_name)
+        result = self._run("status.ps1", env=environment)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("PYTHON_EXECUTABLE_NAME_INVALID", result.stderr)
+
+        invalid_python = self._build_python_probe_stub(
+            self.root / "invalid-runtime",
+            3,
+            12,
+            implementation="not-python",
+        )
+        environment["SSA_PYTHON"] = str(invalid_python)
+        result = self._run("status.ps1", env=environment)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("PYTHON_IMPLEMENTATION_UNSUPPORTED", result.stderr)
+
+    def test_ssa_python_full_probe_rejects_wrong_python_version(self) -> None:
+        wrong_version = self._build_python_probe_stub(
+            self.root / "python-3.11-stub",
+            3,
+            11,
+        )
+        environment = dict(self.env)
+        environment["SSA_PYTHON"] = str(wrong_version)
+        result = self._run("status.ps1", env=environment)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("PYTHON_VERSION_UNSUPPORTED", result.stderr)
+
+    def test_ssa_python_rejects_unc_device_and_alternate_data_stream_paths(self) -> None:
+        candidates = (
+            r"\\server\share\python.exe",
+            r"\\?\C:\synthetic\python.exe",
+            r"C:\synthetic\python.exe:stream",
+        )
+        for candidate in candidates:
+            with self.subTest(candidate=candidate):
+                environment = dict(self.env)
+                environment["SSA_PYTHON"] = candidate
+                result = self._run("status.ps1", env=environment)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("PYTHON_PATH_", result.stderr)
+
+    def test_ssa_python_rejects_an_arbitrary_reparse_runtime(self) -> None:
+        target = tempfile.TemporaryDirectory(
+            prefix="synthetic-sales-assist-m5-ssa-python-target-"
+        )
+        self.addCleanup(target.cleanup)
+        target_path = Path(target.name)
+        (target_path / "python.exe").write_bytes(b"not-an-executable")
+        link = self.root / "arbitrary-python-runtime"
+        self._make_junction(link, target_path)
+        environment = dict(self.env)
+        environment["SSA_PYTHON"] = str(link / "python.exe")
+        result = self._run("status.ps1", env=environment)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("PYTHON_PATH_REPARSE_POINT", result.stderr)
+
+    def test_final_path_rejection_precedes_python_version_probe(self) -> None:
+        stub = self._build_python_probe_stub(self.root / "final-path-ordering", 3, 12)
+        environment = dict(self.env)
+        environment["SSA_TEST_LOCAL_PYTHON"] = str(stub)
+        command = (
+            "$script:probeCalled = $false; "
+            "function Get-SsaFinalExecutablePath { "
+            "throw 'PYTHON_FINAL_PATH_NETWORK_OR_DEVICE_PROHIBITED' }; "
+            "function Invoke-SsaPythonVersionProbe { "
+            "$script:probeCalled = $true; throw 'VERSION_PROBE_WAS_CALLED' }; "
+            "$resolutionError = $null; "
+            "try { [void](Resolve-SsaPythonCandidate "
+            "-PythonPath $env:SSA_TEST_LOCAL_PYTHON "
+            "-Source 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE' -RequireAbsolute) } "
+            "catch { $resolutionError = $_.Exception.Message }; "
+            "if ($resolutionError -cne "
+            "'PYTHON_FINAL_PATH_NETWORK_OR_DEVICE_PROHIBITED') { "
+            "throw 'FINAL_PATH_REJECTION_WAS_NOT_PRESERVED' }; "
+            "if ($script:probeCalled) { throw 'VERSION_PROBE_WAS_CALLED' }; "
+            "'PASS'"
+        )
+        result = self._run_common_command(command, env=environment)
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        self.assertEqual(result.stdout.strip(), "PASS")
+
+    def test_exact_logical_codex_reparse_exemption_is_source_bound(self) -> None:
+        link = self.root / "logical-codex-python"
+        self._make_junction(link, Path(os.path.abspath(sys.executable)).parent)
+        logical_python = link / "python.exe"
+        environment = dict(self.env)
+        environment["SSA_TEST_CODEX_PYTHON"] = str(logical_python)
+        command = (
+            "function Get-SsaVerifiedCodexPythonPath { "
+            "return $env:SSA_TEST_CODEX_PYTHON }; "
+            "$parameterError = $null; "
+            "try { [void](Resolve-SsaPythonCandidate "
+            "-PythonPath $env:SSA_TEST_CODEX_PYTHON -Source 'PARAMETER') } "
+            "catch { $parameterError = $_.Exception.Message }; "
+            "if ($parameterError -cne 'PYTHON_CODEX_RUNTIME_REQUIRES_SSA_PYTHON') { "
+            "throw 'PARAMETER_SOURCE_WAS_NOT_REJECTED' }; "
+            "$runtime = Resolve-SsaPythonCandidate "
+            "-PythonPath $env:SSA_TEST_CODEX_PYTHON "
+            "-Source 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE' -RequireAbsolute; "
+            "$runtime | ConvertTo-Json -Compress"
+        )
+        result = self._run_common_command(command, env=environment)
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        runtime = json.loads(result.stdout.splitlines()[-1])
+        self.assertEqual(runtime["Source"], "SSA_PYTHON_DEVELOPMENT_NONPORTABLE")
+        self.assertTrue(runtime["IsVerifiedCodexRuntime"])
+        self.assertEqual(
+            os.path.normcase(runtime["RequestedPath"]),
+            os.path.normcase(str(logical_python)),
+        )
+        self.assertEqual(
+            os.path.normcase(runtime["Path"]),
+            os.path.normcase(os.path.realpath(sys.executable)),
+        )
+        self.assertEqual(
+            {os.path.normcase(path) for path in runtime["OwnershipPaths"]},
+            {os.path.normcase(os.path.realpath(sys.executable))},
+        )
+
+    def test_normal_path_python_is_preferred_over_ssa_python_fallback(self) -> None:
+        stub = self._build_python_probe_stub(self.root / "normal-path-python", 3, 12)
+        environment = dict(self.env)
+        environment["PATH"] = str(stub.parent)
+        environment["SSA_PYTHON"] = str(self.root / "missing-fallback" / "python.exe")
+        command = (
+            "$runtime = Select-SsaPythonRuntime -PythonPath $null "
+            "-PythonPathWasBound $false; $runtime | ConvertTo-Json -Compress"
+        )
+        result = self._run_common_command(command, env=environment)
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        runtime = json.loads(result.stdout.splitlines()[-1])
+        self.assertEqual(runtime["Source"], "PATH")
+        self.assertFalse(runtime["IsVerifiedCodexRuntime"])
+        self.assertEqual(os.path.normcase(runtime["Path"]), os.path.normcase(str(stub)))
+
+    def test_verified_codex_ssa_python_runs_loopback_lifecycle_with_zero_counters(
+        self,
+    ) -> None:
+        codex_python = os.path.abspath(sys.executable)
+        expected_codex_python = os.path.abspath(
+            Path.home()
+            / ".cache"
+            / "codex-runtimes"
+            / "codex-primary-runtime"
+            / "dependencies"
+            / "python"
+            / "python.exe"
+        )
+        if os.path.normcase(codex_python) != os.path.normcase(expected_codex_python):
+            self.skipTest("the verified Codex primary runtime is not the test interpreter")
+        rejected = self._run_with_python_path("status.ps1", codex_python)
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertIn("PYTHON_CODEX_RUNTIME_REQUIRES_SSA_PYTHON", rejected.stderr)
+
+        port = self._reserve_port()
+        started = self._run(
+            "start.ps1",
+            "-Port",
+            str(port),
+            "-NoBrowser",
+            timeout=60,
+        )
+        self.assertEqual(started.returncode, 0, started.stderr or started.stdout)
+        self.assertIn("DEVELOPMENT / NONPORTABLE", started.stderr)
+        start_report = self._json(started)
+        self.assertEqual(start_report["origin"], f"http://127.0.0.1:{port}")
+
+        receipt = json.loads(
+            (self.root / "runtime" / "service.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(receipt["host"], "127.0.0.1")
+        self.assertEqual(receipt["origin"], f"http://127.0.0.1:{port}")
+
+        status = self._run("status.ps1")
+        self.assertEqual(status.returncode, 0, status.stderr or status.stdout)
+        self.assertIn("DEVELOPMENT / NONPORTABLE", status.stderr)
+        status_report = self._json(status)
+        self.assertEqual(status_report["state"], "RUNNING")
+        self.assertEqual(status_report["last_health_status"], "PASS")
+        self.assertEqual(status_report["origin"], f"http://127.0.0.1:{port}")
+        counters = status_report["safety_counters"]
+        self.assertEqual(len(counters), 9)
+        self.assertEqual(set(counters.values()), {0})
+
+        stopped = self._run("stop.ps1", timeout=30)
+        self.assertEqual(stopped.returncode, 0, stopped.stderr or stopped.stdout)
+        self.assertIn("DEVELOPMENT / NONPORTABLE", stopped.stderr)
+        self.assertEqual(self._json(stopped)["state"], "STOPPED")
+        self.assertFalse((self.root / "runtime" / "service.json").exists())
+
+    def test_windows_powershell_status_uses_codex_ssa_python_fallback(self) -> None:
+        if WINDOWS_POWERSHELL is None:
+            self.skipTest("Windows PowerShell 5.1 is unavailable")
+        codex_python = os.path.abspath(sys.executable)
+        expected_codex_python = os.path.abspath(
+            Path.home()
+            / ".cache"
+            / "codex-runtimes"
+            / "codex-primary-runtime"
+            / "dependencies"
+            / "python"
+            / "python.exe"
+        )
+        if os.path.normcase(codex_python) != os.path.normcase(expected_codex_python):
+            self.skipTest("the verified Codex primary runtime is not the test interpreter")
+        result = self._run("status.ps1", powershell_path=WINDOWS_POWERSHELL)
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        self.assertIn("DEVELOPMENT / NONPORTABLE", result.stderr)
+        status = self._json(result)
+        self.assertEqual(status["state"], "STOPPED")
+        counters = status["safety_counters"]
+        self.assertEqual(len(counters), 9)
+        self.assertEqual(set(counters.values()), {0})
 
     def _wait_for_operation_lock(self, process: subprocess.Popen[str]) -> None:
         import msvcrt
@@ -316,6 +622,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
         sentinel.write_bytes(b"unchanged")
         result = self._run("reset-demo.ps1", "-ConfirmReset", timeout=60)
         self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+        self.assertIn("DEVELOPMENT / NONPORTABLE", result.stderr)
         report = self._json(result)
         self.assertEqual(report["state"], "RESET")
         self.assertTrue(report["verified"])

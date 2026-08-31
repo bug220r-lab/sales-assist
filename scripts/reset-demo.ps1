@@ -1,7 +1,7 @@
 # SYNTHETIC-SALES-ASSIST-AUTHORED-M5
 [CmdletBinding()]
 param(
-    [string]$PythonPath = 'python',
+    [string]$PythonPath,
     [string]$DataDir,
     [ValidateRange(1024, 65535)][int]$Port = 8765,
     [switch]$ConfirmReset
@@ -15,7 +15,10 @@ $operationLock = $null
 $serviceMaintenanceLock = $null
 try {
     if (-not $ConfirmReset) { throw 'RESET_CONFIRMATION_REQUIRED' }
-    $python = Resolve-SsaPythonPath -PythonPath $PythonPath
+    $pythonRuntime = Select-SsaPythonRuntime -PythonPath $PythonPath `
+        -PythonPathWasBound ($PSBoundParameters.ContainsKey('PythonPath'))
+    Write-SsaPythonRuntimeNotice -Runtime $pythonRuntime
+    $python = [string]$pythonRuntime.Path
     $root = Resolve-SsaDataRoot -DataDir $DataDir
     $paths = Get-SsaRuntimePaths -DataRoot $root
     Initialize-SsaDirectories -Paths $paths
@@ -38,7 +41,12 @@ try {
     }
 
     $stopScript = Join-Path $PSScriptRoot 'stop.ps1'
-    $stopOutput = @(& $stopScript -PythonPath $python -DataDir $root 2>&1)
+    if ($pythonRuntime.Source -ceq 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE') {
+        $stopOutput = @(& $stopScript -DataDir $root 2>&1)
+    }
+    else {
+        $stopOutput = @(& $stopScript -PythonPath $python -DataDir $root 2>&1)
+    }
     if ($LASTEXITCODE -ne 0) { throw 'OWNED_STOP_FAILED' }
     $serviceMaintenanceLock = Enter-SsaLeaseCleanupLock -LockPath $paths.Lock
     if ([IO.File]::Exists($paths.Receipt)) { throw 'RUNTIME_RECEIPT_STILL_PRESENT' }

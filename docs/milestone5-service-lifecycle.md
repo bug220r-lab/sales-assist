@@ -1,7 +1,7 @@
 # Milestone 5 Windows service lifecycle
 
 The four operator scripts run without administrator rights and always require an explicit local
-data directory in tests. Their production default is `%LOCALAPPDATA%\SyntheticSalesAssist`.
+data directory in tests. Their operator default is `%LOCALAPPDATA%\SyntheticSalesAssist`.
 
 ```powershell
 scripts\start.ps1 [-PythonPath PATH] [-DataDir PATH] [-Port 8765] [-NoBrowser]
@@ -9,6 +9,25 @@ scripts\status.ps1 [-PythonPath PATH] [-DataDir PATH]
 scripts\stop.ps1 [-PythonPath PATH] [-DataDir PATH]
 scripts\reset-demo.ps1 -ConfirmReset [-PythonPath PATH] [-DataDir PATH] [-Port 8765]
 ```
+
+When this workspace has no ordinary local Python 3.12 installation, use the verified bundled
+runtime as a session-scoped fallback:
+
+```powershell
+# DEVELOPMENT / NONPORTABLE -- this workspace only
+$localAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
+$profileRoot = [IO.Directory]::GetParent($localAppData).Parent.FullName
+$env:SSA_PYTHON = Join-Path $profileRoot `
+  '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+.\scripts\start.ps1 -NoBrowser
+.\scripts\status.ps1
+.\scripts\stop.ps1
+Remove-Item Env:SSA_PYTHON
+```
+
+Keep `SSA_PYTHON` set for start, status, stop, and reset so every ownership check selects the same
+executable. This is a DEVELOPMENT / NONPORTABLE Codex workspace configuration. It does not create
+or claim a portable release.
 
 The scripts serialize lifecycle-changing work with
 `<data-dir>\runtime\lifecycle-operation.lock`. Start holds this mutex until the child owns its
@@ -53,7 +72,18 @@ controlled `data`, `runtime`, `backups`, and related child is revalidated as a r
 symlinks, junctions, and other reparse points fail before files are read, written, backed up, or
 removed.
 
-An explicitly supplied Python runtime must resolve to an absolute regular file on a local drive.
-UNC/device paths, alternate data streams, mapped network drives, and any reparse ancestor are
-rejected before execution. The subsequent application `doctor` call proves that the resolved
-interpreter can load this exact synthetic application before startup or reset continues.
+An explicitly bound `-PythonPath` is authoritative and remains under the strict path policy. With
+no parameter, the scripts first validate `python` from PATH, so a normal local non-reparse Python
+remains preferred. Only when that candidate fails do they consider a nonempty `SSA_PYTHON`, which
+must be an absolute path. The scripts never search through arbitrary reparse-point locations.
+
+Every candidate must exist as a regular non-reparse `python.exe` leaf on a local drive and must
+report CPython 3.12.x through a bounded isolated probe before application code runs. UNC, device,
+URL, alternate-data-stream, mapped-network, and unsafe arbitrary reparse paths are rejected. The
+only ancestor-reparse exception is the exact verified Codex primary-runtime location selected
+through `SSA_PYTHON`; the exception never applies to `-PythonPath`, PATH, a suffix match, an alias,
+or another reparse path. Before any interpreter invocation, an open Windows file handle resolves
+that logical path to its final target. The final target is independently required to be a regular
+local non-reparse `python.exe`, and that resolved path is the one probed and launched. The
+subsequent application `doctor` call proves that the selected interpreter can load this exact
+synthetic application before startup or reset continues.

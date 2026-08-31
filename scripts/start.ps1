@@ -1,7 +1,7 @@
 # SYNTHETIC-SALES-ASSIST-AUTHORED-M5
 [CmdletBinding()]
 param(
-    [string]$PythonPath = 'python',
+    [string]$PythonPath,
     [string]$DataDir,
     [ValidateRange(1024, 65535)][int]$Port = 8765,
     [switch]$NoBrowser,
@@ -15,7 +15,11 @@ $ErrorActionPreference = 'Stop'
 $child = $null
 $operationLock = $null
 try {
-    $python = Resolve-SsaPythonPath -PythonPath $PythonPath
+    $pythonRuntime = Select-SsaPythonRuntime -PythonPath $PythonPath `
+        -PythonPathWasBound ($PSBoundParameters.ContainsKey('PythonPath'))
+    Write-SsaPythonRuntimeNotice -Runtime $pythonRuntime
+    $python = [string]$pythonRuntime.Path
+    $pythonOwnershipPaths = [string[]]$pythonRuntime.OwnershipPaths
     $root = Resolve-SsaDataRoot -DataDir $DataDir
     $paths = Get-SsaRuntimePaths -DataRoot $root
     Initialize-SsaDirectories -Paths $paths
@@ -25,7 +29,8 @@ try {
 
     $prior = Read-SsaRuntimeReceipt -ReceiptPath $paths.Receipt -ExpectedDataRoot $root
     if ($null -ne $prior) {
-        $owned = Get-SsaOwnedProcess -Receipt $prior -PythonPath $python -DataRoot $root `
+        $owned = Get-SsaOwnedProcess -Receipt $prior -PythonPath $pythonOwnershipPaths `
+            -DataRoot $root `
             -ReceiptPath $paths.Receipt -LockPath $paths.Lock
         if ($null -ne $owned) { throw 'SERVICE_ALREADY_RUNNING' }
         Remove-SsaStaleLease -Paths $paths
@@ -66,7 +71,8 @@ try {
         Start-Sleep -Milliseconds 200
     }
     if ($null -eq $receipt -or $null -eq $health) { throw 'SERVICE_HEALTH_TIMEOUT' }
-    $owned = Get-SsaOwnedProcess -Receipt $receipt -PythonPath $python -DataRoot $root `
+    $owned = Get-SsaOwnedProcess -Receipt $receipt -PythonPath $pythonOwnershipPaths `
+        -DataRoot $root `
         -ReceiptPath $paths.Receipt -LockPath $paths.Lock
     if ($null -eq $owned -or $owned.Id -ne $child.Id) { throw 'PROCESS_OWNERSHIP_MISMATCH' }
     Exit-SsaLifecycleOperationLock -Stream $operationLock

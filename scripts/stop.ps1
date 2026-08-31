@@ -1,7 +1,7 @@
 # SYNTHETIC-SALES-ASSIST-AUTHORED-M5
 [CmdletBinding()]
 param(
-    [string]$PythonPath = 'python',
+    [string]$PythonPath,
     [string]$DataDir,
     [ValidateRange(2, 60)][int]$ShutdownTimeoutSeconds = 15
 )
@@ -11,7 +11,11 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lifecycle-common.ps1')
 
 try {
-    $python = Resolve-SsaPythonPath -PythonPath $PythonPath
+    $pythonRuntime = Select-SsaPythonRuntime -PythonPath $PythonPath `
+        -PythonPathWasBound ($PSBoundParameters.ContainsKey('PythonPath'))
+    Write-SsaPythonRuntimeNotice -Runtime $pythonRuntime
+    $python = [string]$pythonRuntime.Path
+    $pythonOwnershipPaths = [string[]]$pythonRuntime.OwnershipPaths
     $root = Resolve-SsaDataRoot -DataDir $DataDir
     $paths = Get-SsaRuntimePaths -DataRoot $root
     if (Test-Path -LiteralPath $paths.Runtime) {
@@ -25,7 +29,8 @@ try {
     }
 
     $receipt = Read-SsaRuntimeReceipt -ReceiptPath $paths.Receipt -ExpectedDataRoot $root
-    $owned = Get-SsaOwnedProcess -Receipt $receipt -PythonPath $python -DataRoot $root `
+    $owned = Get-SsaOwnedProcess -Receipt $receipt -PythonPath $pythonOwnershipPaths `
+        -DataRoot $root `
         -ReceiptPath $paths.Receipt -LockPath $paths.Lock
     if ($null -eq $owned) {
         Remove-SsaStaleLease -Paths $paths

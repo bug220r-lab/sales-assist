@@ -6,15 +6,35 @@ Use a new absolute local data directory containing only synthetic test state. Re
 tree, Python path, data directory, selected port, app version, API/DOM versions, and schema version
 in the acceptance notes. Do not use the default application-data database for testing.
 
+For the current Codex workspace, prepare one isolated acceptance session as follows:
+
+```powershell
+$acceptanceDataRoot = Join-Path $env:LOCALAPPDATA `
+  ('SyntheticSalesAssist-m5-acceptance-' + [Guid]::NewGuid().ToString('N'))
+$acceptancePort = 8765
+# DEVELOPMENT / NONPORTABLE -- this workspace only
+$localAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
+$profileRoot = [IO.Directory]::GetParent($localAppData).Parent.FullName
+$env:SSA_PYTHON = Join-Path $profileRoot `
+  '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+```
+
+Record the interpreter source as `DEVELOPMENT / NONPORTABLE (explicit SSA_PYTHON)`. Keep the
+variable set for every lifecycle command in this session. This fallback is not a portable release.
+
 ## Lifecycle
 
-- [ ] `start.ps1 -NoBrowser` starts one hidden, non-admin process on `127.0.0.1` only.
+- [ ] `.\scripts\start.ps1 -DataDir $acceptanceDataRoot -Port $acceptancePort -NoBrowser`
+      starts one hidden, non-admin process on `127.0.0.1` only and prints the expected
+      `DEVELOPMENT / NONPORTABLE` fallback label.
 - [ ] A second start is rejected and does not affect the first process.
-- [ ] `status.ps1` reports the exact owned PID, origin, app/schema versions, database path/size,
-      nine zero safety counters, and passing health.
+- [ ] `.\scripts\status.ps1 -DataDir $acceptanceDataRoot` reports the exact owned PID, origin,
+      app/schema versions, database path/size, nine zero safety counters, and passing health.
 - [ ] `/scenarios` opens when `-NoBrowser` is omitted.
-- [ ] `stop.ps1` gracefully stops only the owned process.
+- [ ] `.\scripts\stop.ps1 -DataDir $acceptanceDataRoot` gracefully stops only the owned process.
 - [ ] A stale or altered receipt cannot terminate an unrelated process.
+- [ ] An arbitrary reparse-point runtime remains rejected, and the exact Codex runtime receives
+      its ancestor-reparse exception only through `SSA_PYTHON`, never through `-PythonPath`.
 
 ## Portal and scenarios
 

@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-21
+- Amended: 2026-08-30 (M5 launcher compatibility only)
 - Decision scope: Milestone 5 localhost service and synthetic portal only
 
 ## Context
@@ -108,8 +109,18 @@ Every controlled child directory is created and then revalidated as a real local
 symlinks, junctions, other reparse points, and reparse leaves fail before a lock, receipt,
 database, backup, or deletion operation. Non-root data paths are canonicalized without trailing
 separators before Windows child-process quoting.
-The runtime executable receives the same locality treatment: UNC/device/ADS, mapped-network, and
-reparse paths are rejected before execution, followed by an exact application doctor check.
+The runtime executable receives the same locality treatment: UNC/device/ADS and mapped-network
+paths are rejected before execution. A regular non-reparse `python.exe` leaf must pass a bounded,
+isolated CPython 3.12.x probe, followed by an exact application doctor check. Normal PATH and
+`-PythonPath` candidates reject every reparse ancestor. If normal PATH validation fails, the sole
+exception permits ancestor reparse points for the exact OS-profile-relative Codex primary-runtime
+path, only when that absolute path was explicitly supplied through `SSA_PYTHON`. An open Windows
+file handle resolves the logical executable to its final path before invocation; the final target
+must independently be a regular local non-reparse `python.exe`, and only that final path is probed,
+launched, and admitted for process ownership. The leaf itself, arbitrary reparse paths, aliases,
+suffix matches, UNC/device targets, and mapped-network targets receive no exception. The selected
+source remains DEVELOPMENT / NONPORTABLE, does not create a portable release, and makes no
+portable-release claim.
 
 ## Consequences
 
@@ -122,6 +133,8 @@ reparse paths are rejected before execution, followed by an exact application do
 - Reset additionally retains the service lease across its destructive interval, so the documented
   direct module entry point and scripts share one exclusion primitive.
 - A live PID with any ownership mismatch is never stopped automatically.
+- A safe ordinary PATH interpreter remains preferred; the exact Codex runtime fallback preserves
+  its `SSA_PYTHON` provenance across start, status, stop, and reset ownership checks.
 - Static and template assets are admitted only beneath reviewed portal/static roots and carry an
   authored-Milestone-5 marker; copied HTML, manifests, dashboards, connectors, and external assets
   remain scanner failures.

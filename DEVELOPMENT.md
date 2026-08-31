@@ -9,7 +9,7 @@ connector, scheduler, external network client, remote asset, or external telemet
 
 ## Requirements
 
-- Python 3.12 or newer
+- Python 3.12 or newer for repository code; the Windows lifecycle launcher requires CPython 3.12.x
 - Git
 - no production connector, credential, or external data source
 
@@ -22,6 +22,29 @@ Set the source path for a checkout that has not been installed:
 ```powershell
 $env:PYTHONPATH = "src"
 ```
+
+## Windows lifecycle launcher
+
+The launcher prefers a normal local, non-reparse CPython 3.12.x named `python.exe`. On the current
+Codex workspace, set this process-scoped fallback before using start, status, stop, or reset:
+
+```powershell
+# DEVELOPMENT / NONPORTABLE -- this workspace only
+$localAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
+$profileRoot = [IO.Directory]::GetParent($localAppData).Parent.FullName
+$env:SSA_PYTHON = Join-Path $profileRoot `
+  '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+.\scripts\start.ps1 -NoBrowser
+.\scripts\status.ps1
+.\scripts\stop.ps1
+Remove-Item Env:SSA_PYTHON
+```
+
+Leave `SSA_PYTHON` unset when the normal PATH candidate is safe and usable. If PATH validation
+fails, the fallback must name the exact verified Codex runtime through `SSA_PYTHON`; passing that
+runtime through `-PythonPath` does not receive the development-only ancestor-reparse exception.
+The launcher prints `DEVELOPMENT / NONPORTABLE` when it selects the fallback. This mechanism is
+not a portable release and makes no such claim.
 
 ## Local data
 

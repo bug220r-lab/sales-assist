@@ -42,67 +42,379 @@ function Get-SsaUnavailableSafetyCounters {
     return $result
 }
 
-function Resolve-SsaPythonPath {
-    param([string]$PythonPath = 'python')
+function Get-SsaVerifiedCodexPythonPath {
+    $profile = [Environment]::GetFolderPath(
+        [Environment+SpecialFolder]::UserProfile
+    )
+    if ([string]::IsNullOrWhiteSpace($profile)) {
+        $localAppData = [Environment]::GetFolderPath(
+            [Environment+SpecialFolder]::LocalApplicationData
+        )
+        if ([string]::IsNullOrWhiteSpace($localAppData)) {
+            throw 'PYTHON_CODEX_PROFILE_UNAVAILABLE'
+        }
+        $appData = [IO.Directory]::GetParent($localAppData)
+        if ($null -eq $appData -or $null -eq $appData.Parent) {
+            throw 'PYTHON_CODEX_PROFILE_UNAVAILABLE'
+        }
+        $profile = $appData.Parent.FullName
+    }
+    return [IO.Path]::GetFullPath((Join-Path $profile (
+        '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+    )))
+}
+
+function Get-SsaFinalExecutablePath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if ($null -eq ('SyntheticSalesAssist.Launcher.FinalPathNative' -as [type])) {
+        $typeDefinition = @'
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
+
+namespace SyntheticSalesAssist.Launcher
+{
+    public static class FinalPathNative
+    {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern uint GetFinalPathNameByHandle(
+            SafeFileHandle file,
+            StringBuilder path,
+            uint pathLength,
+            uint flags
+        );
+    }
+}
+'@
+        try { Add-Type -TypeDefinition $typeDefinition -Language CSharp -ErrorAction Stop }
+        catch { throw 'PYTHON_FINAL_PATH_RESOLVER_UNAVAILABLE' }
+    }
+
+    $share = [IO.FileShare]([int][IO.FileShare]::ReadWrite -bor [int][IO.FileShare]::Delete)
+    try {
+        $stream = [IO.File]::Open(
+            $Path,
+            [IO.FileMode]::Open,
+            [IO.FileAccess]::Read,
+            $share
+        )
+    }
+    catch { throw 'PYTHON_FINAL_PATH_UNAVAILABLE' }
+    try {
+        $capacity = 32768
+        $builder = [Text.StringBuilder]::new($capacity)
+        $length = [SyntheticSalesAssist.Launcher.FinalPathNative]::GetFinalPathNameByHandle(
+            $stream.SafeFileHandle,
+            $builder,
+            $capacity,
+            0
+        )
+        if ($length -eq 0 -or $length -ge $capacity) {
+            throw 'PYTHON_FINAL_PATH_UNAVAILABLE'
+        }
+        $finalPath = $builder.ToString()
+    }
+    finally { $stream.Dispose() }
+
+    if (
+        $finalPath.StartsWith('\\?\UNC\', [StringComparison]::OrdinalIgnoreCase) -or
+        $finalPath.StartsWith('\\.\', [StringComparison]::OrdinalIgnoreCase) -or
+        $finalPath.StartsWith('\??\', [StringComparison]::OrdinalIgnoreCase)
+    ) {
+        throw 'PYTHON_FINAL_PATH_NETWORK_OR_DEVICE_PROHIBITED'
+    }
+    if ($finalPath.StartsWith('\\?\', [StringComparison]::OrdinalIgnoreCase)) {
+        $finalPath = $finalPath.Substring(4)
+    }
+    $resolved = Assert-SsaPythonProbePathLocal -Path $finalPath
+    if (-not [IO.File]::Exists($resolved)) { throw 'PYTHON_FINAL_PATH_UNAVAILABLE' }
+    $item = Get-Item -LiteralPath $resolved -Force
+    if (
+        $item -isnot [IO.FileInfo] -or
+        ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0
+    ) {
+        throw 'PYTHON_FINAL_PATH_INVALID'
+    }
+    $candidate = [IO.Directory]::GetParent($resolved)
+    while ($null -ne $candidate) {
+        if (Test-Path -LiteralPath $candidate.FullName) {
+            $ancestor = Get-Item -LiteralPath $candidate.FullName -Force
+            if (($ancestor.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw 'PYTHON_FINAL_PATH_REPARSE_POINT'
+            }
+        }
+        $candidate = $candidate.Parent
+    }
+    return $resolved
+}
+
+function Assert-SsaPythonProbePathLocal {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (
+        [string]::IsNullOrWhiteSpace($Path) -or
+        $Path.Contains('"') -or
+        $Path.Contains([char]0) -or
+        $Path -notmatch '^[A-Za-z]:[\\/]'
+    ) {
+        throw 'PYTHON_PROBE_PATH_INVALID'
+    }
+    try { $resolved = [IO.Path]::GetFullPath($Path) }
+    catch { throw 'PYTHON_PROBE_PATH_INVALID' }
+    $root = [IO.Path]::GetPathRoot($resolved)
+    if ([string]::IsNullOrWhiteSpace($root)) { throw 'PYTHON_PROBE_PATH_INVALID' }
+    if ($resolved.Substring($root.Length).Contains(':')) {
+        throw 'PYTHON_PROBE_PATH_INVALID'
+    }
+    try {
+        if ([IO.DriveInfo]::new($root).DriveType -eq [IO.DriveType]::Network) {
+            throw 'PYTHON_PROBE_PATH_NETWORK_PROHIBITED'
+        }
+    }
+    catch [ArgumentException] { throw 'PYTHON_PROBE_PATH_INVALID' }
+    if (-not [IO.Path]::GetFileName($resolved).Equals(
+        'python.exe',
+        [StringComparison]::OrdinalIgnoreCase
+    )) {
+        throw 'PYTHON_PROBE_PATH_INVALID'
+    }
+    return $resolved
+}
+
+function Assert-SsaPythonProbeResult {
+    param(
+        [Parameter(Mandatory = $true)][string]$Output,
+        [Parameter(Mandatory = $true)][string]$ExpectedPath,
+        [Parameter(Mandatory = $true)][bool]$AllowLogicalPathDifference
+    )
+
+    $trimmed = $Output.Trim()
+    if (
+        [string]::IsNullOrWhiteSpace($trimmed) -or
+        $trimmed.Contains("`r") -or
+        $trimmed.Contains("`n") -or
+        $trimmed.Length -gt 4096
+    ) {
+        throw 'PYTHON_VERSION_PROBE_INVALID'
+    }
+    $parts = @($trimmed.Split('|'))
+    if ($parts.Count -ne 6 -or $parts[0] -cne 'SSA_PYTHON_PROBE_V1') {
+        throw 'PYTHON_VERSION_PROBE_INVALID'
+    }
+    $major = 0
+    $minor = 0
+    if (
+        -not [int]::TryParse($parts[1], [ref]$major) -or
+        -not [int]::TryParse($parts[2], [ref]$minor)
+    ) {
+        throw 'PYTHON_VERSION_PROBE_INVALID'
+    }
+    if ($major -ne 3 -or $minor -ne 12) {
+        throw 'PYTHON_VERSION_UNSUPPORTED'
+    }
+    if ($parts[3] -cne 'cpython') { throw 'PYTHON_IMPLEMENTATION_UNSUPPORTED' }
+    $reportedPath = Assert-SsaPythonProbePathLocal -Path $parts[4]
+    $finalPath = Assert-SsaPythonProbePathLocal -Path $parts[5]
+    if (
+        -not $AllowLogicalPathDifference -and
+        (
+            -not $reportedPath.Equals(
+                $ExpectedPath,
+                [StringComparison]::OrdinalIgnoreCase
+            ) -or
+            -not $finalPath.Equals(
+                $ExpectedPath,
+                [StringComparison]::OrdinalIgnoreCase
+            )
+        )
+    ) {
+        throw 'PYTHON_EXECUTABLE_IDENTITY_MISMATCH'
+    }
+    return [PSCustomObject]@{
+        FinalPath = $finalPath
+        ReportedPath = $reportedPath
+    }
+}
+
+function Invoke-SsaPythonVersionProbe {
+    param(
+        [Parameter(Mandatory = $true)][string]$PythonPath,
+        [Parameter(Mandatory = $true)][bool]$AllowLogicalPathDifference
+    )
+
+    $probeCode = "import os,sys;print('SSA_PYTHON_PROBE_V1|{}|{}|{}|{}|{}'.format(" +
+        "sys.version_info[0],sys.version_info[1],sys.implementation.name," +
+        "sys.executable,os.path.realpath(sys.executable)))"
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $PythonPath
+    $startInfo.Arguments = '-I -S -E -c "' + $probeCode + '"'
+    $startInfo.CreateNoWindow = $true
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    try {
+        try { $started = $process.Start() }
+        catch { throw 'PYTHON_EXECUTABLE_INVALID' }
+        if (-not $started) { throw 'PYTHON_EXECUTABLE_INVALID' }
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        if (-not $process.WaitForExit(5000)) {
+            try { $process.Kill() } catch { }
+            [void]$process.WaitForExit(1000)
+            throw 'PYTHON_VERSION_PROBE_TIMEOUT'
+        }
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($stderr)) {
+            throw 'PYTHON_EXECUTABLE_INVALID'
+        }
+        return Assert-SsaPythonProbeResult -Output $stdout -ExpectedPath $PythonPath `
+            -AllowLogicalPathDifference $AllowLogicalPathDifference
+    }
+    finally { $process.Dispose() }
+}
+
+function Resolve-SsaPythonCandidate {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$PythonPath,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('PATH', 'PARAMETER', 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE')]
+        [string]$Source,
+        [switch]$RequireAbsolute
+    )
 
     $normalizedInput = $PythonPath.Replace('/', '\')
     if (
         [string]::IsNullOrWhiteSpace($PythonPath) -or
         $PythonPath.Contains('"') -or
         $PythonPath.Contains([char]0) -or
+        $PythonPath.IndexOfAny([char[]]'*?[]') -ge 0 -or
+        $PythonPath -match '[\x01-\x1f\x7f]' -or
         $PythonPath -match '^[A-Za-z][A-Za-z0-9+.-]*://' -or
-        $normalizedInput.StartsWith('\\') -or
-        $normalizedInput.StartsWith('\\?\') -or
-        $normalizedInput.StartsWith('\\.\')
+        $normalizedInput.StartsWith('\')
     ) {
         throw 'PYTHON_PATH_INVALID'
     }
+    if ($RequireAbsolute -and $normalizedInput -notmatch '^[A-Za-z]:\\') {
+        throw 'PYTHON_PATH_ABSOLUTE_REQUIRED'
+    }
     if ([IO.Path]::IsPathRooted($PythonPath)) {
-        $inputFullPath = [IO.Path]::GetFullPath($PythonPath)
-        $inputRoot = [IO.Path]::GetPathRoot($inputFullPath)
-        $inputTail = $inputFullPath.Substring($inputRoot.Length)
-        if ($inputTail.Contains(':')) { throw 'PYTHON_PATH_INVALID' }
+        try { $resolved = [IO.Path]::GetFullPath($PythonPath) }
+        catch { throw 'PYTHON_PATH_INVALID' }
+    }
+    else {
         try {
-            if ([IO.DriveInfo]::new($inputRoot).DriveType -eq [IO.DriveType]::Network) {
-                throw 'PYTHON_PATH_REMOTE_DRIVE_PROHIBITED'
-            }
+            $command = Get-Command -Name $PythonPath -CommandType Application `
+                -ErrorAction Stop | Select-Object -First 1
         }
-        catch [ArgumentException] { throw 'PYTHON_PATH_INVALID' }
+        catch { throw 'PYTHON_PATH_NOT_FOUND' }
+        try { $resolved = [IO.Path]::GetFullPath([string]$command.Source) }
+        catch { throw 'PYTHON_PATH_INVALID' }
     }
-    $command = Get-Command -Name $PythonPath -CommandType Application -ErrorAction Stop |
-        Select-Object -First 1
-    $resolved = [IO.Path]::GetFullPath([string]$command.Source)
-    if ($resolved.Replace('/', '\').StartsWith('\\')) {
-        throw 'PYTHON_PATH_NETWORK_PROHIBITED'
-    }
-    if (-not [IO.File]::Exists($resolved)) {
-        throw 'PYTHON_PATH_INVALID'
+    $normalizedResolved = $resolved.Replace('/', '\')
+    if ($normalizedResolved -notmatch '^[A-Za-z]:\\') {
+        throw 'PYTHON_PATH_NETWORK_OR_DEVICE_PROHIBITED'
     }
     $root = [IO.Path]::GetPathRoot($resolved)
     if ([string]::IsNullOrWhiteSpace($root)) { throw 'PYTHON_PATH_INVALID' }
-    $tail = $resolved.Substring($root.Length)
-    if ($tail.Contains(':')) { throw 'PYTHON_PATH_INVALID' }
+    if ($resolved.Substring($root.Length).Contains(':')) {
+        throw 'PYTHON_PATH_ALTERNATE_DATA_STREAM'
+    }
     try {
         if ([IO.DriveInfo]::new($root).DriveType -eq [IO.DriveType]::Network) {
             throw 'PYTHON_PATH_REMOTE_DRIVE_PROHIBITED'
         }
     }
     catch [ArgumentException] { throw 'PYTHON_PATH_INVALID' }
-    $candidate = $resolved
-    while (-not [string]::IsNullOrEmpty($candidate)) {
-        if (Test-Path -LiteralPath $candidate) {
-            $item = Get-Item -LiteralPath $candidate -Force
-            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+    if (-not [IO.File]::Exists($resolved)) { throw 'PYTHON_PATH_NOT_FOUND' }
+    $executable = Get-Item -LiteralPath $resolved -Force
+    if ($executable -isnot [IO.FileInfo]) { throw 'PYTHON_EXECUTABLE_INVALID' }
+    if (-not $executable.Name.Equals('python.exe', [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'PYTHON_EXECUTABLE_NAME_INVALID'
+    }
+    if (($executable.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+        throw 'PYTHON_PATH_REPARSE_POINT'
+    }
+
+    $verifiedCodexPath = Get-SsaVerifiedCodexPythonPath
+    $isVerifiedCodexRuntime = $resolved.Equals(
+        $verifiedCodexPath,
+        [StringComparison]::OrdinalIgnoreCase
+    )
+    if (
+        $isVerifiedCodexRuntime -and
+        $Source -cne 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE'
+    ) {
+        throw 'PYTHON_CODEX_RUNTIME_REQUIRES_SSA_PYTHON'
+    }
+    $allowReparseAncestor = (
+        $isVerifiedCodexRuntime -and
+        $Source -ceq 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE'
+    )
+    $candidate = [IO.Directory]::GetParent($resolved)
+    while ($null -ne $candidate) {
+        if (Test-Path -LiteralPath $candidate.FullName) {
+            $item = Get-Item -LiteralPath $candidate.FullName -Force
+            if (
+                ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0 -and
+                -not $allowReparseAncestor
+            ) {
                 throw 'PYTHON_PATH_REPARSE_POINT'
             }
         }
-        $parent = [IO.Directory]::GetParent($candidate)
-        if ($null -eq $parent) { break }
-        $candidate = $parent.FullName
+        $candidate = $candidate.Parent
     }
-    $executable = Get-Item -LiteralPath $resolved -Force
-    if ($executable -isnot [IO.FileInfo]) { throw 'PYTHON_PATH_INVALID' }
-    return $resolved
+    $launchPath = Get-SsaFinalExecutablePath -Path $resolved
+    $probe = Invoke-SsaPythonVersionProbe -PythonPath $launchPath `
+        -AllowLogicalPathDifference $false
+    [void]$probe
+    return [PSCustomObject]@{
+        IsVerifiedCodexRuntime = $isVerifiedCodexRuntime
+        OwnershipPaths = [string[]]@($launchPath)
+        Path = $launchPath
+        RequestedPath = $resolved
+        Source = $Source
+    }
+}
+
+function Select-SsaPythonRuntime {
+    param(
+        [AllowNull()][AllowEmptyString()][string]$PythonPath,
+        [Parameter(Mandatory = $true)][bool]$PythonPathWasBound
+    )
+
+    if ($PythonPathWasBound) {
+        return Resolve-SsaPythonCandidate -PythonPath $PythonPath -Source 'PARAMETER'
+    }
+    $developmentPath = [Environment]::GetEnvironmentVariable('SSA_PYTHON')
+    try { return Resolve-SsaPythonCandidate -PythonPath 'python' -Source 'PATH' }
+    catch {
+        if ($null -eq $developmentPath) { throw }
+    }
+    return Resolve-SsaPythonCandidate -PythonPath $developmentPath `
+        -Source 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE' -RequireAbsolute
+}
+
+function Write-SsaPythonRuntimeNotice {
+    param([Parameter(Mandatory = $true)]$Runtime)
+
+    if ($Runtime.Source -cne 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE') { return }
+    if ($Runtime.IsVerifiedCodexRuntime) {
+        [Console]::Error.WriteLine(
+            'DEVELOPMENT / NONPORTABLE: SSA_PYTHON selected the verified ' +
+            'Codex-bundled Python 3.12 runtime. This configuration is ' +
+            'development-only and is not a portable release.'
+        )
+        return
+    }
+    [Console]::Error.WriteLine(
+        'DEVELOPMENT / NONPORTABLE: SSA_PYTHON selected an explicit local ' +
+        'Python 3.12 runtime. This configuration is development-only and ' +
+        'is not a portable release.'
+    )
 }
 
 function Resolve-SsaDataRoot {
@@ -369,7 +681,7 @@ function Read-SsaRuntimeReceipt {
 function Get-SsaOwnedProcess {
     param(
         [Parameter(Mandatory = $true)]$Receipt,
-        [Parameter(Mandatory = $true)][string]$PythonPath,
+        [Parameter(Mandatory = $true)][string[]]$PythonPath,
         [Parameter(Mandatory = $true)][string]$DataRoot,
         [Parameter(Mandatory = $true)][string]$ReceiptPath,
         [Parameter(Mandatory = $true)][string]$LockPath
@@ -424,7 +736,17 @@ function Get-SsaOwnedProcess {
         throw 'PROCESS_EXECUTABLE_UNAVAILABLE'
     }
     $actualExecutable = [IO.Path]::GetFullPath([string]$process.Path)
-    if (-not $actualExecutable.Equals($PythonPath, [StringComparison]::OrdinalIgnoreCase)) {
+    $matchesExpectedExecutable = $false
+    foreach ($expectedExecutable in $PythonPath) {
+        if ($actualExecutable.Equals(
+            [IO.Path]::GetFullPath($expectedExecutable),
+            [StringComparison]::OrdinalIgnoreCase
+        )) {
+            $matchesExpectedExecutable = $true
+            break
+        }
+    }
+    if (-not $matchesExpectedExecutable) {
         throw 'PROCESS_EXECUTABLE_MISMATCH'
     }
     return $process

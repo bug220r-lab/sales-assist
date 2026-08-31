@@ -238,6 +238,10 @@ class Milestone5BoundaryTests(unittest.TestCase):
         common = (SCRIPTS / "lifecycle-common.ps1").read_text(encoding="utf-8")
         self.assertIn("Enter-SsaLifecycleOperationLock", common)
         self.assertIn("PROCESS_LEASE_IDENTITY_MISMATCH", common)
+        self.assertIn("Select-SsaPythonRuntime", common)
+        self.assertIn("GetFinalPathNameByHandle", common)
+        self.assertIn("PYTHON_VERSION_UNSUPPORTED", common)
+        self.assertIn("PYTHON_CODEX_RUNTIME_REQUIRES_SSA_PYTHON", common)
         self.assertIn("X-SSA-CSRF-Token", common)
         self.assertIn("X-SSA-Shutdown-Token", common)
         self.assertNotIn("Get-CimInstance", common)
@@ -262,6 +266,10 @@ class Milestone5BoundaryTests(unittest.TestCase):
         manual = (ROOT / "docs" / "milestone5-manual-acceptance.md").read_text(
             encoding="utf-8"
         )
+        lifecycle = (ROOT / "docs" / "milestone5-service-lifecycle.md").read_text(
+            encoding="utf-8"
+        )
+        development = (ROOT / "DEVELOPMENT.md").read_text(encoding="utf-8")
         adr = (
             ROOT / "docs" / "adr" / "0021-local-portal-api-dom-and-process-ownership.md"
         ).read_text(encoding="utf-8")
@@ -280,6 +288,12 @@ class Milestone5BoundaryTests(unittest.TestCase):
         ):
             self.assertIn(attribute, dom)
         self.assertIn("M5_MANUAL_ACCEPTANCE = PENDING", manual)
+        for document in (manual, lifecycle, development, adr):
+            self.assertIn("SSA_PYTHON", document)
+            self.assertIn("DEVELOPMENT / NONPORTABLE", document)
+            self.assertIn("portable release", document)
+        self.assertIn("normal local non-reparse Python", lifecycle)
+        self.assertIn("exact verified Codex primary-runtime location", lifecycle)
         self.assertIn("independent CSRF and shutdown tokens", adr)
 
     def test_windows_script_line_endings_are_declared(self) -> None:
