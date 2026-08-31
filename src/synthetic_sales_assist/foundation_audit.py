@@ -40,7 +40,7 @@ from synthetic_sales_assist.structured_logging import (
 
 
 class FoundationAuditError(RuntimeError):
-    """Raised when a Milestone 0 commit-gating invariant fails."""
+    """Raised when a repository commit-gating invariant fails."""
 
 
 def _require(condition: bool, code: str) -> None:
@@ -148,8 +148,42 @@ def _chrome_report(root: Path) -> dict[str, object]:
     allowed_patterns = sorted(ALLOWED_CHROME_HOST_PATTERNS)
     in_memory_manifest = {
         "manifest_version": 3,
+        "name": "Synthetic Sales Assist Local Side Panel",
+        "description": (
+            "Read-only localhost extraction and evaluation for reserved synthetic scenarios."
+        ),
+        "version": "0.1.0",
+        "minimum_chrome_version": "114",
+        "permissions": ["sidePanel"],
         "host_permissions": allowed_patterns,
-        "content_scripts": [{"matches": allowed_patterns}],
+        "background": {"service_worker": "service_worker.js"},
+        "side_panel": {"default_path": "side_panel/index.html"},
+        "content_security_policy": {
+            "extension_pages": (
+                "default-src 'self'; script-src 'self'; style-src 'self'; "
+                "img-src 'self'; connect-src 'none'; object-src 'none'; "
+                "base-uri 'none'; frame-ancestors 'none'"
+            )
+        },
+        "content_scripts": [
+            {
+                "matches": [
+                    "http://127.0.0.1/orders/*",
+                    "http://127.0.0.1/interactions/*",
+                    "http://localhost/orders/*",
+                    "http://localhost/interactions/*",
+                ],
+                "js": [
+                    "shared/canonical.js",
+                    "shared/contracts.js",
+                    "shared/origin.js",
+                    "shared/extraction.js",
+                    "content/content_script.js",
+                ],
+                "run_at": "document_idle",
+                "world": "ISOLATED",
+            }
+        ],
     }
     validate_chrome_permissions(in_memory_manifest)
     manifests = _manifest_paths(root)
@@ -163,17 +197,34 @@ def _chrome_report(root: Path) -> dict[str, object]:
         inventories.append(
             {
                 "path": path.relative_to(root).as_posix(),
-                "host_patterns": sorted(inventory.all_host_patterns),
+                "host_patterns": sorted(inventory.host_permissions),
+                "content_match_patterns": sorted(
+                    pattern
+                    for _, patterns in inventory.match_surfaces
+                    for pattern in patterns
+                ),
                 "api_permissions": list(inventory.api_permissions),
             }
         )
-    _require(not manifests, "MILESTONE0_EXTENSION_MANIFEST_PRESENT")
+    expected_manifest = root / "chrome_extension" / "manifest.json"
+    _require(
+        manifests == (expected_manifest,),
+        "MILESTONE6_EXTENSION_MANIFEST_INVENTORY_INVALID",
+    )
+    extension_root = root / "chrome_extension"
+    extension_files = tuple(
+        path
+        for path in extension_root.rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts
+    )
     return {
         "status": "PASS",
-        "allowed_future_host_patterns": allowed_patterns,
+        "allowed_host_patterns": allowed_patterns,
         "manifest_count": len(manifests),
         "manifests": inventories,
-        "extension_artifacts_created": 0,
+        "extension_artifacts_created": len(extension_files),
+        "extension_root_file_count": len(extension_files),
+        "api_permission_inventory": ["sidePanel"],
     }
 
 
@@ -240,15 +291,24 @@ def _counter_and_migration_report(root: Path) -> tuple[dict[str, object], dict[s
 
 
 def run_foundation_audit(root: Path) -> dict[str, object]:
-    """Run the complete offline foundation audit and return a JSON-safe report."""
+    """Run the complete offline Milestone 6 foundation audit."""
 
     root = root.resolve()
     bundle = audit_bundle(root)
     counters, migrations = _counter_and_migration_report(root)
+    business_rule_paths = tuple(
+        sorted(
+            path.relative_to(root).as_posix()
+            for package_name in ("sales_credit", "doi")
+            for path in (
+                root / "src" / "synthetic_sales_assist" / package_name
+            ).glob("*.py")
+        )
+    )
     return {
-        "schema_version": "synthetic-sales-assist-repository-audit/v2",
+        "schema_version": "synthetic-sales-assist-repository-audit/v3",
         "status": "PASS",
-        "milestone": 5,
+        "milestone": 6,
         "bundle": bundle.to_dict(),
         "identity_firewall": _identity_report(),
         "prohibited_input_scan": _prohibited_input_report(root),
@@ -258,7 +318,11 @@ def run_foundation_audit(root: Path) -> dict[str, object]:
         "safety_counters": counters,
         "migration_framework": migrations,
         "external_system_calls_required": 0,
-        "business_rule_modules": 0,
+        "business_rule_modules": len(business_rule_paths),
+        "business_rule_module_roots": [
+            "src/synthetic_sales_assist/sales_credit",
+            "src/synthetic_sales_assist/doi",
+        ],
         "remaining_binding_contradictions": [],
     }
 
@@ -276,7 +340,7 @@ def main(argv: list[str] | None = None) -> int:
         report = run_foundation_audit(args.root)
     except Exception as error:
         failure = {
-            "schema_version": "synthetic-sales-assist-repository-audit/v2",
+            "schema_version": "synthetic-sales-assist-repository-audit/v3",
             "status": "FAIL",
             "error": type(error).__name__,
         }

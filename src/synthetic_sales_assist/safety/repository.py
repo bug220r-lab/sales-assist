@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
+
+from synthetic_sales_assist.safety.chrome import (
+    ChromePermissionViolation,
+    validate_chrome_permissions,
+)
 
 
 IGNORED_DIRECTORIES = frozenset(
@@ -48,6 +54,7 @@ IMPLEMENTATION_ROOTS = (
     ".gitattributes",
     ".gitignore",
     "DEVELOPMENT.md",
+    "chrome_extension",
     "docs",
     "migrations",
     "pyproject.toml",
@@ -93,6 +100,12 @@ AUTHORED_M5_SCRIPT_PATHS = frozenset(
     }
 )
 MAX_AUTHORED_M5_ASSET_BYTES = 512 * 1024
+AUTHORED_M6_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M6"
+AUTHORED_M6_EXTENSION_ROOT = "chrome_extension"
+AUTHORED_M6_EXTENSION_SUFFIXES = frozenset(
+    {".css", ".html", ".js", ".json", ".md", ".ps1", ".txt"}
+)
+MAX_AUTHORED_M6_ASSET_BYTES = 512 * 1024
 FORBIDDEN_CAPABILITY_PATH_PARTS = frozenset(
     {
         "automation",
@@ -220,6 +233,46 @@ def _is_approved_m5_script(relative: str, path: Path, text: str) -> bool:
     )
 
 
+def _is_beneath_m6_extension(relative: str) -> bool:
+    return relative == AUTHORED_M6_EXTENSION_ROOT or relative.startswith(
+        AUTHORED_M6_EXTENSION_ROOT + "/"
+    )
+
+
+def _is_approved_m6_extension_source(relative: str, path: Path, text: str) -> bool:
+    return (
+        _is_beneath_m6_extension(relative)
+        and relative != f"{AUTHORED_M6_EXTENSION_ROOT}/manifest.json"
+        and path.suffix.lower() in AUTHORED_M6_EXTENSION_SUFFIXES
+        and path.stat().st_size <= MAX_AUTHORED_M6_ASSET_BYTES
+        and AUTHORED_M6_MARKER in text[:8192]
+    )
+
+
+def _m6_manifest_is_safe(relative: str, path: Path, text: str | None) -> bool:
+    if relative != f"{AUTHORED_M6_EXTENSION_ROOT}/manifest.json" or text is None:
+        return False
+    if path.stat().st_size > MAX_AUTHORED_M6_ASSET_BYTES:
+        return False
+
+    def reject_duplicate_members(
+        pairs: list[tuple[str, object]],
+    ) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ChromePermissionViolation("manifest JSON members must be unique")
+            result[key] = value
+        return result
+
+    try:
+        manifest = json.loads(text, object_pairs_hook=reject_duplicate_members)
+        validate_chrome_permissions(manifest)
+    except (json.JSONDecodeError, ChromePermissionViolation):
+        return False
+    return True
+
+
 def _has_forbidden_capability_path(relative: str) -> bool:
     parts = tuple(part.lower() for part in Path(relative).parts)
     return any(part in FORBIDDEN_CAPABILITY_PATH_PARTS for part in parts)
@@ -269,13 +322,33 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
         if path.is_symlink() or not _is_within(root, path):
             findings.add(RepositoryFinding("linked_or_external_path", relative, 0))
             continue
-        if path.name.lower() == "manifest.json":
+        text = _read_text(path)
+        approved_extension_manifest = path.name.lower() == "manifest.json" and (
+            _m6_manifest_is_safe(relative, path, text)
+        )
+        if path.name.lower() == "manifest.json" and not approved_extension_manifest:
             findings.add(RepositoryFinding("extension_manifest", relative, 0))
             continue
-        if _has_forbidden_capability_path(relative):
+        approved_extension = (
+            text is not None
+            and _is_approved_m6_extension_source(relative, path, text)
+        )
+        if (
+            _is_beneath_m6_extension(relative)
+            and not approved_extension
+            and not approved_extension_manifest
+        ):
+            findings.add(
+                RepositoryFinding("unapproved_extension_artifact", relative, 0)
+            )
+            continue
+        if (
+            _has_forbidden_capability_path(relative)
+            and not approved_extension
+            and not approved_extension_manifest
+        ):
             findings.add(RepositoryFinding("prohibited_capability_path", relative, 0))
             continue
-        text = _read_text(path)
         suffix = path.suffix.lower()
         approved_portal = (
             text is not None and _is_approved_m5_portal_source(relative, path, text)
@@ -285,10 +358,18 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
         if relative.startswith("scripts/") and suffix == ".ps1" and not approved_script:
             findings.add(RepositoryFinding("unapproved_lifecycle_script", relative, 0))
             continue
-        if suffix in AUTHORED_M5_PORTAL_SUFFIXES and not approved_portal_asset:
+        if (
+            suffix in AUTHORED_M5_PORTAL_SUFFIXES
+            and not approved_portal_asset
+            and not approved_extension
+        ):
             findings.add(RepositoryFinding("unapproved_portal_asset", relative, 0))
             continue
-        if suffix in PROHIBITED_ARTIFACT_SUFFIXES and not approved_portal_asset:
+        if (
+            suffix in PROHIBITED_ARTIFACT_SUFFIXES
+            and not approved_portal_asset
+            and not approved_extension
+        ):
             findings.add(RepositoryFinding("prohibited_artifact_type", relative, 0))
             continue
         if text is None:
@@ -308,7 +389,11 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
                         "non_synthetic_email", relative, _line_number(text, match.start())
                     )
                 )
-        if not approved_portal:
+        if (
+            not approved_portal
+            and not approved_extension
+            and not approved_extension_manifest
+        ):
             for match in CAPTURED_HTML_PATTERN.finditer(text):
                 findings.add(
                     RepositoryFinding(

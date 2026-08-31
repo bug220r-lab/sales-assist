@@ -1,14 +1,15 @@
-"""Validation for a future least-privilege Chrome Manifest V3 extension.
+"""Closed validation for the localhost-only Milestone 6 Chrome extension.
 
-Milestone 0 does not ship an extension.  This module instead establishes the closed
-permission policy that a future manifest must pass.  Validation is structural and has
-no browser or filesystem side effects.
+Validation is structural and has no browser or filesystem side effects.  It admits
+only the one API capability needed by the side panel and the two exact loopback match
+patterns.  Every executable manifest resource must be a repository-relative path.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 from typing import cast
 
 
@@ -18,12 +19,94 @@ ALLOWED_CHROME_HOST_PATTERNS = frozenset(
         "http://localhost/*",
     }
 )
+ALLOWED_CHROME_CONTENT_MATCH_PATTERNS = frozenset(
+    {
+        "http://127.0.0.1/orders/*",
+        "http://127.0.0.1/interactions/*",
+        "http://localhost/orders/*",
+        "http://localhost/interactions/*",
+    }
+)
 
-# The extraction design uses declarative content-script matches and therefore needs no
-# Chrome API permission.  Keeping this allowlist empty prevents a later manifest from
-# silently acquiring mutation, interception, browsing-history, generic-tab, or native
-# integration capability.
-ALLOWED_CHROME_API_PERMISSIONS: frozenset[str] = frozenset()
+# Static content-script matching needs no API capability.  The single ``sidePanel``
+# permission is required solely to expose the repository-owned local panel page.
+ALLOWED_CHROME_API_PERMISSIONS = frozenset({"sidePanel"})
+REQUIRED_CHROME_API_PERMISSIONS = ALLOWED_CHROME_API_PERMISSIONS
+FORBIDDEN_CHROME_API_PERMISSIONS = frozenset(
+    {
+        "activeTab",
+        "alarms",
+        "bookmarks",
+        "browsingData",
+        "clipboardRead",
+        "clipboardWrite",
+        "contentSettings",
+        "contextMenus",
+        "cookies",
+        "debugger",
+        "declarativeContent",
+        "declarativeNetRequest",
+        "declarativeNetRequestFeedback",
+        "declarativeNetRequestWithHostAccess",
+        "desktopCapture",
+        "downloads",
+        "geolocation",
+        "history",
+        "idle",
+        "management",
+        "nativeMessaging",
+        "notifications",
+        "offscreen",
+        "privacy",
+        "proxy",
+        "scripting",
+        "search",
+        "sessions",
+        "storage",
+        "tabCapture",
+        "tabGroups",
+        "tabs",
+        "topSites",
+        "unlimitedStorage",
+        "webNavigation",
+        "webRequest",
+        "webRequestBlocking",
+    }
+)
+
+EXTENSION_PAGE_CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; "
+    "connect-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+)
+ALLOWED_MANIFEST_KEYS = frozenset(
+    {
+        "background",
+        "content_scripts",
+        "content_security_policy",
+        "description",
+        "host_permissions",
+        "manifest_version",
+        "minimum_chrome_version",
+        "name",
+        "permissions",
+        "side_panel",
+        "version",
+    }
+)
+CHROME_EXTENSION_VERSION = "0.1.0"
+CHROME_EXTENSION_NAME = "Synthetic Sales Assist Local Side Panel"
+CHROME_EXTENSION_DESCRIPTION = (
+    "Read-only localhost extraction and evaluation for reserved synthetic scenarios."
+)
+CONTENT_SCRIPT_RESOURCES = (
+    "shared/canonical.js",
+    "shared/contracts.js",
+    "shared/origin.js",
+    "shared/extraction.js",
+    "content/content_script.js",
+)
+SERVICE_WORKER_PATH = "service_worker.js"
+SIDE_PANEL_PATH = "side_panel/index.html"
 
 # These manifest keys provide powerful browser, request-rewrite, authentication, file,
 # or externally updated code surfaces independently of the normal permission arrays.
@@ -47,6 +130,8 @@ FORBIDDEN_PRIVILEGED_MANIFEST_KEYS = frozenset(
         "update_url",
         "vpn_provider",
         "webview",
+        "externally_connectable",
+        "web_accessible_resources",
     }
 )
 
@@ -126,15 +211,36 @@ def _object_array(
 
 
 def _validate_host_patterns(
-    patterns: tuple[str, ...], *, path: str, require_nonempty: bool = False
+    patterns: tuple[str, ...],
+    *,
+    path: str,
+    allowed: frozenset[str] = ALLOWED_CHROME_HOST_PATTERNS,
+    require_nonempty: bool = False,
 ) -> None:
     if require_nonempty and not patterns:
         raise ChromePermissionViolation(f"{path} must not be empty")
-    unexpected = sorted(set(patterns) - ALLOWED_CHROME_HOST_PATTERNS)
+    unexpected = sorted(set(patterns) - allowed)
     if unexpected:
         raise ChromePermissionViolation(
             f"{path} contains a prohibited Chrome host pattern"
         )
+
+
+def _local_resource_path(value: object, *, path: str, suffix: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ChromePermissionViolation(f"{path} must be a non-empty local path")
+    candidate = PurePosixPath(value)
+    if (
+        candidate.is_absolute()
+        or ".." in candidate.parts
+        or "\\" in value
+        or ":" in value
+        or "?" in value
+        or "#" in value
+        or candidate.suffix.lower() != suffix
+    ):
+        raise ChromePermissionViolation(f"{path} must be a bounded local {suffix} path")
+    return value
 
 
 def _validate_content_scripts(
@@ -145,14 +251,28 @@ def _validate_content_scripts(
         _object_array(manifest, "content_scripts", path="manifest")
     ):
         path = f"manifest.content_scripts[{index}]"
+        if set(script) != {"matches", "js", "run_at", "world"}:
+            raise ChromePermissionViolation(
+                f"{path} must contain only matches, js, run_at, and world"
+            )
         matches = _string_array(script, "matches", path=path, required=True)
-        _validate_host_patterns(matches, path=f"{path}.matches", require_nonempty=True)
+        _validate_host_patterns(
+            matches,
+            path=f"{path}.matches",
+            allowed=ALLOWED_CHROME_CONTENT_MATCH_PATTERNS,
+            require_nonempty=True,
+        )
+        if set(matches) != ALLOWED_CHROME_CONTENT_MATCH_PATTERNS or len(matches) != len(
+            ALLOWED_CHROME_CONTENT_MATCH_PATTERNS
+        ):
+            raise ChromePermissionViolation(
+                f"{path}.matches must contain exactly the four supported local detail routes"
+            )
         surfaces.append((f"content_scripts[{index}].matches", matches))
 
         excludes = _string_array(script, "exclude_matches", path=path)
-        _validate_host_patterns(excludes, path=f"{path}.exclude_matches")
         if excludes:
-            surfaces.append((f"content_scripts[{index}].exclude_matches", excludes))
+            raise ChromePermissionViolation(f"{path}.exclude_matches must be empty")
 
         for glob_key in ("include_globs", "exclude_globs"):
             if _string_array(script, glob_key, path=path):
@@ -166,59 +286,91 @@ def _validate_content_scripts(
         ):
             if script.get(broadening_flag) is True:
                 raise ChromePermissionViolation(f"{path}.{broadening_flag} must not be true")
-        if "world" in script and script["world"] != "ISOLATED":
+        if script.get("world") != "ISOLATED":
             raise ChromePermissionViolation(f"{path}.world must be ISOLATED")
+        javascript = _string_array(script, "js", path=path, required=True)
+        if not javascript:
+            raise ChromePermissionViolation(f"{path}.js must not be empty")
+        for resource_index, resource in enumerate(javascript):
+            _local_resource_path(
+                resource,
+                path=f"{path}.js[{resource_index}]",
+                suffix=".js",
+            )
+        if javascript != CONTENT_SCRIPT_RESOURCES:
+            raise ChromePermissionViolation(
+                f"{path}.js must equal the exact ordered extraction runtime"
+            )
+        if _string_array(script, "css", path=path):
+            raise ChromePermissionViolation(
+                f"{path}.css is prohibited; content extraction has no page stylesheet"
+            )
+        if script.get("run_at") != "document_idle":
+            raise ChromePermissionViolation(f"{path}.run_at must be document_idle")
     return surfaces
 
 
-def _validate_web_accessible_resources(
-    manifest: Mapping[str, object],
-) -> list[tuple[str, tuple[str, ...]]]:
-    surfaces: list[tuple[str, tuple[str, ...]]] = []
-    for index, resource in enumerate(
-        _object_array(manifest, "web_accessible_resources", path="manifest")
-    ):
-        path = f"manifest.web_accessible_resources[{index}]"
-        matches = _string_array(resource, "matches", path=path, required=True)
-        _validate_host_patterns(matches, path=f"{path}.matches", require_nonempty=True)
-        surfaces.append((f"web_accessible_resources[{index}].matches", matches))
-        if _string_array(resource, "extension_ids", path=path):
-            raise ChromePermissionViolation(f"{path}.extension_ids is prohibited")
-    return surfaces
-
-
-def _validate_externally_connectable(
-    manifest: Mapping[str, object],
-) -> list[tuple[str, tuple[str, ...]]]:
-    if "externally_connectable" not in manifest:
-        return []
-    external = _require_mapping(
-        manifest["externally_connectable"], path="manifest.externally_connectable"
+def _validate_extension_pages(manifest: Mapping[str, object]) -> None:
+    csp = _require_mapping(
+        manifest.get("content_security_policy"),
+        path="manifest.content_security_policy",
     )
-    matches = _string_array(external, "matches", path="manifest.externally_connectable")
-    _validate_host_patterns(matches, path="manifest.externally_connectable.matches")
-    if _string_array(external, "ids", path="manifest.externally_connectable"):
-        raise ChromePermissionViolation("manifest.externally_connectable.ids is prohibited")
-    if external.get("accepts_tls_channel_id") is True:
+    if set(csp) != {"extension_pages"} or csp.get("extension_pages") != EXTENSION_PAGE_CSP:
         raise ChromePermissionViolation(
-            "manifest.externally_connectable.accepts_tls_channel_id must not be true"
+            "manifest.content_security_policy must contain only the exact extension CSP"
         )
-    if not matches:
-        return []
-    return [("externally_connectable.matches", matches)]
+
+    panel = _require_mapping(manifest.get("side_panel"), path="manifest.side_panel")
+    if set(panel) != {"default_path"}:
+        raise ChromePermissionViolation("manifest.side_panel must contain only default_path")
+    panel_path = _local_resource_path(
+        panel.get("default_path"),
+        path="manifest.side_panel.default_path",
+        suffix=".html",
+    )
+    if panel_path != SIDE_PANEL_PATH:
+        raise ChromePermissionViolation("manifest.side_panel.default_path is not authorized")
+
+    background = _require_mapping(manifest.get("background"), path="manifest.background")
+    if set(background) != {"service_worker"}:
+        raise ChromePermissionViolation("manifest.background must contain only service_worker")
+    worker_path = _local_resource_path(
+        background.get("service_worker"),
+        path="manifest.background.service_worker",
+        suffix=".js",
+    )
+    if worker_path != SERVICE_WORKER_PATH:
+        raise ChromePermissionViolation("manifest.background.service_worker is not authorized")
 
 
 def validate_chrome_permissions(manifest: object) -> ChromePermissionInventory:
     """Validate every host/API permission surface in a future MV3 manifest.
 
-    ``host_permissions`` must contain both and only the closed localhost patterns.
-    Other match surfaces may use any non-empty subset of those patterns, but can never
-    introduce a third pattern.  Chrome API permissions are deny-by-default.
+    ``host_permissions`` and static content-script matches must contain both and only
+    the closed localhost patterns.  The API permission inventory is exactly
+    ``sidePanel``; optional capability surfaces are empty.
     """
 
     candidate = _require_mapping(manifest, path="manifest")
+    unexpected_keys = sorted(set(candidate) - ALLOWED_MANIFEST_KEYS)
+    if unexpected_keys:
+        raise ChromePermissionViolation("manifest contains an unapproved top-level member")
+    required_keys = ALLOWED_MANIFEST_KEYS
+    if set(candidate) != required_keys:
+        raise ChromePermissionViolation("manifest is missing a required closed-contract member")
     if candidate.get("manifest_version") != 3:
         raise ChromePermissionViolation("manifest.manifest_version must be exactly 3")
+    if candidate.get("name") != CHROME_EXTENSION_NAME:
+        raise ChromePermissionViolation("manifest.name must equal the synthetic M6 name")
+    if candidate.get("description") != CHROME_EXTENSION_DESCRIPTION:
+        raise ChromePermissionViolation(
+            "manifest.description must equal the synthetic M6 description"
+        )
+    version = candidate.get("version")
+    if version != CHROME_EXTENSION_VERSION:
+        raise ChromePermissionViolation("manifest.version must be exactly 0.1.0")
+    if candidate.get("minimum_chrome_version") != "114":
+        raise ChromePermissionViolation("manifest.minimum_chrome_version must be exactly 114")
 
     forbidden_keys = sorted(set(candidate) & FORBIDDEN_PRIVILEGED_MANIFEST_KEYS)
     if forbidden_keys:
@@ -240,27 +392,26 @@ def validate_chrome_permissions(manifest: object) -> ChromePermissionInventory:
     optional_host_permissions = _string_array(
         candidate, "optional_host_permissions", path="manifest"
     )
-    _validate_host_patterns(
-        optional_host_permissions, path="manifest.optional_host_permissions"
-    )
+    if optional_host_permissions:
+        raise ChromePermissionViolation("manifest.optional_host_permissions must be empty")
 
     api_permissions = _string_array(candidate, "permissions", path="manifest")
     optional_api_permissions = _string_array(
         candidate, "optional_permissions", path="manifest"
     )
-    for path, permissions in (
-        ("manifest.permissions", api_permissions),
-        ("manifest.optional_permissions", optional_api_permissions),
+    if set(api_permissions) != REQUIRED_CHROME_API_PERMISSIONS or len(api_permissions) != len(
+        REQUIRED_CHROME_API_PERMISSIONS
     ):
-        unexpected = sorted(set(permissions) - ALLOWED_CHROME_API_PERMISSIONS)
-        if unexpected:
-            raise ChromePermissionViolation(
-                f"{path} contains a prohibited Chrome API capability"
-            )
+        raise ChromePermissionViolation("manifest.permissions must contain exactly sidePanel")
+    if optional_api_permissions:
+        raise ChromePermissionViolation("manifest.optional_permissions must be empty")
 
     surfaces = _validate_content_scripts(candidate)
-    surfaces.extend(_validate_web_accessible_resources(candidate))
-    surfaces.extend(_validate_externally_connectable(candidate))
+    if len(surfaces) != 1 or set(surfaces[0][1]) != ALLOWED_CHROME_CONTENT_MATCH_PATTERNS:
+        raise ChromePermissionViolation(
+            "manifest must contain one static content script with the exact detail routes"
+        )
+    _validate_extension_pages(candidate)
 
     inventory = ChromePermissionInventory(
         manifest_version=3,
@@ -270,7 +421,9 @@ def validate_chrome_permissions(manifest: object) -> ChromePermissionInventory:
         optional_api_permissions=optional_api_permissions,
         match_surfaces=tuple(surfaces),
     )
-    if inventory.all_host_patterns != ALLOWED_CHROME_HOST_PATTERNS:
+    if inventory.all_host_patterns != (
+        ALLOWED_CHROME_HOST_PATTERNS | ALLOWED_CHROME_CONTENT_MATCH_PATTERNS
+    ):
         # Defensive assertion: each secondary surface was checked above and the required
         # surface is exact, so this indicates a validator maintenance error.
         raise ChromePermissionViolation("Chrome host-pattern inventory is not closed")
@@ -293,7 +446,18 @@ validate_chrome_manifest_permissions = validate_chrome_permissions
 
 __all__ = [
     "ALLOWED_CHROME_API_PERMISSIONS",
+    "ALLOWED_CHROME_CONTENT_MATCH_PATTERNS",
     "ALLOWED_CHROME_HOST_PATTERNS",
+    "ALLOWED_MANIFEST_KEYS",
+    "CHROME_EXTENSION_VERSION",
+    "CHROME_EXTENSION_DESCRIPTION",
+    "CHROME_EXTENSION_NAME",
+    "CONTENT_SCRIPT_RESOURCES",
+    "EXTENSION_PAGE_CSP",
+    "FORBIDDEN_CHROME_API_PERMISSIONS",
+    "REQUIRED_CHROME_API_PERMISSIONS",
+    "SERVICE_WORKER_PATH",
+    "SIDE_PANEL_PATH",
     "ChromePermissionInventory",
     "ChromePermissionViolation",
     "FORBIDDEN_PRIVILEGED_MANIFEST_KEYS",

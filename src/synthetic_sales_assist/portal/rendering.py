@@ -36,6 +36,9 @@ from synthetic_sales_assist.safety.identity import is_reserved_identity
 
 
 APPLICATION_SCHEMA_VERSION: Final = "synthetic-sales-assist-application/v1"
+EXTENSION_ORDER_BINDING_SCHEMA_VERSION: Final = (
+    "synthetic-sales-assist-extension-order-binding/v1"
+)
 _ORDER_DETAIL_MEMBERS: Final = frozenset(
     {
         "completeness",
@@ -95,6 +98,9 @@ _ORDER_PAYLOAD_MEMBERS: Final = frozenset(
         "schema_version",
         "source_status",
     }
+)
+_EXTENSION_ORDER_BINDING_MEMBERS: Final = frozenset(
+    {"order_id", "rule_pack", "schema_version"}
 )
 _SYSTEM_STATUS_MEMBERS: Final = frozenset(
     {
@@ -471,6 +477,8 @@ def _validated_order(
         raise PortalContractError("ORDER_DETAIL_SCHEMA_INVALID", status=500)
     if not is_reserved_identity(str(order["order_id"]), expected_namespace="ORDER"):
         raise PortalContractError("ORDER_DETAIL_ID_INVALID", status=500)
+    if order["rule_pack"] not in {"SALES_CREDIT", "DOI"}:
+        raise PortalContractError("ORDER_DETAIL_RULE_PACK_INVALID", status=500)
     completeness = _exact_mapping(
         order["completeness"],
         _COMPLETENESS_MEMBERS,
@@ -589,7 +597,8 @@ def _render_completeness(completeness: Mapping[str, object]) -> str:
     )
     state = completeness["state"]
     badge_class = "" if state == "COMPLETE" else " warning"
-    return f"""<section class="panel" aria-labelledby="completeness-heading"
+    return f"""<section class="panel" data-ssa-section="completeness"
+  aria-labelledby="completeness-heading"
   data-ssa-completeness="{_h(state)}"
   data-ssa-manifest-digest="{_h(completeness['ordered_line_manifest_digest'])}">
   <h2 id="completeness-heading">Whole-order completeness
@@ -622,7 +631,7 @@ def _render_lines(lines: Sequence[object]) -> str:
             + cells
             + "</tr>"
         )
-    return f"""<section class="panel table-wrap">
+    return f"""<section class="panel table-wrap" data-ssa-section="line-universe">
 <table>
   <caption>Complete relevant line universe</caption>
   <thead><tr><th>Index</th><th>Stable line ID</th><th>Product</th><th>Quantity</th>
@@ -884,6 +893,24 @@ def render_order_detail(
         payload,
         expected_members=_ORDER_PAYLOAD_MEMBERS,
     ).decode("utf-8")
+    extension_binding = {
+        "order_id": order["order_id"],
+        "rule_pack": order["rule_pack"],
+        "schema_version": EXTENSION_ORDER_BINDING_SCHEMA_VERSION,
+    }
+    extension_binding_text = canonical_json_bytes(
+        extension_binding,
+        expected_members=_EXTENSION_ORDER_BINDING_MEMBERS,
+    ).decode("utf-8")
+    if (
+        len(extension_binding_text.encode("utf-8")) > MAX_RESPONSE_BODY_BYTES
+        or any(character in extension_binding_text for character in "<>&")
+    ):
+        raise PortalContractError("EXTENSION_ORDER_BINDING_UNSAFE", status=500)
+    extension_binding_element = (
+        '<script type="application/json" id="ssa-extension-order-binding">'
+        f"{extension_binding_text}</script>"
+    )
     interactions = _sequence(order["interaction_ids"], "ORDER_INTERACTIONS_INVALID")
     interaction_links = "".join(
         f'<li><a href="/interactions/{_h(item)}">{_h(item)}</a></li>'
@@ -894,7 +921,7 @@ def render_order_detail(
         f"<dt>Scenario</dt>{_field('scenario_alias', order['scenario_alias'])}"
         f"<dt>Variant</dt>{_field('mode', order['mode'])}"
         f"<dt>Source status</dt>{_field('source_status', order['source_status'])}"
-        f"<dt>Rule pack</dt><dd>{_h(order['rule_pack'])}</dd>"
+        f"<dt>Rule pack</dt>{_field('rule_pack', order['rule_pack'])}"
         f"<dt>Created</dt><dd>{_h(order['created_at'])}</dd>"
         f"<dt>Updated</dt><dd>{_h(order['updated_at'])}</dd>"
     )
@@ -932,7 +959,8 @@ def render_order_detail(
 <p>Source representation is incomplete or malformed. Evaluation is fail-closed.</p></section>"""
     body = f"""<h1>Order {_h(order['order_id'])}</h1>
 {_render_local_status(system_status)}
-<section class="panel"><h2>Factual summary</h2><dl>{summary}</dl></section>
+<section class="panel" data-ssa-section="order-summary">
+<h2>Factual summary</h2><dl>{summary}</dl></section>
 {rendered_lines}
 <section class="panel"><h2>Structured fictional interactions</h2>
 <ul>{interaction_links or '<li>None</li>'}</ul></section>
@@ -940,7 +968,8 @@ def render_order_detail(
 {_render_evaluation(order['latest_evaluation'], order, lines)}
 {_render_history(history, order['order_id'])}
 {evaluation_area}
-<script type="application/json" id="ssa-synthetic-order-payload">{payload_text}</script>"""
+<script type="application/json" id="ssa-synthetic-order-payload">{payload_text}</script>
+{extension_binding_element}"""
     return _page(
         title=f"Order {order['order_id']}",
         page_kind="order-detail",
@@ -974,20 +1003,33 @@ def render_interaction(value: object, csrf_token: str) -> bytes:
         )
     ):
         raise PortalContractError("INTERACTION_VIEW_ID_INVALID", status=500)
+    payload_text = canonical_json_bytes(
+        interaction,
+        expected_members=_INTERACTION_MEMBERS,
+    ).decode("utf-8")
+    if len(payload_text.encode("utf-8")) > MAX_RESPONSE_BODY_BYTES:
+        raise PortalContractError("INTERACTION_PAYLOAD_TOO_LARGE", status=500)
+    if any(character in payload_text for character in "<>&"):
+        raise PortalContractError("INTERACTION_PAYLOAD_HTML_UNSAFE", status=500)
     entries = "".join(
-        f"<dt>{_h(member.replace('_', ' ').title())}</dt><dd>{_h(_display(item))}</dd>"
+        f"<dt>{_h(member.replace('_', ' ').title())}</dt>"
+        + _field(f"interaction.{member}", item)
         for member, item in interaction.items()
         if member != "schema_version"
     )
     body = f"""<h1>Fictional interaction {_h(interaction_id)}</h1>
-<section class="panel"><dl>{entries}</dl>
-<p>No unrestricted message body is retained or displayed.</p></section>"""
+<section class="panel" data-ssa-section="interaction-summary"><dl>{entries}</dl>
+<p>No unrestricted message body is retained or displayed.</p></section>
+<script type="application/json" id="ssa-synthetic-interaction-payload">{payload_text}</script>"""
     return _page(
         title=f"Interaction {interaction_id}",
         page_kind="interaction-detail",
         body=body,
         csrf_token=csrf_token,
-        page_attributes={"data-ssa-interaction-id": interaction_id},
+        page_attributes={
+            "data-ssa-interaction-id": interaction_id,
+            "data-ssa-order-id": interaction["order_id"],
+        },
     )
 
 

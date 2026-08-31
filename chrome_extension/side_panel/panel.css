@@ -1,0 +1,71 @@
+/* SYNTHETIC-SALES-ASSIST-AUTHORED-M6 */
+:root {
+  color-scheme: light;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f2f6f7;
+  color: #17242b;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 300px; }
+.synthetic-banner {
+  background: #073b4c;
+  color: #fff;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  padding: .65rem 1rem;
+  text-align: center;
+}
+main { display: grid; gap: .85rem; padding: 1rem; }
+header { padding: .15rem .15rem .3rem; }
+.eyebrow { color: #52707b; font-size: .78rem; font-weight: 700; margin: 0; text-transform: uppercase; }
+h1 { font-size: 1.35rem; margin: .25rem 0; }
+h2 { color: #073b4c; font-size: 1rem; margin: 0 0 .65rem; }
+h3 { font-size: .9rem; margin: .9rem 0 .35rem; }
+p { line-height: 1.45; }
+.card {
+  background: #fff;
+  border: 1px solid #c9d7dc;
+  border-radius: .6rem;
+  box-shadow: 0 2px 8px rgb(7 59 76 / 7%);
+  padding: .9rem;
+}
+dl { display: grid; gap: .35rem .7rem; grid-template-columns: 7rem 1fr; margin: 0; }
+dt { font-weight: 700; }
+dd { margin: 0; overflow-wrap: anywhere; }
+label { display: block; font-size: .85rem; font-weight: 700; margin: .65rem 0 .3rem; }
+input {
+  border: 1px solid #8098a1;
+  border-radius: .35rem;
+  font: inherit;
+  padding: .55rem;
+  width: 100%;
+}
+.buttons { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .65rem; }
+button {
+  background: #087e8b;
+  border: 0;
+  border-radius: .35rem;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+  padding: .55rem .7rem;
+}
+button.secondary { background: #526a74; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #0b93b8; outline-offset: 2px; }
+.result { border-left: 5px solid #087e8b; }
+.links { display: grid; gap: .5rem; }
+.links span { color: #64777f; }
+a { color: #075e74; font-weight: 700; }
+ul { margin: .35rem 0 0; padding-left: 1.2rem; }
+footer { color: #546970; font-size: .75rem; padding: 1rem; text-align: center; }
+body[data-state="INCOMPLETE_PAGE"] #state-heading,
+body[data-state="MALFORMED_PAGE"] #state-heading,
+body[data-state="DOM_PAYLOAD_MISMATCH"] #state-heading,
+body[data-state="BACKEND_OFFLINE"] #state-heading,
+body[data-state="BACKEND_UNHEALTHY"] #state-heading,
+body[data-state="REQUEST_CONFLICT"] #state-heading,
+body[data-state="SAFE_ERROR"] #state-heading { color: #8a351f; }
+[hidden] { display: none !important; }

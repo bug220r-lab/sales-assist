@@ -1,4 +1,4 @@
-"""Run the complete Milestone 0 audit without installing the package."""
+"""Run the complete offline repository foundation audit without installation."""
 
 from __future__ import annotations
 

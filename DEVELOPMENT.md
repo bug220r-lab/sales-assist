@@ -1,16 +1,18 @@
-# Milestone 5 development
+# Milestone 6 development
 
 This repository contains the synthetic-only safety foundation, immutable Shared Domain Engine,
 Sales Credit rule pack, DOI rule pack, and local SQLite persistence and command-line interface.
 Milestone 5 adds one standard-library HTTP service, closed local API, generic synthetic portal,
-scenario library, and Windows lifecycle scripts. The listener and runtime requests are
-loopback-only. There is no dashboard/control center, browser extension or manifest, production
-connector, scheduler, external network client, remote asset, or external telemetry.
+scenario library, and Windows lifecycle scripts. Milestone 6 adds one repository-owned Chrome
+Manifest V3 extension with a read-only content extractor and local side panel. The listener and all
+runtime requests remain loopback-only. There is no dashboard/control center, production connector,
+scheduler, external action, internet client, remote asset, or external telemetry.
 
 ## Requirements
 
 - Python 3.12 or newer for repository code; the Windows lifecycle launcher requires CPython 3.12.x
 - Git
+- Chrome 114 or newer for manual unpacked-extension acceptance
 - no production connector, credential, or external data source
 
 Runtime code uses only the Python standard library. Optional development tools are declared in
@@ -45,6 +47,50 @@ fails, the fallback must name the exact verified Codex runtime through `SSA_PYTH
 runtime through `-PythonPath` does not receive the development-only ancestor-reparse exception.
 The launcher prints `DEVELOPMENT / NONPORTABLE` when it selects the fallback. This mechanism is
 not a portable release and makes no such claim.
+
+## Unpacked localhost extension
+
+Start the accepted local service on its fixed development origin, then load the repository-owned
+unpacked directory:
+
+```powershell
+.\scripts\start.ps1 -NoBrowser
+Start-Process 'http://127.0.0.1:8765/scenarios'
+```
+
+In Chrome, open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and
+select the repository's `chrome_extension` directory. Chrome must show extension version `0.1.0`,
+only the `sidePanel` API permission, and only these host permissions:
+
+```text
+http://127.0.0.1/*
+http://localhost/*
+```
+
+The static content script is narrower still: only `/orders/*` and `/interactions/*` on those two
+hosts. Open a synthetic order detail page, choose **Synthetic Sales Assist Local Side Panel** in
+Chrome's side-panel picker, and explicitly click Evaluate only after `SUPPORTED_READY`. Loading,
+refreshing, or opening the panel never evaluates automatically. The extension uses no Chrome
+storage and has no production, generic browser-automation, or external action capability.
+
+After changing extension files, choose **Reload** on `chrome://extensions`, then reload the portal
+tab to replace its static content script. Removal uses Chrome's ordinary **Remove** control and
+does not alter the local SQLite database. Complete state, security, network, reload, and uninstall
+steps are in `docs/milestone6-manual-acceptance.md`.
+
+Validate the checked-in source inventory, then create a deterministic ZIP, checksum, and exact
+file/hash inventory outside the repository:
+
+```powershell
+& $env:SSA_PYTHON tools/package_milestone6_extension.py --check
+& $env:SSA_PYTHON tools/package_milestone6_extension.py `
+  --output-dir (Join-Path $env:LOCALAPPDATA 'SyntheticSalesAssist\exports')
+```
+
+The package is a development distribution artifact for local manual loading, not a portable
+release and not a store submission. The tool stages and verifies the ZIP, checksum, and inventory
+together, then atomically publishes their digest-named generation directory. A failed generation
+does not replace a prior complete generation. Do not write package output into the repository.
 
 ## Local data
 
@@ -115,6 +161,9 @@ python -m unittest discover -s tests -t . -p "test_doi_*.py"
 python -m unittest tests.test_milestone5_application
 python -m unittest tests.test_milestone5_portal tests.test_milestone5_security
 python -m unittest tests.test_milestone5_lifecycle tests.test_milestone5_boundary
+python -m unittest tests.test_chrome_permissions
+python -m unittest tests.test_milestone6_extension tests.test_milestone6_security tests.test_milestone6_boundary
+python tools/package_milestone6_extension.py --check
 python tools/run_tests.py
 python tools/run_foundation_audit.py
 ```
@@ -127,16 +176,21 @@ python tools/generate_milestone4_artifacts.py
 ```
 
 The final audit verifies the supplied bundle, protected bytes, repository safety scans, synthetic
-identity firewall, loopback-only policy, zero Chrome manifests, zero external/non-loopback runtime
-network operations, and all nine zero safety counters.
+identity firewall, loopback-only policy, exactly one closed Milestone 6 Chrome manifest, zero
+external/non-loopback runtime network operations, and all nine zero safety counters.
 
 ## Milestone boundary
 
-Milestone 5 adds only the socket-neutral application boundary, loopback service/API, generic
-synthetic portal and static assets, scenario selection/evaluation, Windows lifecycle scripts, and
-their tests/docs. The pure Milestone 1-3 engines remain authoritative for business behavior; the
-portal does not create a new reason, ownership row, transition, or rule outcome. Schema remains
-version 4 with exactly the four Milestone 4 migrations.
+Milestone 6 adds only the closed Chrome MV3 manifest, static read-only content extraction, closed
+message relay, local side-panel display, deterministic packaging, and renderer-only DOM
+compatibility needed to compare existing fictional facts. Order detail now labels its existing
+summary, completeness, and line-universe sections; interaction detail publishes its existing
+closed canonical interaction view and order binding. These are additive markers under the
+unchanged `synthetic-sales-assist-dom/v1` contract, not new source facts or behavior. The existing
+M5 API routes and same-origin/CSRF action boundary remain unchanged. The pure Milestone 1-3 engines
+remain authoritative for business behavior; neither portal nor extension creates a reason,
+ownership row, transition, or rule outcome. Schema remains version 4 with exactly the four
+Milestone 4 migrations.
 
 The four migrations are applied transactionally and checksum-bound. WAL mode, `FULL` synchronous
 writes, foreign keys on every connection, bounded busy handling, connection-per-operation units of
@@ -145,4 +199,6 @@ maintenance coordination are binding implementation choices documented in ADRs 0
 
 The supplied `specs/`, `reference/`, `BUNDLE_MANIFEST.json`, `SHA256SUMS.txt`, and checksummed
 root `README.md` remain byte-for-byte unchanged. Milestone-specific implementation and
-verification material lives under `docs/`, `scripts/`, `src/`, `tests/`, and `tools/`.
+verification material lives under `chrome_extension/`, `docs/`, `scripts/`, `src/`, `tests/`, and
+`tools/`. Dashboard/control-center pages, non-loopback capability, store publication, production
+connectors, and all Milestone 7 work remain absent.

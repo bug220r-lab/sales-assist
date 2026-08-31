@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- SYNTHETIC-SALES-ASSIST-AUTHORED-M6 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Synthetic Sales Assist</title>
+  <link rel="stylesheet" href="panel.css">
+  <script src="../shared/canonical.js" defer></script>
+  <script src="../shared/contracts.js" defer></script>
+  <script src="panel.js" defer></script>
+</head>
+<body data-state="UNSUPPORTED_PAGE">
+  <div class="synthetic-banner">SYNTHETIC DATA ONLY · LOCALHOST</div>
+  <main>
+    <header>
+      <p class="eyebrow">Local read-only assistant</p>
+      <h1 id="state-heading">Checking supported page…</h1>
+      <p id="state-detail" role="status" aria-live="polite">No source facts leave this computer.</p>
+    </header>
+
+    <section class="card" aria-labelledby="source-heading">
+      <h2 id="source-heading">Synthetic source</h2>
+      <dl>
+        <dt>Page</dt><dd id="page-kind">Not available</dd>
+        <dt>Identity</dt><dd id="page-identity">Not available</dd>
+        <dt>Completeness</dt><dd id="completeness">Not available</dd>
+        <dt>Scenario</dt><dd id="scenario">Not available</dd>
+        <dt>Rule pack</dt><dd id="source-rule-pack">Not available</dd>
+      </dl>
+    </section>
+
+    <section class="card" aria-labelledby="backend-heading">
+      <h2 id="backend-heading">Local backend</h2>
+      <dl>
+        <dt>Health</dt><dd id="backend-health">Not checked</dd>
+        <dt>Application</dt><dd id="app-version">Not available</dd>
+        <dt>Build</dt><dd id="build-version">Not available</dd>
+        <dt>Safety counters</dt><dd id="safety-counters">Not checked</dd>
+      </dl>
+    </section>
+
+    <section class="card evaluation" aria-labelledby="evaluation-heading">
+      <h2 id="evaluation-heading">Local evaluation</h2>
+      <p>Evaluation is read-only with respect to source facts and runs only after this explicit click.</p>
+      <label for="request-key">Bounded request key</label>
+      <input id="request-key" maxlength="128" autocomplete="off" spellcheck="false">
+      <div class="buttons">
+        <button id="evaluate" type="button" disabled>Evaluate synthetic page</button>
+        <button id="retry" type="button" hidden>Safe retry with same key</button>
+        <button id="refresh" type="button" class="secondary">Refresh page status</button>
+      </div>
+    </section>
+
+    <section class="card result" id="result-card" aria-labelledby="result-heading" hidden>
+      <h2 id="result-heading">Evaluation result</h2>
+      <dl id="result-details"></dl>
+      <h3>Reasons</h3>
+      <ul id="reasons"></ul>
+      <h3>Opportunities and scope</h3>
+      <ul id="opportunities"></ul>
+    </section>
+
+    <section class="card links" aria-labelledby="links-heading">
+      <h2 id="links-heading">Local views</h2>
+      <a id="history-link" target="_blank" rel="noreferrer" hidden>Open persisted local history</a>
+      <span id="future-dashboard">Future dashboard · unavailable until a later milestone</span>
+    </section>
+  </main>
+  <footer>Extension 0.1.0 · DEVELOPMENT / LOCALHOST ONLY</footer>
+</body>
+</html>

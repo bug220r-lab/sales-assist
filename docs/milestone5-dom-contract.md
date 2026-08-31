@@ -71,5 +71,7 @@ Executable fixtures additionally cover large complete, explicit zero-line, missi
 identity mismatch, duplicate line, count mismatch, stale representation, observed unknown, and
 backend-failure modes.
 
-This contract is evidence for a future Milestone 6 extractor; it does not create that extractor,
-browser automation, an extension, or permission to trust arbitrary DOM/JSON.
+Milestone 6 preserves this exact canonical byte contract. Its governed rule-pack proof is carried
+in a separate `synthetic-sales-assist-extension-order-binding/v1` compatibility payload and an
+order-summary DOM marker; the extension requires both to agree. The M5 DOM version and payload
+member set remain unchanged, as do every M5 route, rule, and database behavior.

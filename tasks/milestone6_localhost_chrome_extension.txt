@@ -1,0 +1,540 @@
+# Synthetic Sales Assist v0.1 — Milestone 6
+# Localhost-Only Chrome Extension and Side Panel
+
+# Milestone 5 acceptance gate
+
+The Milestone 5 gate is satisfied.
+
+```text
+M5_VISIBLE_BROWSER_SMOKE = PASS
+M5_OPERATOR_ACCEPTANCE_AUTOMATED = PASS
+M5_MANUAL_ACCEPTANCE = PASS
+```
+
+User-visible acceptance included:
+
+- verified DEVELOPMENT / NONPORTABLE launcher fallback;
+- service startup/status/owned stop/restart;
+- loopback origin `http://127.0.0.1:8765/`;
+- visible synthetic-only scenario library;
+- Sales Credit target-rep and human-review scenarios;
+- DOI fulfillment-split, full-DS, and overlap scenarios;
+- malformed/fail-closed behavior;
+- persisted history across refresh/restart;
+- all safety counters zero.
+
+Automated operator-acceptance evidence:
+
+- full regression: `1,446/1,446 PASS`;
+- M5 scoped: `110/110 PASS`;
+- safety: `46/46 PASS`;
+- exact repository commit/tree and clean workspace;
+- service/API/DOM/security/lifecycle/persistence/replay checks PASS;
+- seven non-blocking discrepancies documented and resolved;
+- all nine safety counters zero;
+- runtime external network calls zero;
+- service stopped after acceptance;
+- Milestone 6 artifacts zero.
+
+Acceptance reports:
+
+```text
+M5_OPERATOR_ACCEPTANCE_REPORT.md
+SHA-256 =
+4d01127af51bb46990a5a9d3c5269419f678a232e5461913106b4b1f06051d52
+
+M5_OPERATOR_ACCEPTANCE_REPORT.json
+SHA-256 =
+e66f39cda51ccf6261ddd1dc91e0d4830cd3c33734a80ad6f250058ffa51e4e5
+```
+
+The repository's M5 manual-acceptance evidence must be updated during this milestone without
+modifying the protected specification bundle.
+
+---
+
+# Exact base state
+
+```text
+branch = main
+base_commit = 28909059cc1ef8a77e3a4bf428782dbf0280d7c4
+base_tree = 27ec8ddccb4d2428af5a6b92d5420f1bbb1a18e7
+parent_commit = 1dd40ea9ec782e376cb154c5aa59ccf23bc6dade
+reported_full_regression = 1,446/1,446 PASS
+service_origin = http://127.0.0.1:8765/
+api_schema_version = synthetic-sales-assist-api/v1
+dom_contract_version = synthetic-sales-assist-dom/v1
+routes = health; scenario inventory and instantiation; order list and detail; local evaluation; persisted history; interaction detail; run detail; metrics summary; system status; owned shutdown. Codex must derive and attest the exact HTTP methods and paths from the committed M5 route registry before editing.
+manual_acceptance = M5_MANUAL_ACCEPTANCE = PASS
+```
+
+## Pre-edit verification
+
+Verify:
+
+- HEAD/HEAD tree;
+- clean index;
+- clean worktree except:
+  `tasks/milestone6_localhost_chrome_extension.txt`;
+- full M5 suite;
+- portal startup and health;
+- exact API/DOM versions;
+- protected specifications;
+- all safety counters zero;
+- extension inventory currently zero;
+- no external network requests;
+- the DEVELOPMENT / NONPORTABLE `SSA_PYTHON` fallback remains available only through the
+  explicit validated launcher path;
+- M5 visible and automated acceptance report hashes match the values in this task;
+- the exact M5 route methods/paths are derived from the committed route registry and recorded
+  before extension implementation.
+
+Stop on any other discrepancy.
+
+---
+
+# Milestone objective
+
+Implement **Milestone 6 only**:
+
+- a Chrome Manifest V3 extension;
+- a read-only content extractor for supported localhost synthetic pages;
+- a side panel;
+- closed messaging/API contracts;
+- independent completeness and DOM/payload verification;
+- local evaluation and result display;
+- extension packaging and manual load instructions;
+- extension security and browser acceptance tests.
+
+Do not begin the final dashboard milestone.
+
+During this milestone create or update:
+
+`docs/acceptance/milestone5-acceptance.md`
+
+It must record:
+
+- M5 commit/tree;
+- `M5_VISIBLE_BROWSER_SMOKE = PASS`;
+- `M5_OPERATOR_ACCEPTANCE_AUTOMATED = PASS`;
+- `M5_MANUAL_ACCEPTANCE = PASS`;
+- both acceptance-report SHA-256 values;
+- the launcher-remediation commit lineage;
+- all nine safety counters zero;
+- runtime external network calls zero;
+- seven non-blocking discrepancies documented/resolved;
+- exact API, DOM, application/build, and runtime-receipt versions.
+
+---
+
+# Hard security boundary
+
+The manifest may contain host permissions only for:
+
+```text
+http://127.0.0.1/*
+http://localhost/*
+```
+
+No wildcard internet permission.
+
+Prohibit:
+
+- `cookies`
+- `webRequest`
+- `webRequestBlocking`
+- `nativeMessaging`
+- `debugger`
+- `downloads`
+- `clipboardWrite`
+- broad `tabs` unless independently justified
+- remote code
+- `eval`
+- external scripts/assets
+- generic click/type/fill/keyboard/submit helpers
+- mutation of source facts
+- production domains/selectors
+- arbitrary URL fetch
+- credential/session access.
+
+Use static content-script matching where possible. Request only the minimum permissions needed
+for the side panel and local extension state.
+
+Create a manifest/permission ADR and exhaustive permission test.
+
+---
+
+# 1. Extension structure
+
+Recommended:
+
+```text
+chrome_extension/
+├── manifest.json
+├── service_worker.js
+├── content/
+├── side_panel/
+├── shared/
+├── assets/
+└── README.md
+```
+
+Equivalent structure is acceptable.
+
+Requirements:
+
+- Manifest V3;
+- explicit version;
+- `side_panel` page;
+- strict extension CSP;
+- no inline scripts;
+- no remote assets;
+- deterministic build/package inventory;
+- local icons generated or repository-owned;
+- no hidden production capability.
+
+---
+
+# 2. Supported pages and origin validation
+
+Support only the M5 synthetic portal page kinds required for evaluation:
+
+- synthetic order detail;
+- synthetic interaction detail where Sales Credit evaluation needs it;
+- optional scenario page convenience behavior.
+
+Before extraction:
+
+1. verify page origin is loopback and matches allowed service origin policy;
+2. verify `data-ssa-page-kind`;
+3. verify DOM contract version;
+4. verify schema version;
+5. verify synthetic identity;
+6. verify required sections;
+7. verify completeness state;
+8. verify declared/rendered line counts;
+9. verify ordered line-manifest digest;
+10. compare allowlisted DOM facts with embedded canonical payload.
+
+Unsupported, mismatched, incomplete, or malformed pages fail closed.
+
+Do not run on unrelated localhost pages merely because the host matches.
+
+---
+
+# 3. Allowlists and extraction
+
+Implement an explicit versioned extraction allowlist.
+
+Order extraction may read only governed fields such as:
+
+- synthetic order ID;
+- status;
+- timestamps;
+- completeness facts;
+- line identity;
+- canonical fictional product IDs;
+- quantity;
+- exact price/currency;
+- availability;
+- ETA;
+- DS state;
+- activity;
+- structured fictional interactions/observations required by the scenario.
+
+Sales Credit extraction may read only the governed fictional interaction fields.
+
+Prohibit:
+
+- arbitrary page text;
+- `innerHTML` transfer;
+- unrestricted notes;
+- script source;
+- browser storage;
+- cookies;
+- hidden unrelated DOM;
+- file paths;
+- query strings not in the closed contract.
+
+Return a closed versioned extraction object.
+
+---
+
+# 4. Independent completeness/coherence verification
+
+The extension must not blindly trust the embedded JSON payload.
+
+Independently verify:
+
+- requested/observed order identity;
+- rendered line identities;
+- declared/rendered counts;
+- duplicate lines;
+- ordered manifest;
+- source time;
+- DOM/payload equality;
+- completeness status;
+- schema/version.
+
+If the page says COMPLETE but the extension detects a mismatch:
+
+- do not evaluate;
+- display a fail-closed discrepancy;
+- make no successful API call;
+- persist no successful evaluation.
+
+Add tests for every M5 malformed mode.
+
+---
+
+# 5. Side-panel states
+
+Implement clear, accessible states:
+
+```text
+UNSUPPORTED_PAGE
+SUPPORTED_READY
+INCOMPLETE_PAGE
+MALFORMED_PAGE
+DOM_PAYLOAD_MISMATCH
+BACKEND_OFFLINE
+BACKEND_UNHEALTHY
+EVALUATING
+SALES_CREDIT_RESULT
+DOI_OPPORTUNITY
+DOI_MANUAL_REVIEW
+DOI_EXCLUDED
+DOI_MONITOR
+EXACT_REPLAY
+REQUEST_CONFLICT
+SAFE_ERROR
+```
+
+The panel displays:
+
+- synthetic page identity;
+- source completeness;
+- local backend health;
+- rule pack/version;
+- result/workflow state;
+- reasons;
+- opportunities/scope;
+- human-review requirement;
+- value status;
+- replay/conflict;
+- persisted IDs;
+- processing duration;
+- links to local portal history and future dashboard.
+
+No external action button exists.
+
+---
+
+# 6. Evaluation request
+
+The extension sends only the closed extracted facts to the loopback API.
+
+The committed M5 service origin is:
+
+```text
+http://127.0.0.1:8765/
+```
+
+The extension may also accept `localhost` only through the documented closed loopback-origin
+normalizer. It must reject every non-loopback host, alternate scheme, credentials-in-URL,
+query-injected origin, and arbitrary port unless the committed local configuration contract
+explicitly authorizes that bounded port.
+
+Requirements:
+
+- explicit user click to evaluate;
+- bounded request key;
+- no evaluation on page load;
+- no repeated hidden polling;
+- no external fetch;
+- exact replay support;
+- conflict display;
+- request/response version checks;
+- abort/timeout behavior;
+- safe retry;
+- backend unhealthy blocks evaluation.
+
+The extension may open the local portal/dashboard in a new tab, but may not navigate or interact
+with source controls generically.
+
+---
+
+# 7. Local state
+
+Persist only minimal non-sensitive extension preferences if needed:
+
+- selected local origin/port from an allowlisted loopback format;
+- panel preference;
+- last viewed synthetic page ID;
+- development diagnostics toggle.
+
+Do not persist source payloads, evaluation details, fictional contact values, tokens, cookies, or
+database contents in extension storage.
+
+Storage is optional and must be documented.
+
+---
+
+# 8. Extension packaging and installation
+
+Create:
+
+- unpacked development extension directory;
+- deterministic ZIP/package command;
+- manifest and file inventory;
+- SHA-256 inventory;
+- installation guide;
+- update/reload guide;
+- uninstall guide;
+- permission explanation;
+- troubleshooting guide.
+
+Do not publish to any store.
+
+The extension must work without administrator rights.
+
+---
+
+# 9. Automated and manual tests
+
+## Static
+
+- manifest schema;
+- exact host permissions;
+- forbidden permission denylist;
+- CSP;
+- no remote URL;
+- no eval/inline script;
+- no production identifier/selector;
+- package inventory/hash.
+
+## Extraction
+
+- normal order;
+- large order;
+- zero lines;
+- missing section;
+- identity mismatch;
+- duplicate line;
+- count mismatch;
+- DOM/payload mismatch;
+- malformed field;
+- observed UNKNOWN;
+- unsupported page;
+- wrong contract version.
+
+## Panel/API
+
+- backend offline;
+- unhealthy backend;
+- evaluate success;
+- every top-level result state;
+- human review;
+- exact replay;
+- conflict;
+- timeout;
+- safe retry;
+- local history link.
+
+## Browser
+
+Use an installed local browser test tool if available. Otherwise provide:
+
+- deterministic DOM/unit tests;
+- local integration tests;
+- complete manual Chrome acceptance checklist.
+
+Do not download dependencies.
+
+---
+
+# 10. Manual acceptance deliverable
+
+Create `docs/milestone6-manual-acceptance.md` covering:
+
+- load unpacked extension;
+- permission inspection;
+- supported page recognition;
+- all panel states;
+- complete/incomplete/malformed pages;
+- Sales Credit and DOI evaluation;
+- replay/conflict;
+- backend restart/offline;
+- extension reload;
+- uninstall;
+- browser network inspection proving loopback only.
+
+---
+
+# 11. Milestone boundary
+
+Permit only extension code, packaging, tests, docs, and minimal compatible portal/API changes
+that do not alter business behavior.
+
+Continue to reject:
+
+- final dashboard/control-center pages;
+- production connector;
+- non-loopback capability;
+- external action;
+- protected spec changes;
+- Milestone 7 implementation.
+
+---
+
+# Verification and same-tree gate
+
+Run:
+
+- quality/compile gates;
+- full extension static/security tests;
+- extraction/coherence tests;
+- panel/API tests;
+- browser/manual evidence tests;
+- complete M5/M4/M3/M2/M1 regressions;
+- foundation audit;
+- protected-file scan;
+- synthetic identity and secret scans;
+- network scan;
+- manifest/permission audit;
+- package/hash audit;
+- milestone boundary.
+
+Commit only after same-tree PASS. Stop before Milestone 7.
+
+Report:
+
+- exact manifest permissions and host permissions;
+- extension version and package SHA-256;
+- exact committed M5 route methods/paths used by the extension;
+- API version `synthetic-sales-assist-api/v1`;
+- request version `synthetic-sales-assist-api-request/v1`;
+- DOM version `synthetic-sales-assist-dom/v1`;
+- application/build versions;
+- runtime receipt version;
+- panel-state inventory;
+- extraction allowlist inventory;
+- test counts;
+- M5 acceptance evidence document;
+- external network count zero;
+- all safety counters zero;
+- clean tree.
+
+Finish exactly:
+
+```text
+MILESTONE_6_LOCALHOST_CHROME_EXTENSION = PASS
+```
+
+or:
+
+```text
+MILESTONE_6_LOCALHOST_CHROME_EXTENSION = BLOCKED
+```
+
+Do not begin Milestone 7.

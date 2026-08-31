@@ -123,7 +123,7 @@ class Milestone5BoundaryTests(unittest.TestCase):
             },
         )
 
-    def test_authored_milestone5_surface_is_path_exact_and_milestone6_stays_absent(
+    def test_authored_milestone5_surface_is_path_exact_and_milestone6_is_external(
         self,
     ) -> None:
         self.assertTrue(PORTAL.is_dir())
@@ -163,7 +163,7 @@ class Milestone5BoundaryTests(unittest.TestCase):
             for path in ROOT.rglob("manifest.json")
             if ".git" not in path.parts and "__pycache__" not in path.parts
         ]
-        self.assertEqual(manifests, [])
+        self.assertEqual(manifests, ["chrome_extension/manifest.json"])
 
     def test_portal_has_no_external_client_or_direct_rule_pack_import(self) -> None:
         violations: list[str] = []
@@ -287,7 +287,7 @@ class Milestone5BoundaryTests(unittest.TestCase):
             "data-ssa-manifest-digest",
         ):
             self.assertIn(attribute, dom)
-        self.assertIn("M5_MANUAL_ACCEPTANCE = PENDING", manual)
+        self.assertIn("M5_MANUAL_ACCEPTANCE = PASS", manual)
         for document in (manual, lifecycle, development, adr):
             self.assertIn("SSA_PYTHON", document)
             self.assertIn("DEVELOPMENT / NONPORTABLE", document)

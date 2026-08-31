@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Synthetic Sales Assist Local Side Panel",
+  "description": "Read-only localhost extraction and evaluation for reserved synthetic scenarios.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "114",
+  "permissions": [
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js"
+  },
+  "side_panel": {
+    "default_path": "side_panel/index.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1/orders/*",
+        "http://localhost/orders/*",
+        "http://127.0.0.1/interactions/*",
+        "http://localhost/interactions/*"
+      ],
+      "js": [
+        "shared/canonical.js",
+        "shared/contracts.js",
+        "shared/origin.js",
+        "shared/extraction.js",
+        "content/content_script.js"
+      ],
+      "run_at": "document_idle",
+      "world": "ISOLATED"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+  }
+}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from synthetic_sales_assist.safety.repository import (  # noqa: E402
     AUTHORED_M5_MARKER,
+    AUTHORED_M6_MARKER,
     scan_prohibited_repository_content,
     scan_secret_material,
 )
@@ -125,6 +127,99 @@ class RepositoryScannerTests(unittest.TestCase):
                 "prohibited_artifact_type",
                 "prohibited_capability_path",
             },
+        )
+
+    def test_exact_marked_m6_extension_surface_is_admitted_and_scanned(self) -> None:
+        manifest = {
+            "manifest_version": 3,
+            "name": "Synthetic Sales Assist Local Side Panel",
+            "description": (
+                "Read-only localhost extraction and evaluation for reserved synthetic scenarios."
+            ),
+            "version": "0.1.0",
+            "minimum_chrome_version": "114",
+            "permissions": ["sidePanel"],
+            "host_permissions": [
+                "http://127.0.0.1/*",
+                "http://localhost/*",
+            ],
+            "background": {"service_worker": "service_worker.js"},
+            "side_panel": {"default_path": "side_panel/index.html"},
+            "content_security_policy": {
+                "extension_pages": (
+                    "default-src 'self'; script-src 'self'; style-src 'self'; "
+                    "img-src 'self'; connect-src 'none'; object-src 'none'; "
+                    "base-uri 'none'; frame-ancestors 'none'"
+                )
+            },
+            "content_scripts": [
+                {
+                    "matches": [
+                        "http://127.0.0.1/orders/*",
+                        "http://127.0.0.1/interactions/*",
+                        "http://localhost/orders/*",
+                        "http://localhost/interactions/*",
+                    ],
+                    "js": [
+                        "shared/canonical.js",
+                        "shared/contracts.js",
+                        "shared/origin.js",
+                        "shared/extraction.js",
+                        "content/content_script.js",
+                    ],
+                    "run_at": "document_idle",
+                    "world": "ISOLATED",
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            extension = root / "chrome_extension"
+            (extension / "content").mkdir(parents=True)
+            (extension / "side_panel").mkdir()
+            (extension / "manifest.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            for relative, text in (
+                ("service_worker.js", f"// {AUTHORED_M6_MARKER}\n'use strict';\n"),
+                (
+                    "content/content_script.js",
+                    f"// {AUTHORED_M6_MARKER}\n'use strict';\n",
+                ),
+                (
+                    "side_panel/index.html",
+                    f"<!-- {AUTHORED_M6_MARKER} --><!doctype "
+                    "html><title>Synthetic</title>",
+                ),
+            ):
+                (extension / relative).write_text(text, encoding="utf-8")
+            self.assertEqual(scan_prohibited_repository_content(root), ())
+
+            duplicate = json.dumps(manifest).replace(
+                '"version": "0.1.0"',
+                '"version": "0.1.0", "version": "0.1.0"',
+                1,
+            )
+            (extension / "manifest.json").write_text(duplicate, encoding="utf-8")
+            findings = scan_prohibited_repository_content(root)
+            self.assertEqual(
+                {item.category for item in findings}, {"extension_manifest"}
+            )
+
+    def test_unmarked_or_unsafe_m6_extension_artifact_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            extension = root / "chrome_extension"
+            extension.mkdir()
+            (extension / "manifest.json").write_text(
+                '{"manifest_version":3,"host_permissions":[]}',
+                encoding="utf-8",
+            )
+            (extension / "reader.js").write_text("'use strict';\n", encoding="utf-8")
+            findings = scan_prohibited_repository_content(root)
+        self.assertEqual(
+            {item.category for item in findings},
+            {"extension_manifest", "unapproved_extension_artifact"},
         )
 
 

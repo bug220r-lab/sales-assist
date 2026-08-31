@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import re
 import unittest
 from pathlib import Path
 
@@ -100,7 +101,7 @@ class MilestoneBoundaryTests(unittest.TestCase):
         matrix_path = ROOT / "docs" / "audit-finding-closure-matrix.md"
         self.assertTrue(matrix_path.is_file())
         matrix_text = matrix_path.read_text(encoding="utf-8")
-        self.assertIn("- Matrix version: `milestone5/v1`", matrix_text)
+        self.assertIn("- Matrix version: `milestone6/v1`", matrix_text)
         self.assertNotIn("DEFERRED", matrix_text)
         self.assertNotIn("PARTIAL", matrix_text)
         rows = [
@@ -120,11 +121,34 @@ class MilestoneBoundaryTests(unittest.TestCase):
             self.assertNotIn(cells[0], parsed)
             parsed[cells[0]] = cells
         self.assertEqual(set(parsed), expected)
-        allowed_statuses = {
-            "CLOSED_M5",
-            "CLOSED_M5_REOPEN_ON_EXTENSION",
-        }
+        allowed_statuses = {"CLOSED_M6"}
         self.assertTrue(all(cells[1] in allowed_statuses for cells in parsed.values()))
+        collected_methods = {
+            node.name
+            for path in (ROOT / "tests").glob("test_*.py")
+            for node in ast.walk(
+                ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            )
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name.startswith("test_")
+        }
+        m6_methods = {
+            node.name
+            for path in (ROOT / "tests").glob("test_milestone6*.py")
+            for node in ast.walk(
+                ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            )
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name.startswith("test_")
+        }
+        referenced = set(re.findall(r"`(test_[a-z0-9_]+)`", matrix_text))
+        self.assertTrue(referenced)
+        self.assertEqual(referenced - collected_methods, set())
+        for finding, cells in parsed.items():
+            with self.subTest(finding=finding):
+                accepted = set(re.findall(r"`(test_[a-z0-9_]+)`", cells[4]))
+                self.assertTrue(accepted & m6_methods)
+                self.assertIn("ADR 0022", cells[3])
 
     def test_public_domain_facade_exports_every_declared_shared_type(self) -> None:
         exported = domain_package.__all__
@@ -143,7 +167,9 @@ class MilestoneBoundaryTests(unittest.TestCase):
         }
         self.assertTrue(required.issubset(exported))
 
-    def test_milestone_six_dashboard_extension_and_connector_modules_are_absent(self) -> None:
+    def test_milestone_seven_dashboard_connector_and_embedded_extension_are_absent(
+        self,
+    ) -> None:
         discovered = {path.stem for path in PACKAGE.rglob("*.py")}
         discovered.update(path.name for path in PACKAGE.iterdir() if path.is_dir())
         self.assertFalse(discovered & FORBIDDEN_FEATURE_NAMES)
@@ -151,17 +177,17 @@ class MilestoneBoundaryTests(unittest.TestCase):
     def test_milestone_five_and_user_interface_modules_are_absent(self) -> None:
         """Preserve the old selector while advancing its prohibited-capability boundary."""
 
-        self.test_milestone_six_dashboard_extension_and_connector_modules_are_absent()
+        self.test_milestone_seven_dashboard_connector_and_embedded_extension_are_absent()
 
     def test_milestone_four_and_user_interface_modules_are_absent(self) -> None:
         """Preserve the Milestone 3 boundary oracle name."""
 
-        self.test_milestone_six_dashboard_extension_and_connector_modules_are_absent()
+        self.test_milestone_seven_dashboard_connector_and_embedded_extension_are_absent()
 
     def test_milestone_three_and_user_interface_modules_are_absent(self) -> None:
         """Preserve the Milestone 2 oracle ID at the advanced milestone boundary."""
 
-        self.test_milestone_six_dashboard_extension_and_connector_modules_are_absent()
+        self.test_milestone_seven_dashboard_connector_and_embedded_extension_are_absent()
 
     def test_package_has_no_network_client_import(self) -> None:
         violations: list[str] = []
