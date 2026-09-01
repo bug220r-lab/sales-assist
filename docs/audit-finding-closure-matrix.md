@@ -1,21 +1,23 @@
 # Audit-finding closure matrix
 
-- Matrix version: `milestone6/v1`
+- Matrix version: `milestone7/v1`
 - Scope: Milestone 0 safety foundation, Milestone 1 Shared Domain Engine, Milestone 2
   Sales Credit rule pack, Milestone 3 DOI rule pack, Milestone 4 local persistence/CLI,
-  Milestone 5 localhost API/portal, and Milestone 6 localhost Chrome extension
-- Status vocabulary: `CLOSED_M6`
+  Milestone 5 localhost API/portal, Milestone 6 localhost Chrome extension, and Milestone 7
+  localhost Control Center
+- Status vocabulary: `CLOSED_M6` (preserved historical verdict), `CLOSED_M7` (current re-audit)
 
-Every row is release-closed for the Milestone 6 local synthetic extension. The 17 extension-reopen
+The original table below preserves the accepted Milestone 6 closure record. The 17 extension-reopen
 rows from Milestone 5 were reopened and re-audited against the concrete M6
 allowlist, coherence verifier, message/API boundary, manifest, package inventory, and negative
 tests. Documentation alone is not closure: each row names collected implementation evidence,
 positive tests, focused negative vectors, and the consequential ADR where one is required.
 The exact extension JavaScript and all 16 panel states additionally passed the Chromium runtime
-session recorded in `docs/acceptance/milestone6-browser-evidence.md`. `CLOSED_M6` means the audit
-finding is implementation- and evidence-closed; it does not claim the user's load-unpacked,
-permission-dialog, reload, or uninstall checklist is complete. That separate manual checklist
-remains explicitly `M6_MANUAL_ACCEPTANCE = PENDING`.
+session recorded in `docs/acceptance/milestone6-browser-evidence.md`. The authoritative M7 task
+records `M6_MANUAL_ACCEPTANCE = PASS`; this M7 re-audit does not rewrite that historical evidence.
+`CLOSED_M7` in the second table means the current Control Center change was reopened and checked
+against executable M7 evidence. It does not claim M7 manual acceptance, which remains
+`M7_MANUAL_ACCEPTANCE = PENDING`.
 
 | Finding | Status | Artifact/version | ADR | Accepted tests | Negative tests | Dependency | Re-audit scope |
 |---|---|---|---|---|---|---|---|
@@ -39,6 +41,37 @@ remains explicitly `M6_MANUAL_ACCEPTANCE = PENDING`.
 | R02-02 | CLOSED_M6 | SQLite serialization and owned process lease unchanged; closed panel-worker-content relay invokes one existing local action | ADR 0014, ADR 0016, ADR 0021, ADR 0022 | `test_extraction_reservation_vs_rc084_has_one_winner`; `test_lifecycle_script_inventory_is_exact_and_non_elevating`; `test_tab_api_is_message_only_and_needs_no_tabs_permission`; `test_messaging_and_api_are_explicit_bounded_and_base_url_immune` | Dual commit, retry/finalization, busy/fault, second start, stale receipt, ownership mismatch, replay conflict, sender, timeout, hostile-base URL, and duplicate-click vectors | New worker, process, permission, message, or action | Re-prove atomicity, process ownership, sender isolation, retry, timeout, and fault handling |
 | R02-03 | CLOSED_M6 | RC-084 gate, pre-extraction TR-004 branch, and durable rules-control receipt unchanged; extension has no rules authority | ADR 0012, ADR 0014, ADR 0016, ADR 0022 | `test_rc084_evaluation_gate_creates_no_substitute_evaluation`; `test_extraction_reservation_vs_rc084_has_one_winner`; `test_extension_is_outside_business_packages_and_schema_is_unchanged`; `test_runtime_has_no_remote_code_storage_or_generic_page_action` | Unavailable-rule substitution, wrong route, post-reservation terminalization, dual winner, illegal emission, rule import, and external-action vectors | New rules-authority site, transition, or extension action | Reconcile both legal sites and prove zero additional rule/action authority |
 
-All 19 findings are executable-release-closed for Milestone 6. A future milestone must reopen every
-row whose dependency changes; this matrix does not authorize a dashboard, connector, non-loopback
-capability, external action, protected-specification change, or any Milestone 7 implementation.
+## Milestone 7 re-audit
+
+ADR 0023, ADR 0024, ADR 0025, and ADR 0026 govern the new current-projection query boundary,
+closed human-action idempotency boundary, truthful extension last-seen semantics, and denominator
+registry. Schema remains version 4. The extension permission surface remains exactly `sidePanel`
+plus the two loopback host patterns. No new rule, reason, transition, production connector,
+external action, remote asset, or non-loopback request was added.
+
+| Re-audit ID | M7 status | M7 delta reviewed | Current executable evidence |
+|---|---|---|---|
+| M7-R01-01 | CLOSED_M7 | Closed dashboard query/action records and separate system/human authority | `test_sales_credit_manager_outcome_success_replay_conflict_and_separation`; `test_action_matrix_matches_rendered_mutation_surface` |
+| M7-R01-02 | CLOSED_M7 | Bounded queue filters, reserved synthetic IDs, closed action enums, and exact Money | `test_search_bound_accepts_96_and_rejects_97_ascii_characters`; `test_partial_requires_exact_currency_money` |
+| M7-R01-03 | CLOSED_M7 | Current projection versus immutable history and replay/conflict separation | `test_metrics_separate_replay_conflict_and_current_projection_counts`; `test_queues_are_current_bounded_and_domain_aware` |
+| M7-R01-04 | CLOSED_M7 | Timestamped terminal telemetry windows and immutable action receipts | `test_metric_window_is_half_open`; `test_doi_overlap_selection_is_atomic_replayable_and_conflicting` |
+| M7-R01-05 | CLOSED_M7 | Exact per-currency value segmentation without conversion or overlap guess | `test_currency_totals_are_segmented_and_overlap_remains_unavailable`; `test_current_projection_history_and_currency_labels_are_explicit` |
+| M7-R01-06 | CLOSED_M7 | Request-key replay/conflict on the two human actions and managed backup | `test_sales_credit_manager_outcome_success_replay_conflict_and_separation`; `test_backup_is_verified_privacy_safe_and_exact_replay` |
+| M7-R01-07 | CLOSED_M7 | Product/opportunity facts remain read-only except exact overlap scenario selection | `test_doi_overlap_selection_is_atomic_replayable_and_conflicting`; `test_unsupported_high_authority_controls_are_absent` |
+| M7-R01-08 | CLOSED_M7 | HTML/JSON escaping, privacy-safe location classes, local static assets, and closed schemas | `test_escaping_closed_members_and_private_paths_fail_closed`; `test_assets_are_local_static_and_accessibility_safe` |
+| M7-R01-09 | CLOSED_M7 | Current DOI human-review presentation reads governed retained facts only | `test_queues_are_current_bounded_and_domain_aware`; `test_human_action_forms_are_explicit_confirmed_and_closed` |
+| M7-R01-10 | CLOSED_M7 | Reserved synthetic route binding, audit subjects, and no path/username disclosure | `test_evidence_and_audit_evaluation_routes_are_closed_gets`; `test_database_view_hides_absolute_path_and_keeps_schema_four` |
+| M7-R01-11 | CLOSED_M7 | Existing canonical hash domains unchanged; extension package remains deterministic | `test_current_package_inventory_and_deterministic_bytes_are_exact`; `test_patch_version_and_permission_surface_are_exact` |
+| M7-R01-12 | CLOSED_M7 | Domain inventories and schema 4 unchanged; Control Center contracts separately versioned | `test_registry_is_versioned_and_exhaustive`; `test_milestone_seven_schema_and_protected_bundle_are_unchanged` |
+| M7-R01-13 | CLOSED_M7 | No UI business-rule authority; unsupported high-authority controls absent | `test_unsupported_high_authority_controls_are_absent`; `test_action_matrix_matches_rendered_mutation_surface` |
+| M7-R01-14 | CLOSED_M7 | Review/timeline projections expose closed fields, not unrestricted notes or payload rows | `test_queues_are_current_bounded_and_domain_aware`; `test_empty_schema_four_application_renders_every_fixed_dashboard` |
+| M7-R01-15 | CLOSED_M7 | Denominator registry and package SHA inventories are exact and versioned | `test_denominator_documentation_reconciles_to_registry`; `test_current_package_inventory_and_deterministic_bytes_are_exact` |
+| M7-R01-16 | CLOSED_M7 | Existing WWC reducers unchanged; generic human-fact UI control remains absent | `test_unsupported_high_authority_controls_are_absent`; `test_m6_extraction_runtime_and_message_partition_are_unchanged` |
+| M7-R02-01 | CLOSED_M7 | Existing source transport unchanged; dashboard uses local projections and closed loopback GETs | `test_closed_dashboard_url_builder_accepts_only_loopback_routes_and_ids`; `test_root_redirects_to_overview_and_keeps_strict_security_headers` |
+| M7-R02-02 | CLOSED_M7 | SQLite atomicity, owned lifecycle, CSRF/origin, confirmation, and replay boundaries preserved | `test_new_post_routes_require_origin_and_csrf_before_dispatch`; `test_doi_scenario_selection_requires_exact_sorted_option_set` |
+| M7-R02-03 | CLOSED_M7 | Existing rules-control gates unchanged; extension and dashboard add no rule authority | `test_m6_extraction_runtime_and_message_partition_are_unchanged`; `test_action_matrix_matches_rendered_mutation_surface` |
+
+All 19 findings are re-audited for the Milestone 7 implementation surface. A future milestone must
+reopen every row whose dependency changes. This matrix does not authorize a production connector,
+non-loopback capability, external action, protected-specification change, release package, store
+publication, release tag, independent final audit, or any other Milestone 8 implementation.

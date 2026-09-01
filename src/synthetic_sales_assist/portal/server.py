@@ -10,27 +10,50 @@ import threading
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from functools import partial
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from socketserver import TCPServer
 from typing import Final, cast
+from urllib.parse import unquote_to_bytes
 
+from synthetic_sales_assist.application.control_center import (
+    ControlCenterApplication,
+    ControlCenterError,
+    MetricWindow,
+    PageRequest,
+)
+from synthetic_sales_assist.persistence.database import SQLiteDatabase
 from synthetic_sales_assist.persistence.paths import DataPaths, resolve_data_paths
 from synthetic_sales_assist.portal.assets import STATIC_ASSETS
 from synthetic_sales_assist.portal.contracts import (
+    API_REQUEST_SCHEMA_VERSION,
+    API_SCHEMA_VERSION,
+    DOM_SCHEMA_VERSION,
     MAX_REQUEST_BODY_BYTES,
     MAX_RESPONSE_BODY_BYTES,
     PortalContractError,
     ScenarioApplicationProtocol,
+    dashboard_response_bytes,
     error_bytes,
+    parse_backup_create_request,
+    parse_database_verify_request,
+    parse_doi_scenario_selection_request,
     parse_evaluate_request,
+    parse_extension_handshake_request,
     parse_instantiate_request,
+    parse_manager_outcome_request,
     parse_shutdown_request,
     response_bytes,
+    route_validated_dashboard_response_bytes,
     validate_alias,
+    validate_backup_action_response,
+    validate_dashboard_evidence_response,
     validate_evaluation_response,
+    validate_extension_handshake_response,
     validate_health_response,
+    validate_human_action_response,
     validate_history_response,
     validate_interaction_response,
     validate_metrics_response,
@@ -42,6 +65,7 @@ from synthetic_sales_assist.portal.contracts import (
     validate_synthetic_id,
     validate_system_status_response,
 )
+from synthetic_sales_assist.portal.dashboard_assets import DASHBOARD_STATIC_ASSETS
 from synthetic_sales_assist.portal.lifecycle import (
     LOOPBACK_HOSTS,
     RuntimeReceipt,
@@ -56,6 +80,10 @@ from synthetic_sales_assist.portal.rendering import (
     render_run,
     render_safe_error,
     render_scenarios,
+)
+from synthetic_sales_assist.portal.dashboard_rendering import (
+    render_dashboard_page,
+    validate_dashboard_page_data,
 )
 
 
@@ -79,6 +107,90 @@ _INTERACTION_ROUTE = re.compile(
     r"\A(?:/api/v1)?/interactions/(SYN-INTERACTION-[A-Z0-9-]+)\Z"
 )
 _RUN_ROUTE = re.compile(r"\A(?:/api/v1)?/runs/(SYN-RUN-[A-Z0-9-]+)\Z")
+_SALES_CREDIT_DASHBOARD_ROUTE = re.compile(
+    r"\A(?:/api/v1/dashboard)?/sales-credit/(SYN-ORDER-[A-Z0-9-]+)\Z"
+)
+_DOI_DASHBOARD_ROUTE = re.compile(
+    r"\A(?:/api/v1/dashboard)?/doi/(SYN-EVIDENCE-[A-Z0-9-]+)\Z"
+)
+_AUDIT_DASHBOARD_ROUTE = re.compile(
+    r"\A(?:/api/v1/dashboard)?/audit/"
+    r"(sales-credit-case|doi-case|doi-run|evaluation|"
+    r"SALES_CREDIT_CASE|DOI_CASE|DOI_RUN|EVALUATION)/"
+    r"(SYN-(?:ORDER|EVIDENCE|EVALUATION|RUN)-[A-Z0-9-]+)\Z"
+)
+_SALES_CREDIT_MANAGER_OUTCOME_ROUTE = re.compile(
+    r"\A/api/v1/dashboard/sales-credit/"
+    r"(SYN-ORDER-[A-Z0-9-]+)/manager-outcome\Z"
+)
+_DOI_SCENARIO_SELECTION_ROUTE = re.compile(
+    r"\A/api/v1/dashboard/doi/"
+    r"(SYN-EVIDENCE-[A-Z0-9-]+)/scenario-selection\Z"
+)
+_DASHBOARD_HTML_ROUTES: Final = frozenset(
+    {
+        "/overview",
+        "/sales-credit",
+        "/doi",
+        "/review",
+        "/system",
+        "/system/database",
+        "/system/backups",
+        "/system/telemetry",
+        "/system/extension",
+    }
+)
+_DASHBOARD_API_GET_ROUTES: Final = frozenset(
+    {
+        "/api/v1/dashboard/overview",
+        "/api/v1/dashboard/sales-credit",
+        "/api/v1/dashboard/doi",
+        "/api/v1/dashboard/review",
+        "/api/v1/dashboard/system",
+        "/api/v1/dashboard/system/database",
+        "/api/v1/dashboard/system/backups",
+        "/api/v1/dashboard/system/telemetry",
+        "/api/v1/dashboard/system/extension",
+        "/api/v1/dashboard/evidence",
+    }
+)
+_DASHBOARD_POST_ROUTES: Final = frozenset(
+    {
+        "/api/v1/dashboard/system/database/verify",
+        "/api/v1/dashboard/system/backups",
+        "/api/v1/system/extension/handshake",
+    }
+)
+EXPECTED_EXTENSION_VERSION: Final = "0.1.1"
+EXPECTED_EXTENSION_PACKAGE_SHA256: Final = (
+    "595044d03c0aa843f7e751167b27b8d16de4cb8cf8fbc7064409f30e88ba885c"
+)
+EXTENSION_STALE_AFTER_SECONDS: Final = 300
+_QUERY_KEY = re.compile(r"\A[a-z][a-z_]{0,31}\Z", re.ASCII)
+_SYNTHETIC_SEARCH = re.compile(r"\ASYN-[A-Z0-9-]{1,92}\Z", re.ASCII)
+_PERCENT_ESCAPE = re.compile(r"%[0-9A-Fa-f]{2}")
+_SALES_CREDIT_STATES: Final = frozenset(
+    {
+        "AWAITING_SOURCE_REVIEW",
+        "CHECKED_NO_ORDER_WINDOW_ACTIVE",
+        "REVIEW_WINDOW_CLOSED_NO_ORDER",
+        "CREDIT_CONFIRMED_TARGET_REP",
+        "EVIDENCE_NEEDED",
+        "VERIFIED_PREORDER_EVIDENCE",
+        "OUTBOUND_EVIDENCE_HUMAN_REVIEW",
+        "INBOUND_EVIDENCE_HUMAN_REVIEW",
+        "TIMING_UNCERTAIN_HUMAN_REVIEW",
+        "OTHER_REP_HUMAN_REVIEW",
+        "ORDER_CHANGED_HUMAN_REVIEW",
+        "CANCELED_REPLACEMENT_WINDOW_ACTIVE",
+        "POSSIBLE_REPLACEMENT_HUMAN_REVIEW",
+        "CANCELED_NO_REPLACEMENT",
+        "MANUAL_REVIEW_REQUIRED",
+    }
+)
+_DOI_STATES: Final = frozenset(
+    {"DOI_OPPORTUNITY", "DOI_MANUAL_REVIEW", "DOI_EXCLUDED", "DOI_MONITOR"}
+)
 _GET_ROUTES: Final = frozenset(
     {
         "/",
@@ -89,26 +201,204 @@ _GET_ROUTES: Final = frozenset(
         "/health",
         "/orders",
         "/scenarios",
+        *_DASHBOARD_HTML_ROUTES,
+        *_DASHBOARD_API_GET_ROUTES,
+        *DASHBOARD_STATIC_ASSETS,
         *STATIC_ASSETS,
     }
 )
 
 
 def _allowed_methods(path: str) -> tuple[str, ...] | None:
+    if path == "/api/v1/dashboard/system/backups":
+        return ("GET", "POST")
     if path in _GET_ROUTES:
         return ("GET",)
-    if path == "/api/v1/system/shutdown":
+    if path == "/api/v1/system/shutdown" or path in _DASHBOARD_POST_ROUTES:
         return ("POST",)
-    if _ALIAS_ROUTE.fullmatch(path) or _ORDER_EVALUATE_ROUTE.fullmatch(path):
+    if (
+        _ALIAS_ROUTE.fullmatch(path)
+        or _ORDER_EVALUATE_ROUTE.fullmatch(path)
+        or _SALES_CREDIT_MANAGER_OUTCOME_ROUTE.fullmatch(path)
+        or _DOI_SCENARIO_SELECTION_ROUTE.fullmatch(path)
+    ):
         return ("POST",)
     if (
         _ORDER_ROUTE.fullmatch(path)
         or _ORDER_HISTORY_ROUTE.fullmatch(path)
         or _INTERACTION_ROUTE.fullmatch(path)
         or _RUN_ROUTE.fullmatch(path)
+        or _SALES_CREDIT_DASHBOARD_ROUTE.fullmatch(path)
+        or _DOI_DASHBOARD_ROUTE.fullmatch(path)
+        or _AUDIT_DASHBOARD_ROUTE.fullmatch(path)
     ):
         return ("GET",)
     return None
+
+
+def _decode_query_component(raw: str) -> str:
+    if not raw or "+" in raw or "#" in raw or "\\" in raw or "\x00" in raw:
+        raise PortalContractError("DASHBOARD_QUERY_INVALID")
+    index = 0
+    while index < len(raw):
+        if raw[index] == "%":
+            if _PERCENT_ESCAPE.match(raw, index) is None:
+                raise PortalContractError("DASHBOARD_QUERY_INVALID")
+            index += 3
+        else:
+            index += 1
+    try:
+        value = unquote_to_bytes(raw).decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise PortalContractError("DASHBOARD_QUERY_INVALID") from exc
+    if not value or any(ord(character) < 32 or ord(character) > 126 for character in value):
+        raise PortalContractError("DASHBOARD_QUERY_INVALID")
+    return value
+
+
+def _parse_query_members(
+    raw: str,
+    allowed: frozenset[str],
+    *,
+    empty_members: frozenset[str] = frozenset(),
+) -> dict[str, str]:
+    if not raw:
+        raise PortalContractError("DASHBOARD_QUERY_INVALID")
+    result: dict[str, str] = {}
+    for pair in raw.split("&"):
+        if pair.count("=") != 1:
+            raise PortalContractError("DASHBOARD_QUERY_INVALID")
+        raw_key, raw_value = pair.split("=", 1)
+        if "%" in raw_key or _QUERY_KEY.fullmatch(raw_key) is None:
+            raise PortalContractError("DASHBOARD_QUERY_INVALID")
+        if raw_key not in allowed or raw_key in result:
+            raise PortalContractError("DASHBOARD_QUERY_INVALID")
+        if not raw_value and raw_key in empty_members:
+            result[raw_key] = ""
+        else:
+            result[raw_key] = _decode_query_component(raw_value)
+    return result
+
+
+def _positive_integer(value: str, *, maximum: int, code: str) -> int:
+    if not value.isascii() or not value.isdigit() or value.startswith("0"):
+        raise PortalContractError(code)
+    parsed = int(value)
+    if not 1 <= parsed <= maximum:
+        raise PortalContractError(code)
+    return parsed
+
+
+def _queue_request(query: str, *, domain: str, html: bool) -> tuple[PageRequest, bool]:
+    allowed = {"q", "state", "sort", "direction", "page", "page_size"}
+    if html:
+        allowed.add("presentation")
+    values = (
+        {}
+        if not query
+        else _parse_query_members(
+            query,
+            frozenset(allowed),
+            empty_members=frozenset({"q", "state"}),
+        )
+    )
+    search = values.get("q") or None
+    if search is not None and _SYNTHETIC_SEARCH.fullmatch(search) is None:
+        raise PortalContractError("DASHBOARD_SEARCH_INVALID")
+    states = _SALES_CREDIT_STATES if domain == "SALES_CREDIT" else _DOI_STATES
+    state = values.get("state") or None
+    if state is not None and state not in states:
+        raise PortalContractError("DASHBOARD_FILTER_INVALID")
+    sort_fields = (
+        frozenset({"order_id", "workflow_state", "updated_at"})
+        if domain == "SALES_CREDIT"
+        else frozenset({"case_id", "order_id", "updated_at", "doi_state"})
+    )
+    sort_by = values.get("sort", "updated_at")
+    if sort_by not in sort_fields:
+        raise PortalContractError("DASHBOARD_SORT_INVALID")
+    direction = values.get("direction", "desc")
+    if direction not in {"asc", "desc"}:
+        raise PortalContractError("DASHBOARD_SORT_INVALID")
+    page = _positive_integer(
+        values.get("page", "1"),
+        maximum=10_000,
+        code="DASHBOARD_PAGE_INVALID",
+    )
+    page_size = _positive_integer(
+        values.get("page_size", "25"),
+        maximum=50,
+        code="DASHBOARD_PAGE_INVALID",
+    )
+    if page_size not in {10, 25, 50}:
+        raise PortalContractError("DASHBOARD_PAGE_INVALID")
+    presentation = values.get("presentation", "0")
+    if presentation not in {"0", "1"}:
+        raise PortalContractError("DASHBOARD_PRESENTATION_INVALID")
+    return (
+        PageRequest(
+            search=search,
+            state=state,
+            sort_by=sort_by,
+            descending=direction == "desc",
+            offset=(page - 1) * page_size,
+            limit=page_size,
+        ),
+        presentation == "1",
+    )
+
+
+def _presentation_query(query: str) -> bool:
+    if not query:
+        return False
+    values = _parse_query_members(query, frozenset({"presentation"}))
+    if values["presentation"] != "1":
+        raise PortalContractError("DASHBOARD_PRESENTATION_INVALID")
+    return True
+
+
+def _metric_window(query: str, *, html: bool) -> tuple[MetricWindow, bool]:
+    allowed = {"start", "end"}
+    if html:
+        allowed.add("presentation")
+    values = {} if not query else _parse_query_members(query, frozenset(allowed))
+    presentation = values.get("presentation", "0")
+    if presentation not in {"0", "1"}:
+        raise PortalContractError("DASHBOARD_PRESENTATION_INVALID")
+    return MetricWindow(values.get("start"), values.get("end")), presentation == "1"
+
+
+def _validate_dashboard_route_data(
+    route_name: str,
+    data: object,
+    *,
+    expected_subject_kind: str | None = None,
+    expected_subject_id: str | None = None,
+) -> object:
+    """Validate one closed view and bind detail/audit identity to its URL."""
+
+    closed = validate_dashboard_page_data(route_name, data)
+    if expected_subject_kind is None and expected_subject_id is None:
+        return closed
+    if expected_subject_kind is None or expected_subject_id is None or type(closed) is not dict:
+        raise PortalContractError("DASHBOARD_ROUTE_BINDING_INVALID", status=500)
+    root = cast(dict[str, object], closed)
+    if route_name == "sales_credit_detail":
+        summary = root.get("summary")
+        actual_kind = "SALES_CREDIT_CASE"
+        actual_id = summary.get("order_id") if type(summary) is dict else None
+    elif route_name == "doi_detail":
+        summary = root.get("summary")
+        actual_kind = "DOI_CASE"
+        actual_id = summary.get("case_id") if type(summary) is dict else None
+    elif route_name == "audit":
+        actual_kind = root.get("subject_kind")
+        actual_id = root.get("subject_id")
+    else:
+        raise PortalContractError("DASHBOARD_ROUTE_BINDING_INVALID", status=500)
+    if actual_kind != expected_subject_kind or actual_id != expected_subject_id:
+        raise PortalContractError("DASHBOARD_ROUTE_SUBJECT_MISMATCH", status=500)
+    return closed
 
 
 class PortalServerError(RuntimeError):
@@ -188,9 +478,18 @@ class PortalHTTPServer(HTTPServer):
         ):
             raise PortalServerError("PORTAL_CONTROL_TOKEN_INVALID")
         self.application = application
+        database = getattr(application, "database", None)
+        self.control_center = (
+            ControlCenterApplication(database, scenario_application=application)
+            if type(database) is SQLiteDatabase
+            else None
+        )
         self.csrf_token = csrf_token
         self.shutdown_token = shutdown_token
         self.shutdown_requested = threading.Event()
+        self.extension_observation_lock = threading.Lock()
+        self.observed_extension_version: str | None = None
+        self.extension_observed_at: datetime | None = None
         self.public_host = config.host
         bind_host = DEFAULT_HOST if config.host == "localhost" else config.host
         if config.host == "::1":
@@ -200,6 +499,27 @@ class PortalHTTPServer(HTTPServer):
         authority = f"[{config.host}]" if config.host == "::1" else config.host
         self.origin = "http" + f"://{authority}:{actual_port}"
         self.expected_host = f"{authority}:{actual_port}"
+
+    def observe_extension(self, version: str) -> dict[str, object]:
+        now = datetime.now(timezone.utc)
+        with self.extension_observation_lock:
+            self.observed_extension_version = version
+            self.extension_observed_at = now
+        return {
+            "expected_extension_version": EXPECTED_EXTENSION_VERSION,
+            "last_seen_at": now.isoformat().replace("+00:00", "Z"),
+            "observed_extension_version": version,
+            "stale_after_seconds": EXTENSION_STALE_AFTER_SECONDS,
+            "status": (
+                "LAST_SEEN_HEALTHY"
+                if version == EXPECTED_EXTENSION_VERSION
+                else "VERSION_MISMATCH"
+            ),
+        }
+
+    def extension_observation(self) -> tuple[str | None, datetime | None]:
+        with self.extension_observation_lock:
+            return self.observed_extension_version, self.extension_observed_at
 
     def server_bind(self) -> None:
         """Bind the validated numeric loopback address without resolver calls."""
@@ -227,6 +547,7 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         super().setup()
         self.connection.settimeout(5.0)
         self._request_body_consumed = False
+        self._query = ""
 
     def log_message(self, _format: str, *_args: object) -> None:
         return
@@ -293,6 +614,15 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             self._safe_error(exc.status, exc.code)
         except PortalServerError as exc:
             self._safe_error(503, exc.code)
+        except ControlCenterError as exc:
+            status = (
+                404
+                if exc.code.endswith("_NOT_FOUND")
+                else 503
+                if exc.code in {"SAFETY_COUNTERS_NONZERO", "DATABASE_UNHEALTHY"}
+                else 400
+            )
+            self._safe_error(status, exc.code)
         except Exception as exc:
             category = str(getattr(exc, "category", ""))
             code = getattr(exc, "code", "INTERNAL_ERROR")
@@ -313,16 +643,45 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             or original_target != target
             or not target.startswith("/")
             or target.startswith("//")
-            or "?" in target
             or "#" in target
-            or "%" in target
             or "\\" in target
             or "\x00" in target
-            or any(segment == ".." for segment in target.split("/"))
             or len(target) > 512
         ):
             raise PortalContractError("REQUEST_TARGET_INVALID")
-        return target
+        if target.count("?") > 1:
+            raise PortalContractError("REQUEST_TARGET_INVALID")
+        path, separator, query = target.partition("?")
+        if (
+            "%" in path
+            or any(segment == ".." for segment in path.split("/"))
+            or (separator and not query)
+            or (separator and not self._dashboard_query_route(path))
+        ):
+            raise PortalContractError("REQUEST_TARGET_INVALID")
+        self._query = query if separator else ""
+        return path
+
+    @staticmethod
+    def _dashboard_query_route(path: str) -> bool:
+        return bool(
+            path in _DASHBOARD_HTML_ROUTES
+            or path
+            in {
+                "/api/v1/dashboard/overview",
+                "/api/v1/dashboard/sales-credit",
+                "/api/v1/dashboard/doi",
+                "/api/v1/dashboard/system/telemetry",
+            }
+            or (
+                not path.startswith("/api/")
+                and (
+                    _SALES_CREDIT_DASHBOARD_ROUTE.fullmatch(path)
+                    or _DOI_DASHBOARD_ROUTE.fullmatch(path)
+                    or _AUDIT_DASHBOARD_ROUTE.fullmatch(path)
+                )
+            )
+        )
 
     def _discard_bounded_body(self) -> None:
         """Best-effort bounded drain before closing an early-rejected POST."""
@@ -392,11 +751,273 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             raise PortalContractError("REQUEST_BODY_TRUNCATED")
         return body
 
+    def _control_center(self) -> ControlCenterApplication:
+        control_center = self.portal_server.control_center
+        if control_center is None:
+            raise PortalServerError("CONTROL_CENTER_UNAVAILABLE")
+        return control_center
+
+    def _extension_view(self) -> dict[str, object]:
+        observed_version, observed_at = self.portal_server.extension_observation()
+        return self._control_center().extension_status_view(
+            expected_version=EXPECTED_EXTENSION_VERSION,
+            expected_package_sha256=EXPECTED_EXTENSION_PACKAGE_SHA256,
+            package_available=True,
+            observed_version=observed_version,
+            observed_at=observed_at,
+            now=datetime.now(timezone.utc),
+        )
+
+    def _system_view(self) -> dict[str, object]:
+        observed_version, observed_at = self.portal_server.extension_observation()
+        view = self._control_center().system_view(
+            expected_extension_version=EXPECTED_EXTENSION_VERSION,
+            expected_extension_package_sha256=EXPECTED_EXTENSION_PACKAGE_SHA256,
+            extension_package_available=True,
+            observed_extension_version=observed_version,
+            extension_observed_at=observed_at,
+            now=datetime.now(timezone.utc),
+            repository_root=Path(__file__).resolve().parents[3],
+        )
+        status = _status_mapping(self.portal_server.application, deep=False)
+        return {
+            **view,
+            "api_request_schema_version": API_REQUEST_SCHEMA_VERSION,
+            "api_schema_version": API_SCHEMA_VERSION,
+            "application_version": status["app_version"],
+            "dom_schema_version": DOM_SCHEMA_VERSION,
+            "network_policy": "LOOPBACK_ONLY_EXTERNAL_REQUESTS_ZERO",
+            "owned_pid": os.getpid(),
+            "runtime_directory_class": "OWNED_LOCAL_RUNTIME_DIRECTORY",
+            "service_origin": self.portal_server.origin + "/",
+            "service_status": "PASS" if status_is_healthy(status, deep=False) else "FAIL",
+        }
+
+    def _overview_view(self, window: MetricWindow) -> dict[str, object]:
+        view = self._control_center().overview_view(window)
+        system = self._system_view()
+        database = cast(dict[str, object], system["database"])
+        extension = cast(dict[str, object], system["extension"])
+        return {
+            **view,
+            "system": {
+                "database_status": database["database_status"],
+                "extension_status": extension["state"],
+                "latest_backup": database["latest_backup"],
+                "service_status": system["service_status"],
+            },
+        }
+
+    def _send_dashboard(
+        self,
+        route_name: str,
+        data: object,
+        *,
+        api: bool,
+        presentation: bool = False,
+        expected_subject_kind: str | None = None,
+        expected_subject_id: str | None = None,
+    ) -> None:
+        route_validator = partial(
+            _validate_dashboard_route_data,
+            route_name,
+            expected_subject_kind=expected_subject_kind,
+            expected_subject_id=expected_subject_id,
+        )
+        if api:
+            validator: Callable[[object], object]
+            if route_name == "evidence":
+                validator = partial(
+                    validate_dashboard_evidence_response,
+                    expected_routes=_DASHBOARD_HTML_ROUTES,
+                )
+            else:
+                validator = route_validator
+            self._send_json(
+                200,
+                data,
+                validator=validator,
+                dashboard=True,
+                route_validated_dashboard=True,
+            )
+            return
+        closed = route_validator(data)
+        self._send_html(
+            render_dashboard_page(
+                route_name,
+                closed,
+                self.portal_server.csrf_token,
+                presentation=presentation,
+            )
+        )
+
+    def _dashboard_get(self, path: str) -> bool:
+        control_center = self._control_center()
+        api = path.startswith("/api/v1/dashboard/")
+        if path in {"/overview", "/api/v1/dashboard/overview"}:
+            window, presentation = _metric_window(self._query, html=not api)
+            self._send_dashboard(
+                "overview",
+                self._overview_view(window),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        if path in {"/sales-credit", "/api/v1/dashboard/sales-credit"}:
+            request, presentation = _queue_request(
+                self._query,
+                domain="SALES_CREDIT",
+                html=not api,
+            )
+            self._send_dashboard(
+                "sales_credit_queue",
+                control_center.sales_credit_queue_view(request),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        if path in {"/doi", "/api/v1/dashboard/doi"}:
+            request, presentation = _queue_request(
+                self._query,
+                domain="DOI",
+                html=not api,
+            )
+            self._send_dashboard(
+                "doi_queue",
+                control_center.doi_queue_view(request),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        if path in {"/review", "/api/v1/dashboard/review"}:
+            presentation = _presentation_query(self._query) if not api else False
+            self._send_dashboard(
+                "review",
+                control_center.review_queue_view(),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        match = _SALES_CREDIT_DASHBOARD_ROUTE.fullmatch(path)
+        if match:
+            presentation = _presentation_query(self._query) if not api else False
+            order_id = validate_synthetic_id(match.group(1), "ORDER")
+            self._send_dashboard(
+                "sales_credit_detail",
+                control_center.sales_credit_detail(order_id),
+                api=api,
+                presentation=presentation,
+                expected_subject_kind="SALES_CREDIT_CASE",
+                expected_subject_id=order_id,
+            )
+            return True
+        match = _DOI_DASHBOARD_ROUTE.fullmatch(path)
+        if match:
+            presentation = _presentation_query(self._query) if not api else False
+            case_id = validate_synthetic_id(match.group(1), "EVIDENCE")
+            self._send_dashboard(
+                "doi_detail",
+                control_center.doi_detail(case_id),
+                api=api,
+                presentation=presentation,
+                expected_subject_kind="DOI_CASE",
+                expected_subject_id=case_id,
+            )
+            return True
+        match = _AUDIT_DASHBOARD_ROUTE.fullmatch(path)
+        if match:
+            presentation = _presentation_query(self._query) if not api else False
+            kind = {
+                "sales-credit-case": "SALES_CREDIT_CASE",
+                "doi-case": "DOI_CASE",
+                "doi-run": "DOI_RUN",
+                "evaluation": "EVALUATION",
+                "SALES_CREDIT_CASE": "SALES_CREDIT_CASE",
+                "DOI_CASE": "DOI_CASE",
+                "DOI_RUN": "DOI_RUN",
+                "EVALUATION": "EVALUATION",
+            }[match.group(1)]
+            self._send_dashboard(
+                "audit",
+                control_center.audit_view(kind, match.group(2)),
+                api=api,
+                presentation=presentation,
+                expected_subject_kind=kind,
+                expected_subject_id=match.group(2),
+            )
+            return True
+        if path in {"/system", "/api/v1/dashboard/system"}:
+            presentation = _presentation_query(self._query) if not api else False
+            self._send_dashboard(
+                "system", self._system_view(), api=api, presentation=presentation
+            )
+            return True
+        if path in {"/system/database", "/api/v1/dashboard/system/database"}:
+            presentation = _presentation_query(self._query) if not api else False
+            self._send_dashboard(
+                "database",
+                control_center.database_view(
+                    repository_root=Path(__file__).resolve().parents[3]
+                ),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        if path in {"/system/backups", "/api/v1/dashboard/system/backups"}:
+            presentation = _presentation_query(self._query) if not api else False
+            self._send_dashboard(
+                "backups",
+                control_center.backups_view(),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        if path in {"/system/telemetry", "/api/v1/dashboard/system/telemetry"}:
+            window, presentation = _metric_window(self._query, html=not api)
+            self._send_dashboard(
+                "telemetry",
+                control_center.telemetry_view(window),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        if path in {"/system/extension", "/api/v1/dashboard/system/extension"}:
+            presentation = _presentation_query(self._query) if not api else False
+            self._send_dashboard(
+                "extension",
+                self._extension_view(),
+                api=api,
+                presentation=presentation,
+            )
+            return True
+        if path == "/api/v1/dashboard/evidence":
+            self._send_dashboard(
+                "evidence",
+                {
+                    "dashboard_routes": sorted(_DASHBOARD_HTML_ROUTES),
+                    "manager_demo_steps": 12,
+                    "schema_version": "synthetic-sales-assist-m8-evidence-surfaces/v1",
+                    "selector_prefix": "data-ssa-dashboard-",
+                },
+                api=True,
+            )
+            return True
+        return False
+
     def _get(self, path: str) -> None:
         application = self.portal_server.application
         if path == "/":
-            self._send(303, b"", "text/plain; charset=utf-8", {"Location": "/scenarios"})
+            self._send(303, b"", "text/plain; charset=utf-8", {"Location": "/overview"})
             return
+        if (
+            path in _DASHBOARD_HTML_ROUTES
+            or path in _DASHBOARD_API_GET_ROUTES
+            or _SALES_CREDIT_DASHBOARD_ROUTE.fullmatch(path)
+            or _DOI_DASHBOARD_ROUTE.fullmatch(path)
+            or _AUDIT_DASHBOARD_ROUTE.fullmatch(path)
+        ):
+            if self._dashboard_get(path):
+                return
         if path == "/health":
             status = _status_mapping(application, deep=False)
             healthy = status_is_healthy(status, deep=False)
@@ -529,7 +1150,7 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             else:
                 self._send_html(render_run(run, self.portal_server.csrf_token))
             return
-        asset = STATIC_ASSETS.get(path)
+        asset = STATIC_ASSETS.get(path) or DASHBOARD_STATIC_ASSETS.get(path)
         if asset is not None:
             content_type, body = asset
             self._send(200, body, content_type)
@@ -538,6 +1159,92 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
 
     def _post(self, path: str) -> None:
         application = self.portal_server.application
+        if path == "/api/v1/system/extension/handshake":
+            version = parse_extension_handshake_request(self._read_json_body())
+            self._send_json(
+                200,
+                self.portal_server.observe_extension(version),
+                validator=validate_extension_handshake_response,
+            )
+            return
+        match = _SALES_CREDIT_MANAGER_OUTCOME_ROUTE.fullmatch(path)
+        if match:
+            order_id = validate_synthetic_id(match.group(1), "ORDER")
+            request = parse_manager_outcome_request(self._read_json_body())
+            result = self._control_center().record_sales_credit_manager_outcome(
+                order_id,
+                actor_id=cast(str, request["actor_id"]),
+                outcome=cast(str, request["outcome"]),
+                amount_minor_units=cast(int | None, request["amount_minor_units"]),
+                currency_code=cast(str | None, request["currency_code"]),
+                decided_at=cast(str, request["decided_at"]),
+                request_key=cast(str, request["request_key"]),
+                confirmed=True,
+            )
+            self._send_json(
+                200,
+                result,
+                validator=partial(
+                    validate_human_action_response,
+                    expected_subject_id=order_id,
+                    expected_subject_namespace="ORDER",
+                    evaluation_required=False,
+                ),
+                dashboard=True,
+            )
+            return
+        match = _DOI_SCENARIO_SELECTION_ROUTE.fullmatch(path)
+        if match:
+            case_id = validate_synthetic_id(match.group(1), "EVIDENCE")
+            request = parse_doi_scenario_selection_request(self._read_json_body())
+            result = self._control_center().record_doi_overlap_selection(
+                case_id,
+                evaluation_id=cast(str, request["evaluation_id"]),
+                actor_id=cast(str, request["actor_id"]),
+                selected_opportunity_id=cast(
+                    str, request["selected_opportunity_id"]
+                ),
+                option_opportunity_ids=cast(
+                    tuple[str, ...], request["option_opportunity_ids"]
+                ),
+                occurred_at=cast(str, request["occurred_at"]),
+                request_key=cast(str, request["request_key"]),
+                confirmed=True,
+            )
+            self._send_json(
+                200,
+                result,
+                validator=partial(
+                    validate_human_action_response,
+                    expected_subject_id=case_id,
+                    expected_subject_namespace="EVIDENCE",
+                    evaluation_required=True,
+                ),
+                dashboard=True,
+            )
+            return
+        if path == "/api/v1/dashboard/system/database/verify":
+            parse_database_verify_request(self._read_json_body())
+            self._send_json(
+                200,
+                self._control_center().deep_verify(),
+                validator=partial(validate_dashboard_page_data, "database"),
+                dashboard=True,
+                route_validated_dashboard=True,
+            )
+            return
+        if path == "/api/v1/dashboard/system/backups":
+            request = parse_backup_create_request(self._read_json_body())
+            self._send_json(
+                201,
+                self._control_center().create_verified_backup(
+                    request_key=cast(str, request["request_key"]),
+                    confirmed=True,
+                ),
+                validator=validate_backup_action_response,
+                dashboard=True,
+            )
+            return
         match = _ALIAS_ROUTE.fullmatch(path)
         if match:
             alias = validate_alias(match.group(1))
@@ -617,12 +1324,12 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
 
     def _method_not_allowed(self) -> None:
         try:
-            self._validated_target()
+            path = self._validated_target()
             self._validate_common_headers()
         except PortalContractError as exc:
             self._safe_error(exc.status, exc.code)
             return
-        allowed = _allowed_methods(self.path)
+        allowed = _allowed_methods(path)
         if allowed is None:
             self._safe_error(404, "ROUTE_NOT_FOUND")
             return
@@ -639,9 +1346,16 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         *,
         validator: Callable[[object], object],
         before_send: Callable[[], None] | None = None,
+        dashboard: bool = False,
+        route_validated_dashboard: bool = False,
     ) -> None:
         closed = validator(data)
-        body = response_bytes(closed)
+        if route_validated_dashboard:
+            if not dashboard:
+                raise PortalContractError("RESPONSE_VALIDATION_MODE_INVALID", status=500)
+            body = route_validated_dashboard_response_bytes(closed)
+        else:
+            body = dashboard_response_bytes(closed) if dashboard else response_bytes(closed)
         if before_send is not None:
             before_send()
         self._send(status, body, "application/json; charset=utf-8")
@@ -851,6 +1565,9 @@ __all__ = [
     "CSRF_HEADER",
     "DEFAULT_HOST",
     "DEFAULT_PORT",
+    "EXPECTED_EXTENSION_PACKAGE_SHA256",
+    "EXPECTED_EXTENSION_VERSION",
+    "EXTENSION_STALE_AFTER_SECONDS",
     "PortalHTTPServer",
     "PortalRequestHandler",
     "PortalRuntime",

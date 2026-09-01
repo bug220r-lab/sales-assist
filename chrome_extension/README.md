@@ -2,8 +2,10 @@
 # Synthetic Sales Assist localhost side panel
 
 This unpacked Chrome Manifest V3 extension is a DEVELOPMENT / LOCALHOST ONLY companion to
-Synthetic Sales Assist Milestone 6. It is not a portable release, is not published to a store,
-and requires no administrator rights.
+Synthetic Sales Assist. Version `0.1.1` preserves the accepted Milestone 6 extraction and
+evaluation behavior and adds only Milestone 7 localhost Control Center links and truthful
+last-seen registration. It is not a portable release, is not published to a store, and requires
+no administrator rights.
 
 ## Security boundary
 
@@ -22,10 +24,12 @@ is `8765`.
 
 There is no extension storage, remote asset, remote code, cookie access, generic source-page
 interaction, external action, or background network client. The service worker only validates
-and relays closed messages between the panel and the active supported content script. Health and
-evaluation requests originate in that content script as absolute URLs constructed only from the
-independently validated current loopback origin and exact closed paths. This makes document base
-elements irrelevant while the M5 Host, Origin, and CSRF controls remain authoritative.
+and relays closed messages between the panel and the active supported content script. Health,
+extension handshake, and evaluation requests originate in that content script as absolute URLs
+constructed only from the independently validated current loopback origin and exact closed paths.
+This makes document base elements irrelevant while the M5 Host, Origin, and CSRF controls remain
+authoritative. The handshake uses the existing page-scoped local CSRF value and sends only the
+exact schema `synthetic-sales-assist-extension-handshake/v1` and extension version `0.1.1`.
 
 The manifest intentionally declares no custom icon and the package contains no icon asset; Chrome
 uses its generic extension presentation. This avoids an unnecessary asset surface. If a custom
@@ -40,7 +44,9 @@ package inventory, and covered by the remote-asset deny tests.
 4. Choose **Load unpacked** and select this `chrome_extension` directory.
 5. Open a synthetic order detail page, then open the extension's side panel.
 
-The panel performs one bounded status refresh when opened. Evaluation never runs on page load. The
+The panel performs one bounded status refresh when opened. After a supported page and healthy
+backend pass validation, that open or an explicit **Refresh page status** click sends one bounded
+maintenance handshake. There is no timer or hidden polling. Evaluation never runs on page load. The
 **Evaluate synthetic page** button is enabled only for a COMPLETE order whose allowlisted DOM
 facts, exact M5 canonical embedded payload, identities, counts, source time, and independently
 recomputed ordered-line digest all agree. A separate exact three-member canonical extension
@@ -70,9 +76,11 @@ context; evaluation remains available only from a fully verified order detail pa
 `EXACT_REPLAY`, `REQUEST_CONFLICT`, and `SAFE_ERROR` are the complete state inventory.
 
 Results show the local rule pack and version, reasons, separately scoped opportunities, human
-review requirement, value status, replay/conflict flags, persisted synthetic IDs, processing
-duration, and a local history link. The future dashboard remains deliberately unavailable in
-Milestone 6. No external action button exists.
+review requirement, value status, replay/conflict flags, persisted synthetic IDs, and processing
+duration. Closed ordinary loopback links can open the Control Center overview, current order,
+validated current case/evaluation, domain-aware review queue, and system health. These links use
+only reserved synthetic IDs already validated by the closed panel contract; they carry no token,
+credential, source payload, or arbitrary destination. No external action button exists.
 
 ## Deterministic package
 
@@ -99,8 +107,8 @@ filesystem call.
 
 ## Reload, update, and uninstall
 
-- After a same-version development edit, use **Reload** on `chrome://extensions`, then refresh
-  the supported localhost page and the panel.
+- After a development edit or version update, use **Reload** on `chrome://extensions`, then
+  refresh the supported localhost page and the panel.
 - To update from a committed package, remove the old unpacked directory selection and load the
   verified replacement directory.
 - To uninstall, choose **Remove** on `chrome://extensions`. No extension storage or source data

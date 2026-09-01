@@ -1,0 +1,568 @@
+{
+  "schema_version": "synthetic-sales-assist-m7-action-service-matrix/v1",
+  "base_commit": "1ff8198e19af7cbcf9f153c36a66bcfef1c5a45f",
+  "base_tree": "d07f75737eb6a5e891d002cea8a89c6d0d146c67",
+  "policy": {
+    "business_rules_in_handlers": false,
+    "unknown_members_rejected": true,
+    "synthetic_identity_only": true,
+    "loopback_only": true,
+    "unsupported_actions_rendered": false,
+    "classification_and_human_outcome_separate": true
+  },
+  "dispositions": [
+    "SUPPORTED_EXISTING_SERVICE",
+    "SUPPORTED_BY_M7_THIN_ADAPTER",
+    "SUPPORTED_READ_ONLY",
+    "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+    "OUT_OF_SCOPE_M7_NOT_RENDERED"
+  ],
+  "actions": [
+    {
+      "action_id": "SALES_CREDIT_EVALUATE",
+      "domain": "SALES_CREDIT",
+      "label": "Evaluate synthetic Sales Credit order or interaction",
+      "disposition": "SUPPORTED_EXISTING_SERVICE",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.application.scenarios.ScenarioApplication.evaluate",
+        "synthetic_sales_assist.persistence.sales_credit_services.SalesCreditPersistenceService.persist_case_mutation"
+      ],
+      "accepted_input": "One reserved synthetic OrderId and an optional 1..128 character request key accepted by validate_request_key; source facts come from the retained scenario instance, not the form.",
+      "actor_requirement": "SYSTEM; no human authority is asserted by evaluation.",
+      "confirmation_requirement": "Explicit click is required; a second confirmation dialog is not required because evaluation is local, synthetic, and creates no human outcome or external action.",
+      "request_key": "Bound by ScenarioApplication.evaluate to order_id plus the retained source binding. The dashboard supplies a bounded key.",
+      "receipt_event_result": "EvaluationResultView plus the durable evaluation binding, telemetry terminal row, durable attempt, and the underlying Sales Credit DurableCommandResult/event graph.",
+      "replay_behavior": "The same request key and identical bound order/source returns the retained evaluation with replayed=true and does not allocate a new evaluation.",
+      "conflict_behavior": "The same request key with changed order/source material raises IDEMPOTENCY_KEY_MATERIAL_CONFLICT before a new evaluation is persisted.",
+      "projection_effects": "Updates the current Sales Credit case projection exactly once from the committed evaluator result.",
+      "history_effects": "Appends the first successful evaluation attempt; replay is recorded as request history/telemetry and is not a new evaluation.",
+      "underlying_tests": [
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_real_sales_credit_evaluation_persists_replay_and_safe_history",
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_evaluation_request_key_conflict_is_closed_and_counted",
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_evaluation_never_mutates_source_facts",
+        "tests.test_milestone5_portal.PortalHTTPTestCase.test_instantiation_and_evaluation_delegate_exactly"
+      ],
+      "m7_tests_required": [
+        "explicit click delegates once",
+        "replay does not increment unique evaluations",
+        "conflict creates no successful item",
+        "classification creates no manager outcome"
+      ]
+    },
+    {
+      "action_id": "SALES_CREDIT_MANAGER_OUTCOME",
+      "domain": "SALES_CREDIT",
+      "label": "Record manager outcome",
+      "disposition": "SUPPORTED_EXISTING_SERVICE",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.persistence.sales_credit_services.SalesCreditPersistenceService.record_manager_outcome",
+        "synthetic_sales_assist.persistence.sales_credit_repository.SalesCreditRepository.append_manager_outcome"
+      ],
+      "accepted_input": "OrderId plus ManagerOutcome. The UI admits only APPROVED, DENIED, PARTIAL, OTHER_REP, or NOT_PURSUED; PARTIAL requires positive exact Money with a registered currency. active_note is not exposed.",
+      "actor_requirement": "A bounded reserved synthetic RepId; the repository independently requires an eligible current workflow/evaluation and no pending replacement child authority conflict.",
+      "confirmation_requirement": "Required. The dialog repeats the synthetic order, closed outcome, actor, and exact amount/currency when PARTIAL.",
+      "request_key": "Required 1..96 character Control Center key passed unchanged to record_manager_outcome and bound to ManagerOutcome canonical bytes by SQLiteIdempotencyRepository.",
+      "receipt_event_result": "DurableCommandResult; immutable ManagerOutcome; OUTCOME_RECORDED sc_case_event; updated StoredSalesCreditCase projection.",
+      "replay_behavior": "Same key and byte-identical ManagerOutcome returns the retained DurableCommandResult with replayed=true and appends nothing.",
+      "conflict_behavior": "Same key with changed canonical ManagerOutcome raises IdempotencyConflictError(IDEMPOTENCY_KEY_MATERIAL_CONFLICT) before allocation.",
+      "projection_effects": "Sets only manager_occurrence_id and the authorized workflow closure projection. The retained system attribution/classification and evaluation are unchanged.",
+      "history_effects": "Appends one immutable manager outcome and one OUTCOME_RECORDED event. Replay is a receipt, not a second outcome/event.",
+      "underlying_tests": [
+        "tests.test_milestone4_sales_credit_persistence.Milestone4SalesCreditPersistenceTests.test_manager_outcome_replay_conflict_and_authority_are_enforced",
+        "tests.test_milestone4_sales_credit_concurrency_faults.Milestone4SalesCreditConcurrencyFaultTests.test_two_exact_concurrent_writers_commit_once_and_replay_once",
+        "tests.test_milestone4_sqlite_idempotency.Milestone4SQLiteIdempotencyTests.test_same_key_changed_material_conflicts_before_allocation"
+      ],
+      "m7_tests_required": [
+        "confirmation is mandatory",
+        "all five enum values are closed",
+        "PARTIAL Money/currency validation",
+        "success, exact replay, and changed-material conflict",
+        "system classification remains unchanged",
+        "source facts remain unchanged"
+      ]
+    },
+    {
+      "action_id": "DOI_EVALUATE",
+      "domain": "DOI",
+      "label": "Evaluate synthetic DOI order",
+      "disposition": "SUPPORTED_EXISTING_SERVICE",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.application.scenarios.ScenarioApplication.evaluate",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.persist_demo"
+      ],
+      "accepted_input": "One reserved synthetic OrderId and an optional 1..128 character request key; the retained complete source fixture is the only evaluation material.",
+      "actor_requirement": "SYSTEM; evaluation never asserts human authority.",
+      "confirmation_requirement": "Explicit click is required; no second confirmation dialog is required.",
+      "request_key": "Bound to the order and retained source binding by ScenarioApplication.evaluate and to the DOI demo command material by durable idempotency.",
+      "receipt_event_result": "EvaluationResultView plus durable DOI run/snapshot/evaluation graph, DurableCommandResult, telemetry, and attempt history.",
+      "replay_behavior": "Same key/material returns the retained evaluation with replayed=true; it creates no human fact, intervention, resulting-order link, or value.",
+      "conflict_behavior": "Changed material under the same key fails with IDEMPOTENCY_KEY_MATERIAL_CONFLICT before a successful evaluation is added.",
+      "projection_effects": "Updates the current DOI case/evaluation projection exactly once using evaluate_doi output.",
+      "history_effects": "Retains the first immutable evaluation graph. Replay/conflict remain request history and do not become unique evaluations.",
+      "underlying_tests": [
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_real_doi_edge_scenarios_preserve_engine_results",
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_doi_history_exposes_attention_values_transitions_and_no_synthetic_actions",
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_evaluation_request_key_conflict_is_closed_and_counted",
+        "tests.test_milestone4_doi_demo.Milestone4DOIDemoTests.test_overlay_results_remain_exact"
+      ],
+      "m7_tests_required": [
+        "explicit click delegates once",
+        "replay/conflict accounting",
+        "evaluation cannot create a human fact",
+        "evaluation cannot create intervention, resulting link, or value"
+      ]
+    },
+    {
+      "action_id": "DOI_SELECT_OVERLAP_SCENARIO",
+      "domain": "DOI",
+      "label": "Select one exact overlap scenario",
+      "disposition": "SUPPORTED_BY_M7_THIN_ADAPTER",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.application.control_center.ControlCenterApplication.record_doi_overlap_selection",
+        "synthetic_sales_assist.doi.models.verify_synthetic_human_authority",
+        "synthetic_sales_assist.doi.models.StructuredHumanFact.create",
+        "synthetic_sales_assist.doi.models.DOIHumanFactEvent",
+        "synthetic_sales_assist.doi.models.reduce_human_fact",
+        "synthetic_sales_assist.doi.evaluator.evaluate_doi",
+        "synthetic_sales_assist.persistence.doi_repository.DOIRepository.append_owner_event",
+        "synthetic_sales_assist.persistence.doi_repository.DOIRepository.persist_evaluation",
+        "synthetic_sales_assist.persistence.idempotency.SQLiteIdempotencyRepository.resolve_or_record"
+      ],
+      "accepted_input": "Current synthetic DOI case/evaluation identity, one selected opportunity ID, the exact sorted option-opportunity ID set already present in the unresolved overlap evaluation, reserved synthetic actor, required confirmation flag, and a 1..96 character Control Center request key. IDs, source, context, timestamps, and authority material are loaded or generated server-side from the retained synthetic graph.",
+      "actor_requirement": "A reserved synthetic RepId crossing verify_synthetic_human_authority against the exact open retained DOIActionContext and synthetic interaction SourceRef.",
+      "confirmation_requirement": "Required. The dialog names the case, selected opportunity, all mutually exclusive options, actor, and the effect: recompute aggregate potential without merging or deleting opportunities.",
+      "request_key": "Required and bound by SQLiteIdempotencyRepository to canonical command bytes containing the exact case/evaluation, option set, selected opportunity, actor, and confirmation material.",
+      "receipt_event_result": "DurableCommandResult whose result binds the recomputed DOIEvaluation; immutable DOIHumanFactEvent/StructuredHumanFact with usage SCENARIO_SELECTION and result SCENARIO_SELECTED; owner event and durable evaluation append in one transaction.",
+      "replay_behavior": "Same key and identical canonical selection returns the original durable receipt and performs no reducer, owner-event, or evaluation append.",
+      "conflict_behavior": "Same key with any changed selected opportunity, option set, case/evaluation, actor, or confirmation material raises IDEMPOTENCY_KEY_MATERIAL_CONFLICT before any append.",
+      "projection_effects": "Re-evaluates the same retained facts with one validated ScenarioSelection. Opportunities remain separate; only scenario_selection_state and the already-defined aggregate-potential result change according to evaluate_doi.",
+      "history_effects": "Appends one immutable structured human fact/owner event and one new immutable evaluation. Prior unresolved evaluation remains history. No new reason, transition, intervention, resulting link, or value rule is introduced.",
+      "underlying_tests": [
+        "tests.test_doi_evaluator.DOIEvaluatorOverlayTests.test_overlapping_opportunities_survive_and_withhold_aggregate",
+        "tests.test_doi_evaluator.DOIEvaluatorOverlayTests.test_scenario_selection_rejects_invalid_human_fact_provenance",
+        "tests.test_doi_models.DOIModelTests.test_wwc_and_human_fact_correction_histories_are_exact",
+        "tests.test_doi_lifecycle.TestDoiLifecycle.test_dedupe_and_human_fact_owner_reducers_cover_tr060_064_and_tr096_097",
+        "tests.test_milestone4_sqlite_idempotency.Milestone4SQLiteIdempotencyTests.test_exact_replay_returns_retained_result_without_new_allocation",
+        "tests.test_milestone4_sqlite_idempotency.Milestone4SQLiteIdempotencyTests.test_same_key_changed_material_conflicts_before_allocation"
+      ],
+      "m7_tests_required": [
+        "atomic success",
+        "exact replay",
+        "changed-material conflict",
+        "confirmation and synthetic authority",
+        "invalid option/cross-case/cross-evaluation rejection",
+        "projection update and immutable timeline",
+        "unrelated opportunities and source facts unchanged"
+      ]
+    },
+    {
+      "action_id": "DOI_RECORD_STRUCTURED_HUMAN_FACT_GENERIC",
+      "domain": "DOI",
+      "label": "Record an arbitrary structured human fact",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.models.reduce_human_fact",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.record_human_fact"
+      ],
+      "accepted_input": "No generic dashboard input. The domain has closed typed facts, but the committed application has no bounded generic command that selects the correct context, authority, downstream reevaluation, and idempotency material.",
+      "actor_requirement": "Would require verified synthetic human authority for the exact action context.",
+      "confirmation_requirement": "Would be required for a future purpose-specific action; no M7 generic form exists.",
+      "request_key": "No committed generic request-key boundary.",
+      "receipt_event_result": "Low-level reducer and owner-event persistence exist; that is insufficient authorization for a generic UI command.",
+      "replay_behavior": "Low-level event identity replay exists, but no complete application-level command replay is committed.",
+      "conflict_behavior": "Low-level changed-event conflict exists, but no complete application-level material-conflict contract is committed.",
+      "projection_effects": "None from M7 UI.",
+      "history_effects": "None from M7 UI.",
+      "underlying_tests": [
+        "tests.test_doi_models.DOIModelTests.test_wwc_and_human_fact_correction_histories_are_exact",
+        "tests.test_milestone4_doi_services.Milestone4DOIServiceTests.test_required_transactional_operation_surface_is_named"
+      ],
+      "m7_tests_required": [
+        "generic fact control is absent",
+        "detail remains read-only except the purpose-specific overlap action"
+      ]
+    },
+    {
+      "action_id": "DOI_COMPATIBILITY_REVIEW_APPROVE_REJECT",
+      "domain": "DOI",
+      "label": "Approve or reject compatibility review",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.models.reduce_human_fact",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.record_human_fact"
+      ],
+      "accepted_input": "None in M7; low-level COMPATIBILITY_DECISION facts are not exposed without a purpose-specific application command.",
+      "actor_requirement": "Verified synthetic human authority would be required.",
+      "confirmation_requirement": "Required if a future purpose-specific command is added.",
+      "request_key": "No committed application-level key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "Not available at the application boundary.",
+      "conflict_behavior": "Not available at the application boundary.",
+      "projection_effects": "Read-only display only.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_models.DOIModelTests.test_wwc_and_human_fact_correction_histories_are_exact"
+      ],
+      "m7_tests_required": ["control is absent and compatibility state is read-only"]
+    },
+    {
+      "action_id": "DOI_CONFIRM_NO_VIABLE_ALTERNATE",
+      "domain": "DOI",
+      "label": "Confirm no viable alternate",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.models.reduce_human_fact",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.record_human_fact"
+      ],
+      "accepted_input": "None in M7; NO_VIABLE_ALTERNATE exists as a closed human-fact result but has no complete dashboard application command.",
+      "actor_requirement": "Verified synthetic human authority would be required.",
+      "confirmation_requirement": "Required if a future purpose-specific command is added.",
+      "request_key": "No committed application-level key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "Not available at the application boundary.",
+      "conflict_behavior": "Not available at the application boundary.",
+      "projection_effects": "Read-only display only.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_models.DOIModelTests.test_wwc_and_human_fact_correction_histories_are_exact"
+      ],
+      "m7_tests_required": ["control is absent and alternate state is read-only"]
+    },
+    {
+      "action_id": "DOI_CLOSE_HUMAN_OUT_OF_SCOPE",
+      "domain": "DOI",
+      "label": "Close human out of scope",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.models.reduce_human_fact",
+        "synthetic_sales_assist.doi.lifecycle.make_out_of_scope_closure_guard_proof",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.apply_lifecycle_transition"
+      ],
+      "accepted_input": "None in M7; the protected closure requires exact authorized fact and lifecycle evidence that no committed dashboard command assembles.",
+      "actor_requirement": "Verified synthetic human authority plus exact closure guard evidence would be required.",
+      "confirmation_requirement": "Strong confirmation would be required.",
+      "request_key": "No committed application-level key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "Not available at the application boundary.",
+      "conflict_behavior": "Not available at the application boundary.",
+      "projection_effects": "Read-only display only.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_lifecycle.TestDoiLifecycle.test_tr013_requires_real_authorized_out_of_scope_fact"
+      ],
+      "m7_tests_required": ["closure control is absent"]
+    },
+    {
+      "action_id": "DOI_RESOLVE_ONE_ATTENTION_CAUSE",
+      "domain": "DOI",
+      "label": "Resolve one exact attention cause",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.lifecycle.reduce_attention",
+        "synthetic_sales_assist.doi.case_attention.clear_intervention_verification_from_action",
+        "synthetic_sales_assist.doi.case_attention.clear_resulting_link_review_from_exact_link",
+        "synthetic_sales_assist.doi.case_attention.clear_human_coordination_review_from_human_fact",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.clear_attention_cause"
+      ],
+      "accepted_input": "None in M7. Each cause has a distinct evidence-owning reducer; there is deliberately no generic clear-by-ID command.",
+      "actor_requirement": "Depends on the exact owning evidence; a generic actor assertion is insufficient.",
+      "confirmation_requirement": "Would be required for a future cause-specific action.",
+      "request_key": "No committed cause-specific application key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "Low-level attention events replay exactly, but no safe generic application command exists.",
+      "conflict_behavior": "Wrong cause set/evidence fails in the reducer; no M7 mutation is attempted.",
+      "projection_effects": "Attention causes are displayed read-only and remain independent.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_lifecycle.TestDoiLifecycle.test_attention_causes_coexist_and_clear_references_exact_set",
+        "tests.test_doi_lifecycle.TestDoiLifecycle.test_attention_wrong_set_cannot_clear_and_replay_is_exact",
+        "tests.test_doi_case_attention.DOIAttentionExtractionTests.test_tr020_tr021_tr022_and_tr024_are_typed_and_preserve_unrelated_causes"
+      ],
+      "m7_tests_required": ["generic clear control is absent", "unrelated causes remain visible"]
+    },
+    {
+      "action_id": "DOI_TRIGGER_LOCAL_RECHECK",
+      "domain": "DOI",
+      "label": "Trigger a local synthetic recheck",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.lifecycle.make_case_recheck_transition_guard_proof",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.reopen_case"
+      ],
+      "accepted_input": "None in M7. ScenarioApplication.evaluate replay is not a domain recheck, and the committed reopen service requires a complete precomputed retention/snapshot/evaluation graph.",
+      "actor_requirement": "Exact system-owned recheck evidence would be required.",
+      "confirmation_requirement": "Would be required if a bounded recheck command is later added.",
+      "request_key": "No committed application-level recheck key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "Not available at the application boundary.",
+      "conflict_behavior": "Not available at the application boundary.",
+      "projection_effects": "Read-only display only.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_lifecycle.TestDoiLifecycle.test_tr014_and_tr015_require_exact_case_recheck_and_retention"
+      ],
+      "m7_tests_required": ["recheck control is absent"]
+    },
+    {
+      "action_id": "DOI_VERIFY_INTERVENTION_ACTION",
+      "domain": "DOI",
+      "label": "Verify a synthetic intervention/action",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.interventions.record_verified_intervention",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.verify_intervention_action"
+      ],
+      "accepted_input": "None in M7; the named persistence method accepts a fully constructed verified DOIIntervention and is not itself a UI authorization/orchestration boundary.",
+      "actor_requirement": "Exact verified system or human action evidence and authority are required by the domain reducer.",
+      "confirmation_requirement": "Required if a purpose-specific command is later added.",
+      "request_key": "No committed application-level key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "The domain reducer supports exact replay, but no M7 command assembles the proof graph.",
+      "conflict_behavior": "Changed occurrence material conflicts in the reducer; no M7 mutation is attempted.",
+      "projection_effects": "Read-only display only.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_interventions.TestDoiInterventions.test_only_verified_action_creates_intervention",
+        "tests.test_doi_interventions.TestDoiInterventions.test_action_exact_replay_and_changed_occurrence_conflict"
+      ],
+      "m7_tests_required": ["intervention verification control is absent", "opportunity cannot create intervention"]
+    },
+    {
+      "action_id": "DOI_CONFIRM_RESULTING_ORDER_LINK",
+      "domain": "DOI",
+      "label": "Confirm a synthetic resulting-order link",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.interventions.append_resulting_link_revision",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.link_resulting_order"
+      ],
+      "accepted_input": "None in M7; the persistence method accepts an already authorized exact DOIResultingOrderLink and does not infer or authorize one from a UI selection.",
+      "actor_requirement": "Exact authorized link evidence is required; identity similarity is never authority.",
+      "confirmation_requirement": "Required if a purpose-specific exact-link command is later added.",
+      "request_key": "No committed application-level key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "Low-level link revision replay exists; no M7 application command exists.",
+      "conflict_behavior": "Changed link occurrence conflicts in the reducer; no M7 mutation is attempted.",
+      "projection_effects": "Read-only display only.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_interventions.TestDoiInterventions.test_resulting_link_conflict_and_resolution_preserve_revisions",
+        "tests.test_doi_interventions.TestDoiInterventions.test_search_not_found_and_ambiguous_are_not_exact_links"
+      ],
+      "m7_tests_required": ["resulting-link control is absent", "evaluation cannot create a resulting link"]
+    },
+    {
+      "action_id": "DOI_APPEND_VALUE_CORRECTION_OR_REVERSAL",
+      "domain": "DOI",
+      "label": "Append value correction or reversal",
+      "disposition": "READ_ONLY_NO_CLOSED_APPLICATION_COMMAND",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.doi.interventions.append_value_event",
+        "synthetic_sales_assist.persistence.doi_services.DOIPersistenceService.append_value_event"
+      ],
+      "accepted_input": "None in M7; the named persistence method persists a fully reduced intervention graph and does not authorize arbitrary Money or value state from a form.",
+      "actor_requirement": "Exact verified intervention/value evidence is required.",
+      "confirmation_requirement": "Strong confirmation would be required if a purpose-specific command is later added.",
+      "request_key": "No committed application-level key/material contract.",
+      "receipt_event_result": "No complete application receipt for this candidate.",
+      "replay_behavior": "Low-level value events replay exactly; no M7 application command exists.",
+      "conflict_behavior": "Changed occurrence material conflicts; no M7 mutation is attempted.",
+      "projection_effects": "Read-only display only; Money remains currency-specific.",
+      "history_effects": "No M7 append.",
+      "underlying_tests": [
+        "tests.test_doi_interventions.TestDoiInterventions.test_system_value_and_append_only_partial_full_reversal",
+        "tests.test_doi_interventions.TestDoiInterventions.test_reversal_void_recomputes_without_rewriting_history",
+        "tests.test_doi_interventions.TestDoiInterventions.test_value_exact_replay_and_occurrence_conflict"
+      ],
+      "m7_tests_required": ["value mutation control is absent", "opportunity cannot create realized value"]
+    },
+    {
+      "action_id": "SYSTEM_HEALTH_REFRESH",
+      "domain": "SYSTEM",
+      "label": "Refresh health",
+      "disposition": "SUPPORTED_READ_ONLY",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.application.scenarios.ScenarioApplication.system_status"
+      ],
+      "accepted_input": "deep=false only; no path, SQL, or arbitrary probe input.",
+      "actor_requirement": "None; read-only local query.",
+      "confirmation_requirement": "None.",
+      "request_key": "Not applicable to a read-only GET/query.",
+      "receipt_event_result": "SystemStatusView with quick database, projections, migrations, versions, and all safety counters.",
+      "replay_behavior": "Each request truthfully reads current state; no durable mutation occurs.",
+      "conflict_behavior": "Not applicable; unhealthy/error state is returned through the safe closed envelope.",
+      "projection_effects": "None.",
+      "history_effects": "None.",
+      "underlying_tests": [
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_status_metrics_and_exact_closed_versions",
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_status_fails_for_nonzero_system_or_incomplete_telemetry_counter_set",
+        "tests.test_milestone5_portal.PortalHTTPTestCase.test_health_and_closed_get_api_routes"
+      ],
+      "m7_tests_required": ["refresh delegates with deep=false", "no mutation", "safe unhealthy response"]
+    },
+    {
+      "action_id": "SYSTEM_DATABASE_DEEP_VERIFY",
+      "domain": "SYSTEM",
+      "label": "Run deep database verification",
+      "disposition": "SUPPORTED_READ_ONLY",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.application.scenarios.ScenarioApplication.system_status",
+        "synthetic_sales_assist.persistence.schema.verify_database",
+        "synthetic_sales_assist.persistence.projections.verify_sales_credit_projections",
+        "synthetic_sales_assist.persistence.doi_repository.DOIRepository.verify_projections"
+      ],
+      "accepted_input": "deep=true only; no path, SQL, or arbitrary pragma input.",
+      "actor_requirement": "None; read-only local maintenance query.",
+      "confirmation_requirement": "None; the UI labels that the check can take longer.",
+      "request_key": "Not applicable to a read-only verification.",
+      "receipt_event_result": "SystemStatusView containing integrity_check, quick_check, migration, projection, and safety results.",
+      "replay_behavior": "A repeated request reruns verification and does not mutate state.",
+      "conflict_behavior": "Database busy/unhealthy conditions fail safely without partial writes.",
+      "projection_effects": "None; verification never rebuilds projections.",
+      "history_effects": "None.",
+      "underlying_tests": [
+        "tests.test_milestone4_sqlite_core.Milestone4SQLiteCoreTests.test_fresh_database_migrates_and_inventory_is_deterministic",
+        "tests.test_milestone4_doi_repository.Milestone4DOIRepositoryTests.test_projection_verifier_detects_drift_without_rebuilding",
+        "tests.test_milestone5_application.Milestone5ApplicationTests.test_status_metrics_and_exact_closed_versions"
+      ],
+      "m7_tests_required": ["deep=true exact delegation", "integrity and both projection checks visible", "verification is read-only"]
+    },
+    {
+      "action_id": "SYSTEM_CREATE_VERIFIED_BACKUP",
+      "domain": "SYSTEM",
+      "label": "Create a verified backup",
+      "disposition": "SUPPORTED_BY_M7_THIN_ADAPTER",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.application.control_center_actions.ControlCenterActions.create_verified_backup",
+        "synthetic_sales_assist.persistence.backup.create_backup",
+        "synthetic_sales_assist.persistence.backup.verify_backup"
+      ],
+      "accepted_input": "A required confirmation and bounded request key; the server, not the browser, derives one safe non-reparse destination beneath the managed local backups directory. Arbitrary paths and overwrite are not accepted.",
+      "actor_requirement": "Local operator action; no Sales Credit or DOI human authority is asserted.",
+      "confirmation_requirement": "Required. It states that a new local verified snapshot and receipt will be created and that no restore occurs.",
+      "request_key": "Required by the M7 adapter and used only to derive/deduplicate the bounded managed destination; it is never accepted as a path. Exact existing receipt verification is replay; changed material under the same key is conflict.",
+      "receipt_event_result": "BackupReceipt from create_backup, immediately equal to verify_backup readback; the existing backup_receipts row and signed sidecar remain the authoritative history.",
+      "replay_behavior": "Same key/material returns the already verified managed receipt and creates no second backup.",
+      "conflict_behavior": "The browser exposes no second material field to change. Unsafe or arbitrary destinations are absent from the request schema and the derived path still fails closed under create_backup path policy.",
+      "projection_effects": "None.",
+      "history_effects": "One immutable verified backup receipt for the first accepted key; replay does not add another receipt.",
+      "underlying_tests": [
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_online_backup_and_exact_restore_preserve_active_validity",
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_empty_new_database_backup_is_verified",
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_backup_path_policy_rejects_nonlocal_or_ambiguous_paths",
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_new_backup_publishes_sidecar_before_identity_database"
+      ],
+      "m7_tests_required": [
+        "confirmation and bounded key required",
+        "server-owned managed destination only",
+        "created receipt equals verify_backup",
+        "exact replay with no client-controlled alternate material",
+        "ordinary response hides absolute path/username"
+      ]
+    },
+    {
+      "action_id": "SYSTEM_VIEW_BACKUP_RECEIPTS",
+      "domain": "SYSTEM",
+      "label": "View backup receipts",
+      "disposition": "SUPPORTED_READ_ONLY",
+      "rendered": true,
+      "service_symbols": [
+        "synthetic_sales_assist.application.control_center.ControlCenterApplication.backup_receipts"
+      ],
+      "accepted_input": "No client path. The application reads only the immutable backup_receipts projection with a bounded server-owned limit.",
+      "actor_requirement": "None; read-only local query.",
+      "confirmation_requirement": "None.",
+      "request_key": "Not applicable to a read-only query.",
+      "receipt_event_result": "Privacy-safe receipt summaries containing synthetic ID, status, completion time, schema, checksum, and quick/foreign-key verification state.",
+      "replay_behavior": "Repeated reads return current verified receipt state without mutation.",
+      "conflict_behavior": "Read-only receipt projection has no conflict. Failed or incomplete receipts remain explicit status rows; no raw error or filesystem path is returned.",
+      "projection_effects": "None.",
+      "history_effects": "None.",
+      "underlying_tests": [
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_corrupt_wrong_checksum_and_future_schema_backups_are_rejected",
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_exact_expiry_rejects_restore_and_deletes_managed_pair_idempotently"
+      ],
+      "m7_tests_required": ["managed receipts only", "no absolute paths/usernames", "corrupt receipt safe state"]
+    },
+    {
+      "action_id": "SYSTEM_RESTORE",
+      "domain": "SYSTEM",
+      "label": "Restore database",
+      "disposition": "OUT_OF_SCOPE_M7_NOT_RENDERED",
+      "rendered": false,
+      "service_symbols": [
+        "synthetic_sales_assist.persistence.backup.restore_backup"
+      ],
+      "accepted_input": "None through the M7 Control Center.",
+      "actor_requirement": "A separate maintenance workflow would be required.",
+      "confirmation_requirement": "Separate strong confirmation is mandatory outside the M7 overview.",
+      "request_key": "No M7 dashboard command.",
+      "receipt_event_result": "Existing CLI/maintenance RestoreResult only.",
+      "replay_behavior": "Not exposed.",
+      "conflict_behavior": "Not exposed.",
+      "projection_effects": "None from M7 UI.",
+      "history_effects": "None from M7 UI.",
+      "underlying_tests": [
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_rejected_or_interrupted_restore_leaves_active_database_valid",
+        "tests.test_milestone4_backup_restore.Milestone4BackupRestoreTests.test_restore_then_same_request_is_exact_replay"
+      ],
+      "m7_tests_required": ["no restore control on overview, database, or backup pages"]
+    },
+    {
+      "action_id": "SYSTEM_RESET",
+      "domain": "SYSTEM",
+      "label": "Reset local state",
+      "disposition": "OUT_OF_SCOPE_M7_NOT_RENDERED",
+      "rendered": false,
+      "service_symbols": [],
+      "accepted_input": "None through the M7 Control Center.",
+      "actor_requirement": "A separate lifecycle-maintenance workflow would be required.",
+      "confirmation_requirement": "Separate strong confirmation is mandatory outside the M7 overview.",
+      "request_key": "No M7 dashboard command.",
+      "receipt_event_result": "No M7 result.",
+      "replay_behavior": "Not exposed.",
+      "conflict_behavior": "Not exposed.",
+      "projection_effects": "None from M7 UI.",
+      "history_effects": "None from M7 UI.",
+      "underlying_tests": [],
+      "m7_tests_required": ["no reset control on any Control Center page"]
+    },
+    {
+      "action_id": "LOCAL_DASHBOARD_DEEP_LINK",
+      "domain": "NAVIGATION",
+      "label": "Open an ordinary loopback dashboard deep link",
+      "disposition": "SUPPORTED_READ_ONLY",
+      "rendered": true,
+      "service_symbols": [],
+      "accepted_input": "Closed route kind plus one reserved synthetic ID; destination is normalized against the fixed loopback origin and closed route templates.",
+      "actor_requirement": "None; navigation only.",
+      "confirmation_requirement": "None.",
+      "request_key": "Not applicable.",
+      "receipt_event_result": "Ordinary GET navigation only; no business result or receipt.",
+      "replay_behavior": "Repeated navigation is read-only.",
+      "conflict_behavior": "Invalid origin/path/ID or missing destination fails safely without navigation or mutation.",
+      "projection_effects": "None.",
+      "history_effects": "None.",
+      "underlying_tests": [
+        "tests.test_milestone6_extension.Milestone6StaticExtensionTests.test_messaging_and_api_are_explicit_bounded_and_base_url_immune"
+      ],
+      "m7_tests_required": ["closed route/ID validation", "no credentials/query injection", "missing destination safe handling"]
+    }
+  ]
+}

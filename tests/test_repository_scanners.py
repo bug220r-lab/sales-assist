@@ -16,6 +16,7 @@ from synthetic_sales_assist.safety.repository import (  # noqa: E402
     scan_prohibited_repository_content,
     scan_secret_material,
 )
+from synthetic_sales_assist.safety.chrome import CHROME_EXTENSION_VERSION  # noqa: E402
 
 
 class RepositoryScannerTests(unittest.TestCase):
@@ -136,7 +137,7 @@ class RepositoryScannerTests(unittest.TestCase):
             "description": (
                 "Read-only localhost extraction and evaluation for reserved synthetic scenarios."
             ),
-            "version": "0.1.0",
+            "version": CHROME_EXTENSION_VERSION,
             "minimum_chrome_version": "114",
             "permissions": ["sidePanel"],
             "host_permissions": [
@@ -195,9 +196,10 @@ class RepositoryScannerTests(unittest.TestCase):
                 (extension / relative).write_text(text, encoding="utf-8")
             self.assertEqual(scan_prohibited_repository_content(root), ())
 
+            version_member = f'"version": "{CHROME_EXTENSION_VERSION}"'
             duplicate = json.dumps(manifest).replace(
-                '"version": "0.1.0"',
-                '"version": "0.1.0", "version": "0.1.0"',
+                version_member,
+                f'{version_member}, {version_member}',
                 1,
             )
             (extension / "manifest.json").write_text(duplicate, encoding="utf-8")

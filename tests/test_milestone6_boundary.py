@@ -165,7 +165,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
         self.assertEqual(
             inventory["author_marker"], "SYNTHETIC-SALES-ASSIST-AUTHORED-M6"
         )
-        self.assertEqual(inventory["extension_version"], "0.1.0")
+        self.assertEqual(inventory["extension_version"], "0.1.1")
         self.assertEqual(inventory["inventory_excludes"], ["package_inventory.json"])
         expected_paths = sorted(
             EXPECTED_EXTENSION_FILES - {"package_inventory.json"}, key=str.casefold
@@ -414,7 +414,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
             second = packager.package(Path(second_directory))
             first_package, first_digest, first_inventory, first_checksum = first
             second_package, second_digest, second_inventory, second_checksum = second
-            package_name = "synthetic-sales-assist-m6-extension-0.1.0.zip"
+            package_name = "synthetic-sales-assist-m6-extension-0.1.1.zip"
             self.assertEqual(first_package.name, package_name)
             self.assertEqual(second_package.name, package_name)
             first_raw = first_package.read_bytes()
@@ -423,7 +423,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
             self.assertEqual(first_digest, second_digest)
             self.assertEqual(first_digest, hashlib.sha256(first_raw).hexdigest())
             generation_name = (
-                "synthetic-sales-assist-m6-extension-0.1.0-" + first_digest
+                "synthetic-sales-assist-m6-extension-0.1.1-" + first_digest
             )
             self.assertEqual(first_package.parent.name, generation_name)
             self.assertEqual(second_package.parent.name, generation_name)
@@ -452,7 +452,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
                     "archive_sha256": first_digest,
                     "archive_size": len(first_raw),
                     "author_marker": "SYNTHETIC-SALES-ASSIST-AUTHORED-M6",
-                    "extension_version": "0.1.0",
+                    "extension_version": "0.1.1",
                     "files": expected_records,
                     "schema_version": "synthetic-sales-assist-extension-package/v1",
                 },
@@ -589,37 +589,33 @@ class Milestone6BoundaryTests(unittest.TestCase):
             evidence,
         )
         self.assertEqual(aggregate_claims, [aggregate])
-        self.assertEqual(
-            components["renderer_source"],
-            hashlib.sha256(
-                (
-                    ROOT
-                    / "src"
-                    / "synthetic_sales_assist"
-                    / "portal"
-                    / "rendering.py"
-                ).read_bytes()
-            ).hexdigest(),
-        )
-        for component, relative in {
-            "canonical_source": "shared/canonical.js",
-            "content_script_source": "content/content_script.js",
-            "contracts_source": "shared/contracts.js",
-            "extraction_source": "shared/extraction.js",
-            "manifest_source": "manifest.json",
-            "origin_source": "shared/origin.js",
-            "package_inventory_source": "package_inventory.json",
-            "panel_script_source": "side_panel/panel.js",
-            "service_worker_source": "service_worker.js",
-        }.items():
+        historical_hashes = {
+            "canonical_source": "3937612403f1e021d877fab047ecd44524c27ce854fd7354a6398599e1e7a8d7",
+            "content_script_source": (
+                "5d5240e74b2d0bc85a36c0b18a2d99ca4f6bc1064942543a783296af80f349d1"
+            ),
+            "contracts_source": "50f445072a954d4d87845409bf43adec07df2f49c9bdcc3e5fba35c65581f101",
+            "extension_package": "acb0ff977e24d69a7d4fab0d1426ef5eba30c0d8ec9b86a1ab744a6b9319210d",
+            "extraction_source": "f4dde4464a764a4bfedb20a4c091033e6af228bcde16ae08ac8ab8d9e85f2e9c",
+            "manifest_source": "81e29390b08d19db4a29934be0f1b983fba0fa9808d0eabc3c34ff1e26ede53f",
+            "origin_source": "44188f68a56e9c9498fc808d14a3a2216c38f3defcac7ef92cff9a9d87da081b",
+            "package_inventory_source": (
+                "366bc639e2be6c9be2ff349ce0995d76a4e574af101ef28b00c4aa7b376ce65a"
+            ),
+            "panel_script_source": (
+                "ed3312cf24615634e04415eccf19bd3a375e8904886d3c71adaa646dce6ded36"
+            ),
+            "renderer_source": "b6e70ad5f2eadb451ed2a3597807a8c0646bbfe2914ca6d8d13c06c22db8f8a1",
+            "service_worker_source": (
+                "4d7f471720d6a1d22e67ab6e944abe6ab6138f4c52f06004f37497a84d1ae7b0"
+            ),
+        }
+        for component, digest in historical_hashes.items():
             with self.subTest(component=component):
-                self.assertEqual(
-                    components[component],
-                    hashlib.sha256((EXTENSION / relative).read_bytes()).hexdigest(),
-                )
+                self.assertEqual(components[component], digest)
         packager = self._packager()
         snapshot = packager._snapshot_files()
-        self.assertEqual(
+        self.assertNotEqual(
             components["extension_package"],
             hashlib.sha256(packager._zip_bytes(snapshot)).hexdigest(),
         )

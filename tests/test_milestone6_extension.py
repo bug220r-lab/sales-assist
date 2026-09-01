@@ -496,7 +496,7 @@ class Milestone6StaticExtensionTests(unittest.TestCase):
 
     def test_manifest_permission_and_static_page_inventory_is_exact(self) -> None:
         self.assertEqual(self.manifest["manifest_version"], 3)
-        self.assertEqual(self.manifest["version"], "0.1.0")
+        self.assertEqual(self.manifest["version"], "0.1.1")
         self.assertEqual(self.manifest["permissions"], ["sidePanel"])
         self.assertEqual(
             self.manifest["host_permissions"],
@@ -679,7 +679,7 @@ class Milestone6StaticExtensionTests(unittest.TestCase):
             'elements.retry.addEventListener("click", () => evaluate(true))', panel
         )
         self.assertIn("const candidate = useLastKey ? lastRequestKey", panel)
-        self.assertIn("/orders/${encodeURIComponent(data.order_id)}#history", panel)
+        self.assertIn('showLink(elements.historyLink, data.origin, "ORDER"', panel)
         self.assertIn('credentials: "omit"', content)
         self.assertNotIn('credentials: "include"', content)
         self.assertNotIn('credentials: "same-origin"', content)

@@ -61,9 +61,38 @@
     return path === `/interactions/${encodeURIComponent(interactionId)}`;
   }
 
+  function dashboardUrl(origin, kind, identifier = null) {
+    const normalizedOrigin = normalizeServiceOrigin(`${origin}/`);
+    let path;
+    if (kind === "OVERVIEW") path = "/overview";
+    else if (kind === "REVIEW") path = "/review";
+    else if (kind === "SYSTEM") path = "/system";
+    else if (kind === "ORDER") {
+      path = `/orders/${encodeURIComponent(contracts.validateSyntheticId(identifier, "ORDER"))}`;
+    } else if (kind === "SALES_CREDIT_CASE") {
+      path = `/sales-credit/${encodeURIComponent(contracts.validateSyntheticId(identifier, "ORDER"))}`;
+    } else if (kind === "DOI_CASE") {
+      path = `/doi/${encodeURIComponent(contracts.validateSyntheticId(identifier, "EVIDENCE"))}`;
+    } else if (kind === "EVALUATION_AUDIT") {
+      path = `/audit/evaluation/${encodeURIComponent(
+        contracts.validateSyntheticId(identifier, "EVALUATION")
+      )}`;
+    } else {
+      contracts.contractError("DASHBOARD_LINK_KIND_INVALID");
+    }
+    const href = `${normalizedOrigin}${path}`;
+    const parsed = new URL(href);
+    if (
+      parsed.origin !== normalizedOrigin || parsed.pathname !== path ||
+      parsed.search !== "" || parsed.hash !== ""
+    ) contracts.contractError("DASHBOARD_LINK_INVALID");
+    return href;
+  }
+
   const root = globalThis.SSA || (globalThis.SSA = {});
   root.Origin = Object.freeze({
     ALLOWED_HOSTS,
+    dashboardUrl,
     isClosedInteractionPath,
     isClosedOrderPath,
     normalizeServiceOrigin,

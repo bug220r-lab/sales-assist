@@ -294,7 +294,7 @@ def _validate_manifest(snapshot: tuple[SnapshotFile, ...]) -> dict[str, object]:
         validate_chrome_permissions(manifest)
     except ChromePermissionViolation as error:
         raise PackageError("MANIFEST_CLOSED_POLICY_INVALID") from error
-    if manifest.get("manifest_version") != 3 or manifest.get("version") != "0.1.0":
+    if manifest.get("manifest_version") != 3 or manifest.get("version") != "0.1.1":
         raise PackageError("MANIFEST_VERSION_INVALID")
     if manifest.get("permissions") != EXPECTED_PERMISSIONS:
         raise PackageError("MANIFEST_PERMISSION_INVALID")

@@ -7,6 +7,7 @@
   const extractionModule = globalThis.SSA.Extraction;
   const originPolicy = globalThis.SSA.Origin;
   const HEALTH_TIMEOUT_MS = 4000;
+  const HANDSHAKE_TIMEOUT_MS = 4000;
   const EVALUATION_TIMEOUT_MS = 10000;
   const API_ENVELOPE_MEMBERS = Object.freeze(["data", "schema_version"]);
   const ERROR_ENVELOPE_MEMBERS = Object.freeze(["error", "schema_version"]);
@@ -16,6 +17,10 @@
     "evaluated_count", "expected_schema_version", "integrity_check", "migration_status",
     "projection_status", "quick_check", "registry_capacity", "registry_count",
     "safety_counters", "schema_version", "status"
+  ]);
+  const HANDSHAKE_MEMBERS = Object.freeze([
+    "expected_extension_version", "last_seen_at", "observed_extension_version",
+    "stale_after_seconds", "status"
   ]);
   const EVALUATION_MEMBERS = Object.freeze([
     "aggregate_potential_status", "aggregate_potential_value", "case_id", "closure_state",
@@ -37,6 +42,7 @@
   const ALIAS = /^[a-z][a-z0-9-]{0,62}[a-z0-9](?![\s\S])/;
   const EVALUATION_PATH =
     /^\/api\/v1\/orders\/(SYN-ORDER-[A-Z0-9]+(?:-[A-Z0-9]+)*)\/evaluate(?![\s\S])/;
+  const HANDSHAKE_PATH = "/api/v1/system/extension/handshake";
   const CONTENT_LENGTH = /^(?:0|[1-9][0-9]*)(?![\s\S])/;
   const INTEGER_AMOUNT = /^-?(?:0|[1-9][0-9]*)(?![\s\S])/;
   const NEGATIVE_ZERO = /^-0(?:\.0+)?(?![\s\S])/;
@@ -132,7 +138,7 @@
 
   function closedRequestUrl(origin, path) {
     const normalizedOrigin = originPolicy.normalizeServiceOrigin(`${origin}/`);
-    if (path !== "/health") {
+    if (path !== "/health" && path !== HANDSHAKE_PATH) {
       const match = EVALUATION_PATH.exec(path);
       if (match === null) contracts.contractError("REQUEST_PATH_INVALID");
       contracts.validateSyntheticId(match[1], "ORDER");
@@ -274,6 +280,44 @@
   async function backendHealth(origin) {
     const result = await fetchClosedJson(origin, "/health", {method: "GET"}, HEALTH_TIMEOUT_MS);
     return validateHealth(result.envelope.data, result.status);
+  }
+
+  function localCsrfHeaders() {
+    const metas = document.querySelectorAll('meta[name="ssa-csrf-token"]');
+    if (metas.length !== 1 || !LOWER_SHA256.test(metas[0].content)) {
+      contracts.contractError("CSRF_TOKEN_UNAVAILABLE");
+    }
+    return Object.freeze({
+      "Content-Type": "application/json",
+      "X-SSA-CSRF-Token": metas[0].content
+    });
+  }
+
+  function validateHandshake(data, status) {
+    canonical.exactMembers(data, HANDSHAKE_MEMBERS, "HANDSHAKE_MEMBERS_INVALID");
+    if (
+      status !== 200 ||
+      !["LAST_SEEN_HEALTHY", "VERSION_MISMATCH"].includes(data.status) ||
+      data.expected_extension_version !== contracts.EXTENSION_VERSION ||
+      data.observed_extension_version !== contracts.EXTENSION_VERSION ||
+      data.stale_after_seconds !== 300
+    ) contracts.contractError("HANDSHAKE_CONTRACT_INVALID");
+    extractionModule.validateTimestamp(data.last_seen_at, "HANDSHAKE_TIMESTAMP_INVALID");
+    return data;
+  }
+
+  async function extensionHandshake(origin) {
+    const body = canonical.canonicalStringify({
+      extension_version: contracts.EXTENSION_VERSION,
+      schema_version: contracts.HANDSHAKE_SCHEMA_VERSION
+    });
+    const result = await fetchClosedJson(
+      origin,
+      HANDSHAKE_PATH,
+      {body, headers: localCsrfHeaders(), method: "POST"},
+      HANDSHAKE_TIMEOUT_MS
+    );
+    return validateHandshake(result.envelope.data, result.status);
   }
 
   function validateMoney(value, code) {
@@ -568,6 +612,11 @@
     try {
       const backend = await backendHealth(extraction.origin);
       if (!backend.healthy) return contracts.response("BACKEND_UNHEALTHY", withBackend(summary, backend), "BACKEND_UNHEALTHY");
+      try {
+        await extensionHandshake(extraction.origin);
+      } catch (_error) {
+        // Status registration is maintenance-only; evaluation readiness remains health-derived.
+      }
       return contracts.response("SUPPORTED_READY", withBackend(summary, backend), null);
     } catch (error) {
       const state = backendHealthFailureState(error);
@@ -660,8 +709,10 @@
       return contracts.response(state, data, "PAGE_CHANGED_DURING_HEALTH");
     }
     extraction = verifiedExtraction;
-    const metas = document.querySelectorAll('meta[name="ssa-csrf-token"]');
-    if (metas.length !== 1 || !LOWER_SHA256.test(metas[0].content)) {
+    let headers;
+    try {
+      headers = localCsrfHeaders();
+    } catch (_error) {
       return contracts.response("SAFE_ERROR", withBackend(summary, backend), "CSRF_TOKEN_UNAVAILABLE");
     }
     const orderId = extraction.order.order_id;
@@ -682,10 +733,7 @@
         `/api/v1/orders/${encodeURIComponent(orderId)}/evaluate`,
         {
           body,
-          headers: {
-            "Content-Type": "application/json",
-            "X-SSA-CSRF-Token": metas[0].content
-          },
+          headers,
           method: "POST"
         },
         EVALUATION_TIMEOUT_MS

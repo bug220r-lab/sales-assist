@@ -1,0 +1,1314 @@
+# Synthetic Sales Assist v0.1 — Milestone 7
+# Local Control Center Dashboard, Human Review, Telemetry, and Operational UX
+
+Continue in the same Codex chat and repository from the exact accepted Milestone 6 state.
+
+This instruction may be delivered in either of two ways:
+
+1. as the repository file:
+   `tasks/milestone7_control_center_dashboard.txt`; or
+2. pasted directly into the existing repository-scoped Codex chat from a mobile device.
+
+If this instruction is pasted into chat and the task file is absent, do not stop for that absence.
+Perform the complete preflight first. After preflight succeeds, save an exact copy of this
+instruction to:
+
+```text
+tasks/milestone7_control_center_dashboard.txt
+```
+
+Include that task file in the Milestone 7 commit. No other pre-existing workspace change is
+authorized.
+
+---
+
+# Accepted Milestone 6 authority
+
+```text
+branch = main
+base_commit = 1ff8198e19af7cbcf9f153c36a66bcfef1c5a45f
+base_tree = d07f75737eb6a5e891d002cea8a89c6d0d146c67
+parent_commit = 16d1fa2a0b369c257c0e90428785f82efe12fd5f
+```
+
+## Milestone 6 implementation
+
+```text
+MILESTONE_6_LOCALHOST_CHROME_EXTENSION = PASS
+M6_LIFECYCLE_CONCURRENCY_REMEDIATION = PASS
+M6_VISIBLE_CHROME_SMOKE = PASS
+M6_POST_REMEDIATION_VISIBLE_SMOKE = PASS
+M6_OPERATOR_ACCEPTANCE_AUTOMATED = PASS
+M6_MANUAL_ACCEPTANCE = PASS
+```
+
+## Accepted regression and component identity
+
+```text
+complete regression = 1,522/1,522 PASS
+lifecycle concurrency = 40/40 PASS
+M5 scoped = 116/116 PASS
+M6 scoped = 80/80 PASS
+current-byte Chrome = 45/45 PASS
+all 16 documented panel states = PASS
+```
+
+```text
+extension manifest version = 3
+extension version = 0.1.0
+extension permission set = {sidePanel}
+extension host permissions =
+  http://127.0.0.1/*
+  http://localhost/*
+
+extension ZIP SHA-256 =
+acb0ff977e24d69a7d4fab0d1426ef5eba30c0d8ec9b86a1ab744a6b9319210d
+```
+
+```text
+portal origin = http://127.0.0.1:8765/
+API response version = synthetic-sales-assist-api/v1
+API request version = synthetic-sales-assist-api-request/v1
+DOM contract = synthetic-sales-assist-dom/v1
+application view = synthetic-sales-assist-application/v1
+application version = 0.1.0
+build = synthetic-sales-assist-m5/v1
+runtime receipt = synthetic-sales-assist-runtime-receipt/v1
+database schema = 4
+```
+
+## Fresh successful operator-acceptance evidence
+
+```text
+M6_OPERATOR_ACCEPTANCE_RERUN_REPORT.md
+SHA-256 =
+cdaf4de076e5ef5fab92287af09d653a130c1c9731908343161df6745c12aecd
+
+M6_OPERATOR_ACCEPTANCE_RERUN_REPORT.json
+SHA-256 =
+ad194987fd60a23694085ca7756b813f52301216e470874ecdfb6e21530ae4ba
+
+M6_OPERATOR_ACCEPTANCE_RERUN_REPORT.sha256
+SHA-256 =
+8cb7fae3e1f5551a15e315890d41cbcc0f39fd4dbb812c403dd22d6a68e09291
+```
+
+The fresh successor acceptance verified:
+
+- preflight and post-run full suites `1,522/1,522 PASS`;
+- lifecycle `40/40`;
+- M5 scoped `116/116`;
+- M6 scoped `80/80`;
+- current-byte Chrome `45/45`;
+- all 16 panel states rendered successfully;
+- all nine safety counters zero;
+- external runtime requests zero;
+- service stopped;
+- port 8765 listeners zero;
+- exact repository commit/tree;
+- clean worktree/index/untracked inventory;
+- no Milestone 7 artifacts.
+
+The prior failed acceptance reports remain preserved as historical evidence. The lifecycle
+remediation classified the reproduced failure as a timing-dependent test defect and also closed
+a related failed-start cleanup-lock gap. The Chrome extension bytes and package hash did not
+change.
+
+---
+
+# M7 design-readiness evidence
+
+The completed off-repository M7 UX readiness review found:
+
+```text
+M7_UX_READINESS_REVIEW = PASS
+M7_DESIGN_DEMO_BLOCKERS = 0
+IMPLEMENTATION_REQUIREMENTS = 10
+POLISH_ITEMS_DEFERRED = 6
+```
+
+The ten implementation requirements in this prompt are binding implementation acceptance
+criteria. They preserve existing business behavior and require no new product decision:
+
+1. Bind every dashboard action to an existing committed application service or reducer.
+2. Keep system classifications and human decisions visibly separate.
+3. Keep current queue counts separate from immutable historical event totals.
+4. Publish and enforce exact metric denominators.
+5. Segment all Money displays and totals by currency.
+6. Use truthful extension-status semantics.
+7. Require confirmation, request keys, replay, and conflict feedback for human actions.
+8. Order explanations for nontechnical users.
+9. Use ordinary loopback deep links without new Chrome permissions.
+10. Expose stable screenshot-safe and machine-readable M8 evidence surfaces.
+
+The six polish items are deferred unless trivial and risk-free:
+
+- guided demo mode;
+- print-friendly manager summary;
+- copy-ID convenience controls;
+- chart animation;
+- saved filters;
+- theme selection.
+
+Do not delay M7 for those polish items.
+
+---
+
+# Pre-edit verification
+
+Before modifying files:
+
+1. Verify `HEAD` equals:
+   `1ff8198e19af7cbcf9f153c36a66bcfef1c5a45f`.
+
+2. Verify `HEAD^{tree}` equals:
+   `d07f75737eb6a5e891d002cea8a89c6d0d146c67`.
+
+3. Verify the index is clean.
+
+4. Verify the worktree is clean except for the one explicitly permitted task file:
+   `tasks/milestone7_control_center_dashboard.txt`.
+   If the prompt was pasted from mobile and the task file is absent, permit its creation only
+   after every other preflight gate succeeds.
+
+5. Verify the protected specification/reference files, bundle manifest, checksums, README, and
+   migrations remain byte-identical to their committed state.
+
+6. Rerun the complete current repository suite and require:
+   `1,522/1,522 PASS`, allowing only the already documented Windows directory-symlink
+   capability skip when equivalent reparse-point canaries pass.
+
+7. Verify:
+   - lifecycle concurrency remediation;
+   - M5 launcher compatibility;
+   - local portal and API;
+   - database schema and integrity;
+   - extension manifest and deterministic package;
+   - M6 route and DOM contracts.
+
+8. Recompute and verify the extension package SHA-256:
+   `acb0ff977e24d69a7d4fab0d1426ef5eba30c0d8ec9b86a1ab744a6b9319210d`.
+
+9. Verify exact extension permissions:
+
+   ```text
+   permissions:
+   - sidePanel
+
+   host_permissions:
+   - http://127.0.0.1/*
+   - http://localhost/*
+   ```
+
+10. Verify all accepted API/request/DOM/application/build/runtime/database versions listed above.
+
+11. Verify:
+    - runtime external network requests = 0;
+    - all nine safety counters = 0;
+    - real data count = 0;
+    - production-system access count = 0;
+    - external mutation count = 0.
+
+12. Verify no Control Center/dashboard implementation or Milestone 8 artifact exists.
+
+13. Record the exact pre-edit inventory, base commit/tree, route inventory, database schema,
+    migrations, extension package inventory, and acceptance evidence.
+
+If any precondition differs—other than the explicitly permitted task file—stop before editing and
+report the exact discrepancy.
+
+If the external acceptance reports cannot be read because of repository-sandbox scope, do not
+invent their contents and do not stop solely for that. Treat the exact user-attested verdicts and
+hashes embedded in this instruction as binding acceptance evidence and record the access
+limitation.
+
+---
+
+# Milestone objective
+
+Implement **Milestone 7 only**:
+
+- a browser-based local Control Center;
+- current Sales Credit and DOI queues;
+- a domain-aware human-review queue;
+- order, case, run, evaluation, and immutable timeline views;
+- plain-English explainability;
+- explicit local synthetic human actions through existing services;
+- accurate telemetry and metric denominators;
+- system, database, backup, and extension health;
+- ordinary loopback deep links from the M6 side panel;
+- accessibility;
+- stable manager-demo and M8 evidence surfaces.
+
+Do not begin Milestone 8 packaging, final release construction, or independent audit.
+
+During this milestone create:
+
+```text
+docs/acceptance/milestone6-acceptance.md
+```
+
+It must record:
+
+- M6 commit/tree/parent;
+- M6 implementation PASS;
+- lifecycle-remediation PASS;
+- visible Chrome smoke PASS;
+- post-remediation visible smoke PASS;
+- automated operator-acceptance PASS;
+- manual acceptance PASS;
+- all three successful report hashes;
+- prior failed acceptance preserved as historical evidence;
+- extension version/hash and exact permissions;
+- API/request/DOM/application/build/runtime/database versions;
+- regression/scoped counts;
+- all 16 panel states PASS;
+- runtime external requests zero;
+- all nine safety counters zero;
+- service stopped and port listeners zero.
+
+Also create an M7 implementation-requirement closure matrix for the ten readiness requirements.
+
+---
+
+# Hard product and safety boundary
+
+Dashboard actions are local synthetic workflow actions only.
+
+Do not:
+
+- connect to any external or production system;
+- send customer or internal messages;
+- modify source-order facts through the portal;
+- add a production connector;
+- add a non-loopback bind;
+- hide human authority;
+- turn a system classification into a human outcome;
+- turn an opportunity into an intervention;
+- turn a recommendation into realized value;
+- infer a resulting-order link;
+- add remote analytics, fonts, scripts, assets, or CDNs;
+- add an automatic updater;
+- request any new Chrome permission;
+- change Sales Credit or DOI business rules;
+- modify protected specifications;
+- add a new reason or transition to solve a UI problem;
+- begin M8 release packaging.
+
+All nine safety counters must remain zero.
+
+---
+
+# 1. Action-to-service preflight
+
+Before creating an action button, generate a machine-readable and human-readable matrix from the
+committed code.
+
+For every proposed UI action, identify:
+
+- exact existing application service/reducer symbol;
+- accepted command/input type;
+- actor requirement;
+- confirmation requirement;
+- request/idempotency key;
+- receipt/event/result type;
+- replay behavior;
+- conflict behavior;
+- projection/history effects;
+- tests proving the underlying service.
+
+Rules:
+
+- UI routes and handlers contain no business rules.
+- Thin API/application adapters may invoke committed services.
+- If no existing service/reducer supports an action, omit the action or render the information
+  read-only.
+- Do not approximate a missing business operation in the UI.
+- Do not add business behavior merely to satisfy a dashboard design.
+
+Required action candidates:
+
+## Sales Credit
+
+- evaluate synthetic order/interaction;
+- record manager outcome:
+  - APPROVED;
+  - DENIED;
+  - PARTIAL;
+  - OTHER_REP;
+  - NOT_PURSUED;
+- exact amount/currency when PARTIAL requires it.
+
+## DOI
+
+Where committed services support them:
+
+- record a structured human fact;
+- select an overlap scenario;
+- approve/reject compatibility review;
+- confirm no viable alternate;
+- close human out of scope;
+- resolve one exact attention cause;
+- trigger a local synthetic recheck;
+- verify a synthetic intervention/action;
+- confirm a synthetic resulting-order link;
+- append value correction or reversal.
+
+## System
+
+- refresh health;
+- deep database verification;
+- create a verified backup;
+- view backup receipts.
+
+Restore and reset must remain separate strongly confirmed workflows, not one-click overview
+actions.
+
+At minimum, the manager-demo build must operationally support through existing services:
+
+- one Sales Credit manager-outcome action;
+- one DOI overlap-scenario selection;
+- one exact replay of a human action;
+- one changed-material conflict of a human action.
+
+If committed services unexpectedly cannot support one of those required demo actions, stop and
+report the exact service gap instead of inventing behavior.
+
+Create:
+
+```text
+docs/milestone7-action-to-service-matrix.md
+docs/milestone7-action-to-service-matrix.json
+```
+
+---
+
+# 2. Dashboard information architecture
+
+Implement stable loopback GET routes equivalent to:
+
+```text
+/
+ /overview
+ /sales-credit
+ /sales-credit/{case_id}
+ /doi
+ /doi/{case_id}
+ /review
+ /orders/{order_id}
+ /runs/{run_id}
+ /audit/{subject_kind}/{subject_id}
+ /system
+ /system/database
+ /system/backups
+ /system/telemetry
+ /system/extension
+```
+
+Equivalent route organization is acceptable if documented and the manager-demo sequence remains
+stable.
+
+Route rules:
+
+- all routes are loopback-only;
+- every identifier is a reserved synthetic ID;
+- queue routes read current projections;
+- detail/timeline routes may join current projections with immutable history;
+- no route exposes raw SQL rows, arbitrary payloads, unrestricted text, local usernames, or
+  absolute file paths in ordinary demo mode;
+- extension deep links use ordinary GET URLs and require no new permission;
+- stable screenshot-safe IDs/selectors are exposed for M8 evidence.
+
+`/` should lead clearly to `/overview`.
+
+---
+
+# 3. Overview
+
+Show current, accurately labeled cards for:
+
+- business requests received;
+- unique new evaluations;
+- exact replays;
+- material conflicts;
+- successful requests;
+- failed-closed requests;
+- current Sales Credit cases;
+- current DOI cases by state;
+- current active DOI opportunities;
+- current human-review items;
+- median and P95 processing latency;
+- database health;
+- latest verified backup;
+- service status;
+- truthful extension status;
+- all nine safety counters.
+
+Cards must link to their denominator/detail views where practical.
+
+Never use all-time event rows to inflate current queue counts.
+
+Empty denominators display `N/A`, not `0%`.
+
+---
+
+# 4. Sales Credit queue and detail
+
+## Queue
+
+Show current projections only:
+
+- synthetic Order Number;
+- current workflow state;
+- current attribution classification;
+- current placed-value status;
+- current human-review requirement;
+- interaction count;
+- most recent update;
+- manager-outcome status.
+
+Closed/history records do not appear as active unless the filter explicitly requests them.
+
+## Detail
+
+Display separate sections for:
+
+1. current system classification;
+2. plain-English why;
+3. required human action;
+4. source/search completeness;
+5. current placed-value state;
+6. interactions/evidence;
+7. manager outcome;
+8. immutable timeline;
+9. developer versions/hashes.
+
+System classification and manager outcome must use separate cards, fields, API objects, and
+timeline event types.
+
+## Manager outcome
+
+Use the existing committed service.
+
+Requirements:
+
+- explicit user click;
+- confirmation;
+- closed outcome enum;
+- bounded synthetic actor;
+- bounded request key;
+- exact Money/currency where PARTIAL requires it;
+- bounded fictional note only if supported;
+- persisted event/receipt;
+- exact replay feedback;
+- changed-material conflict feedback;
+- system classification remains unchanged.
+
+---
+
+# 5. DOI queue and detail
+
+## Queue
+
+Show current projections only:
+
+- synthetic Order Number;
+- DOI state;
+- opportunity types;
+- exact reason summary;
+- potential-value state;
+- attention causes;
+- lifecycle/closure;
+- most recent update.
+
+Opportunity count may exceed case count and must be labeled accordingly.
+
+## Detail
+
+Display:
+
+1. current DOI state;
+2. plain-English why;
+3. required human action;
+4. source completeness;
+5. opportunities and exact scope;
+6. aggregate-potential state;
+7. handling/coordination flags;
+8. current attention causes;
+9. human facts;
+10. interventions and resulting-order links;
+11. value/KPI history;
+12. immutable timeline;
+13. developer versions/hashes.
+
+Unknown facts remain visible without guessed values.
+
+Overlapping opportunities remain separate. Aggregate potential is unavailable until the existing
+domain service records an exact scenario selection.
+
+## DOI human actions
+
+For every supported action, enforce:
+
+- explicit click;
+- confirmation describing the exact synthetic effect;
+- existing service/reducer only;
+- closed bounded input;
+- synthetic actor;
+- request key;
+- persisted event and receipt;
+- exact replay;
+- changed-material conflict;
+- updated projection from immutable history.
+
+Resolving one attention cause must not clear another.
+
+Evaluation itself must never create a human fact, intervention, resulting-order link, or value.
+
+---
+
+# 6. Human-review queue
+
+Create one unified presentation layer while preserving domain semantics.
+
+Every review item shows:
+
+- domain;
+- current subject;
+- exact review reason;
+- why automation stopped or what decision remains;
+- source-completeness state;
+- required human action;
+- existing permitted local action, if any;
+- audit/history link.
+
+Do not collapse Sales Credit manager authority into DOI human facts or vice versa.
+
+Current review queue counts use current unresolved projections only. Historical resolved review
+events appear only in timelines/history.
+
+---
+
+# 7. Current projection versus immutable history
+
+Implement and test this strict distinction:
+
+```text
+current queue/card = current projection
+timeline/history = immutable events and prior snapshots/evaluations
+```
+
+Requirements:
+
+- prior evaluations remain visible but do not inflate current queue cards;
+- closed/superseded/invalidated items do not remain active;
+- purged identity is not reconstructed;
+- exact replay receipts are history, not new evaluations;
+- conflicts are rejected requests, not new successful cases;
+- current counts reconcile to direct list queries;
+- list pagination/filter counts reconcile to the same projection population.
+
+Create explicit repository/query contracts and denominator tests.
+
+---
+
+# 8. Metric denominator registry
+
+Create a versioned machine-readable denominator registry and human-readable matrix.
+
+At minimum define these metrics exactly:
+
+## Requests received
+
+Numerator/basis:
+terminal business-processing telemetry rows in the selected time window.
+
+Maintenance operations are excluded unless explicitly selected.
+
+Exact replays are included in requests and broken out separately.
+
+## Unique evaluations
+
+Count of new durable Sales Credit and DOI evaluation IDs.
+
+Exclude:
+
+- exact replays;
+- conflicts;
+- malformed requests without an evaluation.
+
+## Successful request rate
+
+Numerator:
+successful terminal business requests.
+
+Denominator:
+all terminal business requests in the selected time window.
+
+State explicitly whether exact replays are included; display them separately.
+
+## Fail-closed rate
+
+Numerator:
+terminal business requests flagged fail-closed.
+
+Denominator:
+all terminal business requests in the selected window.
+
+## Human-review rate
+
+Numerator:
+new evaluations whose current result requires human review.
+
+Denominator:
+new unique evaluations.
+
+Exclude replays and conflicts.
+
+## Active Sales Credit cases
+
+Current nonclosed Sales Credit projections only.
+
+## Manager-outcome rate
+
+Cases with a recorded manager outcome divided by eligible cases actually presented for a human
+decision in the selected window.
+
+Cases not yet eligible/presented are excluded.
+
+## Active DOI opportunities
+
+Current active opportunity records/projections only.
+
+Exclude closed, superseded, invalidated, and purged opportunities.
+
+## DOI state distribution
+
+Current DOI case population, with the population definition visible.
+
+## Opportunity type count
+
+Current active opportunities by type. Label that opportunity count can exceed case count.
+
+## Latency
+
+Median/P95 over a declared sample of terminal business requests. Maintenance operations are
+separate. Replays are a separate series or clearly identified if included.
+
+## Throughput
+
+Terminal business requests per wall-clock unit with inclusion rules visible.
+
+## Potential value
+
+Exact eligible opportunity potential, grouped by currency.
+
+Exclude:
+
+- unavailable values;
+- unresolved overlap;
+- mixed-currency combination.
+
+Show unavailable/overlap count separately.
+
+## Realized value
+
+Current exact verified intervention contribution, grouped by currency.
+
+Exclude unverified actions. Apply reversals/corrections exactly once.
+
+## Backup/database/safety status
+
+Use latest verified receipts/results and show their timestamps/schema.
+
+Presentation rules:
+
+- every rate/card provides numerator, denominator, exclusions, and time window;
+- cards link to details;
+- empty denominator is `N/A`;
+- mixed currencies use separate rows/cards;
+- unresolved overlap is `Unavailable`, not zero;
+- no identity appears in aggregate views.
+
+Create:
+
+```text
+docs/milestone7-metric-denominator-matrix.md
+src/.../a versioned denominator registry
+tests for every denominator and empty/edge case
+```
+
+---
+
+# 9. Truthful extension status
+
+Dashboard extension state must be one of:
+
+```text
+EXPECTED_PACKAGE_ONLY
+LAST_SEEN_HEALTHY
+LAST_SEEN_STALE
+VERSION_MISMATCH
+UNKNOWN
+```
+
+Rules:
+
+- package presence alone never means installed or running;
+- display expected extension version and package SHA-256;
+- use a last-seen local handshake/heartbeat only if implemented with no new permission and no
+  external network;
+- clearly display last-seen timestamp;
+- stale threshold is documented;
+- version mismatch is explicit;
+- absence of handshake is `EXPECTED_PACKAGE_ONLY` or `UNKNOWN`, not installed;
+- dashboard does not require extension presence.
+
+Minimal compatible M6 extension changes are permitted only for:
+
+- ordinary loopback deep links;
+- local last-seen/version handshake;
+- no business behavior change;
+- no new permission;
+- no broader host access.
+
+If extension bytes change:
+
+- increment the extension patch version or otherwise follow the existing version policy;
+- rebuild deterministically;
+- publish the new package SHA-256;
+- rerun all extension permission/security/current-byte tests.
+
+---
+
+# 10. Extension deep links
+
+The M6 side panel should be able to open ordinary loopback URLs for:
+
+- current synthetic order;
+- Sales Credit or DOI case;
+- current evaluation/history;
+- human-review item;
+- system health when the backend is unhealthy.
+
+Requirements:
+
+- stable GET routes;
+- no new Chrome permission;
+- synthetic IDs only;
+- no embedded credential/token;
+- no arbitrary URL;
+- local origin validation;
+- destination existence/fail-safe handling.
+
+Dashboard remains fully usable without the extension.
+
+---
+
+# 11. System health, database, backup, telemetry
+
+## System health
+
+Show:
+
+- app/build/API/DOM/database versions;
+- service origin and owned PID;
+- truthful extension state/version/hash/last seen;
+- database path in ordinary UI as a privacy-safe location class, not an absolute username-bearing
+  path;
+- database size;
+- migrations;
+- quick/deep/foreign-key/projection status;
+- latest backup/restore;
+- runtime directory class;
+- M4 benchmark baseline;
+- current safety counters;
+- network policy;
+- recent safe errors.
+
+## Operations
+
+Permitted:
+
+- health refresh;
+- deep database verify;
+- create a verified backup;
+- view backup receipts.
+
+Restore and reset remain separate, strongly confirmed workflows. Do not make them one-click
+overview actions.
+
+## Telemetry
+
+Expose:
+
+- request/evaluation/replay/conflict counts;
+- latency and throughput;
+- fail-closed/human-review rates;
+- result distributions;
+- database errors;
+- backup status;
+- database size/growth;
+- current benchmark reference;
+- currency-specific potential/realized values.
+
+Use local SVG/Canvas/CSS or tables. No remote chart dependency. Every chart has an accessible
+table alternative.
+
+---
+
+# 12. Screenshot-safe manager-demo and M8 evidence surfaces
+
+Create stable, synthetic routes and selectors for this manager-demo sequence:
+
+1. `/system` — localhost, DB health, extension status, all safety counters zero.
+2. `/overview` — requests, unique evaluations, current queues, latency, backup.
+3. deterministic Sales Credit case — classification and no manager outcome yet.
+4. Sales Credit human-review case — record one synthetic outcome.
+5. DOI fulfillment split — opportunity, scope, reasons.
+6. DOI overlap — separate opportunities, RC-087, scenario selection.
+7. `/review` — domain-aware human-review queue.
+8. immutable audit timeline.
+9. M6 side panel and dashboard deep link.
+10. malformed/incomplete case.
+11. `/system/telemetry`.
+12. `/system/backups`.
+
+Requirements:
+
+- stable `data-ssa-dashboard-*` attributes or equivalent;
+- optional screenshot/presentation mode that suppresses absolute local paths and local usernames;
+- no hidden tooltip-only evidence;
+- no nondeterministic live animation;
+- meaningful empty states;
+- stable synthetic seed/demo dataset;
+- machine-readable health/metrics endpoints for M8 benchmarks;
+- ordinary pages remain truthful and not hard-coded screenshots.
+
+Guided-demo mode and print-friendly summary are optional polish, not M7 blockers.
+
+---
+
+# 13. Search, filters, sorting, pagination
+
+Search only synthetic local indexed fields.
+
+Requirements:
+
+- bounded query length;
+- closed filter fields/operators;
+- deterministic sorting;
+- stable pagination;
+- count/result reconciliation;
+- no arbitrary SQL;
+- no unrestricted hidden-payload full text;
+- no external search;
+- no acceptance of real-looking identity.
+
+Saved filters are deferred unless trivial.
+
+---
+
+# 14. Visual and accessibility requirements
+
+Use the existing generic blue/teal/charcoal synthetic-tool design.
+
+Required:
+
+- one `h1` per page;
+- logical heading hierarchy;
+- navigation/main/filter/status landmarks;
+- skip-to-content link;
+- semantic tables with captions and header associations;
+- visible labels and validation;
+- full keyboard access;
+- visible focus;
+- no keyboard trap;
+- modal focus management;
+- processing/status live regions;
+- error recovery instructions;
+- color is not the only state indicator;
+- text labels for replay/conflict/fail-closed/human-review;
+- usable at 200% zoom;
+- narrow side-panel-linked responsiveness;
+- safe wrapping of long synthetic IDs;
+- `prefers-reduced-motion`;
+- no flashing;
+- chart table alternatives;
+- direct series labels or accessible legends;
+- currency and denominator in chart title/caption;
+- unavailable and zero visually distinct.
+
+The complete manager-demo route sequence must be operable without a mouse.
+
+---
+
+# 15. Security
+
+Test and preserve:
+
+- loopback-only bind/origin/Host restrictions;
+- local CSRF/origin controls;
+- explicit confirmation boundaries;
+- closed action schemas;
+- bounded notes and request keys;
+- synthetic actor validation;
+- HTML escaping;
+- safe JSON embedding;
+- strict local CSP;
+- no arbitrary file access;
+- no arbitrary SQL;
+- no unsafe error/stack trace;
+- no source mutation;
+- no remote code or assets;
+- no external analytics/update;
+- action replay/conflict;
+- deep-link validation;
+- no new Chrome permission;
+- all nine safety counters zero.
+
+---
+
+# 16. API/service additions
+
+Add only thin, versioned local endpoints required for:
+
+- current projection queues;
+- domain details and timelines;
+- metric denominators;
+- existing human-action services;
+- extension status/handshake;
+- system health, verify, and backup;
+- dashboard filters and pagination.
+
+Requirements:
+
+- closed request/response schemas;
+- extra/unknown members rejected;
+- synthetic IDs only;
+- exact actor/request keys;
+- no business logic in handlers;
+- safe error envelopes;
+- no raw row dumps;
+- no absolute paths in ordinary demo responses;
+- exact replay/conflict response states.
+
+If a database migration is genuinely needed for dashboard projection/index/extension-handshake
+state:
+
+- create the next versioned migration after schema version 4;
+- do not change business semantics;
+- test fresh install and upgrade from schema 4;
+- preserve backup/recovery;
+- report the new schema version and checksum.
+
+Prefer existing telemetry/projections when sufficient.
+
+---
+
+# 17. Documentation
+
+Create at minimum:
+
+- M6 acceptance evidence;
+- M7 architecture/route inventory;
+- action-to-service matrix, Markdown and machine-readable;
+- current-projection versus history contract;
+- metric denominator registry/matrix;
+- extension status semantics;
+- dashboard/API contract;
+- human-action guide;
+- accessibility verification;
+- manager-demo route sequence;
+- M8 screenshot/evidence surface inventory;
+- M7 manual acceptance checklist;
+- updated development/start instructions;
+- updated audit-finding/implementation-requirement closure matrix.
+
+Create ADRs only for consequential choices, expected areas:
+
+- Control Center query/projection architecture;
+- human-action API/idempotency boundary;
+- extension last-seen semantics;
+- dashboard denominator registry;
+- optional schema migration.
+
+Do not create ADRs for ordinary CSS or route naming.
+
+---
+
+# 18. Tests
+
+At minimum implement:
+
+## Action-to-service
+
+- every rendered action maps to a real service;
+- unsupported actions are absent/read-only;
+- no UI business rule;
+- classification cannot create human outcome;
+- opportunity cannot create intervention;
+- evaluation cannot create resulting link/value.
+
+## Current versus history
+
+- current cards equal current projections;
+- historical events do not inflate queues;
+- replays do not increment unique evaluations;
+- conflicts do not create successful items;
+- closed/superseded/invalidated/purged items excluded;
+- list counts reconcile with cards and pagination.
+
+## Denominators
+
+- every metric numerator/denominator/exclusion;
+- empty denominator → N/A;
+- replays separate;
+- conflicts separate;
+- human-review denominator;
+- opportunity count can exceed case count;
+- mixed currencies separated;
+- overlap/unavailable excluded and shown separately;
+- backup/DB/safety timestamps.
+
+## Human actions
+
+For every implemented action family:
+
+- explicit confirmation;
+- bounded synthetic actor/input/request key;
+- success event/receipt;
+- exact replay;
+- changed-material conflict;
+- projection update;
+- immutable timeline;
+- no source mutation;
+- safe errors.
+
+## Extension status/deep links
+
+- all five status states;
+- package-only does not mean installed;
+- healthy/stale threshold;
+- version mismatch;
+- no heartbeat/unknown;
+- no new permission;
+- deep-link origin/path/ID validation;
+- missing destination safe handling.
+
+## Dashboard/UX
+
+- overview;
+- queues;
+- details;
+- review;
+- audit timeline;
+- system/database/backups/telemetry;
+- filters/sorting/pagination;
+- presentation mode;
+- stable M8 selectors;
+- HTML/JSON escaping;
+- no absolute path/username in ordinary demo pages.
+
+## Accessibility
+
+- headings/landmarks;
+- labels;
+- keyboard;
+- focus;
+- live regions;
+- chart tables;
+- reduced motion;
+- 200% zoom/manual checklist;
+- narrow layout;
+- manager-demo route sequence.
+
+## Regression/security
+
+- all M1–M6 tests;
+- extension current-byte/package tests;
+- lifecycle concurrency;
+- database/backup/restore;
+- protected-file integrity;
+- synthetic identity;
+- prohibited input;
+- secrets;
+- localhost/network;
+- permissions;
+- foundation audit;
+- milestone boundary.
+
+Use actual collected test counts. Do not preserve a historical total artificially.
+
+---
+
+# 19. Manual acceptance deliverable
+
+Create:
+
+```text
+docs/milestone7-manual-acceptance.md
+```
+
+It must cover:
+
+- start/status/stop;
+- overview/current counts;
+- Sales Credit queue/detail/outcome;
+- DOI queue/detail/overlap selection;
+- human-review queue;
+- exact replay/conflict for human actions;
+- attention resolution where supported;
+- intervention/resulting-link/value flow where supported;
+- immutable timeline;
+- metrics/denominators/currencies;
+- system health;
+- DB verify;
+- backup;
+- extension status/deep links;
+- presentation mode/screenshots;
+- accessibility;
+- network/safety;
+- restart persistence.
+
+Automated PASS does not replace the later user-visible acceptance.
+
+---
+
+# 20. Milestone boundary
+
+Permit:
+
+- Control Center/dashboard pages;
+- thin local API/service adapters;
+- projection/metric queries;
+- local human-action forms;
+- minimal no-new-permission extension deep-link/handshake changes;
+- tests/docs/ADRs;
+- a narrowly required schema migration.
+
+Continue to reject:
+
+- production integration;
+- non-loopback network;
+- external messaging;
+- source mutation;
+- new business rules;
+- remote assets;
+- final release ZIP/installer;
+- store publication;
+- auto-update;
+- protected specification changes;
+- Milestone 8 implementation.
+
+---
+
+# Required verification
+
+Run at minimum:
+
+1. quality gate;
+2. compileall;
+3. M7 dashboard route/view tests;
+4. action-to-service parity audit;
+5. human-action success/replay/conflict tests;
+6. current-versus-history tests;
+7. metric denominator and currency tests;
+8. extension status/deep-link tests;
+9. accessibility tests;
+10. M8 evidence-surface tests;
+11. local API/security tests;
+12. optional migration/upgrade tests if schema changes;
+13. M6 extension/current-byte/package tests;
+14. M6 lifecycle concurrency tests;
+15. M5 portal/API tests;
+16. M4 persistence/CLI/backup/restore tests;
+17. M3 DOI tests;
+18. M2 Sales Credit tests;
+19. M1 shared-domain tests;
+20. complete repository suite;
+21. foundation audit;
+22. protected-file verification;
+23. synthetic-identity scan;
+24. prohibited-input scan;
+25. secret scan;
+26. localhost/no-network checks;
+27. Chrome permission audit;
+28. milestone-boundary tests;
+29. generated documentation/traceability reconciliation.
+
+All protected specification bytes remain unchanged.
+
+All nine safety counters remain zero.
+
+Runtime external network requests remain zero.
+
+---
+
+# Same-tree commit gate
+
+1. Finish every Milestone 7 candidate file.
+2. Record the candidate tree.
+3. Run all scoped and complete gates.
+4. Rerun the final complete gate on that exact tree.
+5. If extension bytes changed, rebuild and verify the deterministic extension package from the
+   same tree.
+6. Commit only when all gates pass.
+7. Verify the commit tree equals the gated tree.
+8. Verify worktree/index/untracked inventory clean.
+9. Verify service stopped and port 8765 listeners zero.
+10. Do not begin Milestone 8.
+11. Do not create a release tag.
+
+---
+
+# Completion report
+
+Report:
+
+- base commit/tree/parent;
+- candidate tree;
+- final commit/tree;
+- exact created/modified/deleted inventory;
+- dashboard route/view inventory;
+- local API additions;
+- database schema/migration status;
+- action-to-service matrix and unsupported actions;
+- Sales Credit queue/detail/outcome results;
+- DOI queue/detail/human-action results;
+- human-review queue;
+- current-versus-history reconciliation;
+- metric denominator registry and results;
+- currency segmentation;
+- extension status states;
+- extension deep links;
+- extension version/hash/permissions if changed;
+- system/database/backup/telemetry views;
+- presentation/M8 evidence routes;
+- accessibility results;
+- M6 acceptance evidence document;
+- implementation-requirement closure matrix;
+- actual collected tests and complete result;
+- all M1–M6 regression results;
+- quality/foundation/security/protected-file results;
+- external network count;
+- all nine safety counters;
+- service/listener state;
+- worktree/index state;
+- manual acceptance document;
+- deferred polish items;
+- any genuine blocker.
+
+Finish exactly:
+
+```text
+MILESTONE_7_CONTROL_CENTER_DASHBOARD = PASS
+```
+
+or:
+
+```text
+MILESTONE_7_CONTROL_CENTER_DASHBOARD = BLOCKED
+```
+
+Stop before Milestone 8.

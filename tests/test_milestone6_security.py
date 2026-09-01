@@ -1190,7 +1190,7 @@ process.stdout.write(
         required = (
             "function closedRequestUrl(origin, path)",
             "originPolicy.normalizeServiceOrigin(`${origin}/`)",
-            'path !== "/health"',
+            'path !== "/health" && path !== HANDSHAKE_PATH',
             "contracts.validateSyntheticId(match[1], \"ORDER\")",
             "const requestUrl = `${normalizedOrigin}${path}`",
             "const parsed = new URL(requestUrl)",

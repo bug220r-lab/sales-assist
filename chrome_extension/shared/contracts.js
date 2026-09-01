@@ -2,12 +2,13 @@
 "use strict";
 
 (() => {
-  const EXTENSION_VERSION = "0.1.0";
+  const EXTENSION_VERSION = "0.1.1";
   const API_SCHEMA_VERSION = "synthetic-sales-assist-api/v1";
   const API_REQUEST_SCHEMA_VERSION = "synthetic-sales-assist-api-request/v1";
   const APPLICATION_SCHEMA_VERSION = "synthetic-sales-assist-application/v1";
   const DOM_SCHEMA_VERSION = "synthetic-sales-assist-dom/v1";
   const EXTRACTION_SCHEMA_VERSION = "synthetic-sales-assist-extension-extraction/v1";
+  const HANDSHAKE_SCHEMA_VERSION = "synthetic-sales-assist-extension-handshake/v1";
   const MESSAGE_SCHEMA_VERSION = "synthetic-sales-assist-extension-message/v1";
   const ORDER_BINDING_SCHEMA_VERSION =
     "synthetic-sales-assist-extension-order-binding/v1";
@@ -653,6 +654,7 @@
     EXTENSION_VERSION,
     EXTRACTION_ALLOWLIST,
     EXTRACTION_SCHEMA_VERSION,
+    HANDSHAKE_SCHEMA_VERSION,
     LINE_MANIFEST_DOMAIN,
     LINE_MANIFEST_SCHEMA_VERSION,
     MESSAGE_SCHEMA_VERSION,

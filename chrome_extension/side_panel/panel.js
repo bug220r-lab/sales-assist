@@ -3,14 +3,18 @@
 
 (() => {
   const contracts = globalThis.SSA.Contracts;
+  const originPolicy = globalThis.SSA.Origin;
   const elements = Object.freeze({
     appVersion: document.getElementById("app-version"),
+    auditLink: document.getElementById("audit-link"),
     backendHealth: document.getElementById("backend-health"),
     buildVersion: document.getElementById("build-version"),
+    caseLink: document.getElementById("case-link"),
     completeness: document.getElementById("completeness"),
     evaluate: document.getElementById("evaluate"),
     historyLink: document.getElementById("history-link"),
     opportunities: document.getElementById("opportunities"),
+    overviewLink: document.getElementById("overview-link"),
     pageIdentity: document.getElementById("page-identity"),
     pageKind: document.getElementById("page-kind"),
     reasons: document.getElementById("reasons"),
@@ -19,11 +23,13 @@
     resultCard: document.getElementById("result-card"),
     resultDetails: document.getElementById("result-details"),
     retry: document.getElementById("retry"),
+    reviewLink: document.getElementById("review-link"),
     safetyCounters: document.getElementById("safety-counters"),
     scenario: document.getElementById("scenario"),
     sourceRulePack: document.getElementById("source-rule-pack"),
     stateDetail: document.getElementById("state-detail"),
-    stateHeading: document.getElementById("state-heading")
+    stateHeading: document.getElementById("state-heading"),
+    systemLink: document.getElementById("system-link")
   });
   const STATE_COPY = Object.freeze({
     UNSUPPORTED_PAGE: ["Unsupported page", "Open a supported synthetic order or interaction detail page."],
@@ -80,6 +86,50 @@
     const item = document.createElement("li");
     item.textContent = text(value);
     list.append(item);
+  }
+
+  function hideLink(element) {
+    element.hidden = true;
+    element.removeAttribute("href");
+  }
+
+  function showLink(element, origin, kind, identifier = null) {
+    element.href = originPolicy.dashboardUrl(origin, kind, identifier);
+    element.hidden = false;
+  }
+
+  function renderDashboardLinks(data) {
+    const links = [
+      elements.auditLink, elements.caseLink, elements.historyLink,
+      elements.overviewLink, elements.reviewLink, elements.systemLink
+    ];
+    links.forEach(hideLink);
+    if (
+      !data || !["order-detail", "interaction-detail"].includes(data.page_kind)
+    ) return;
+    showLink(elements.overviewLink, data.origin, "OVERVIEW");
+    showLink(elements.systemLink, data.origin, "SYSTEM");
+    if (data.order_id !== null) {
+      showLink(elements.historyLink, data.origin, "ORDER", data.order_id);
+    }
+    const evaluation = data.evaluation;
+    if (evaluation === null) return;
+    const caseKind = evaluation.rule_pack === "SALES_CREDIT"
+      ? "SALES_CREDIT_CASE"
+      : "DOI_CASE";
+    showLink(elements.caseLink, data.origin, caseKind, evaluation.case_id);
+    elements.caseLink.textContent = evaluation.rule_pack === "SALES_CREDIT"
+      ? "Open Sales Credit case"
+      : "Open DOI case";
+    showLink(
+      elements.auditLink,
+      data.origin,
+      "EVALUATION_AUDIT",
+      evaluation.evaluation_id
+    );
+    if (evaluation.human_review_required) {
+      showLink(elements.reviewLink, data.origin, "REVIEW");
+    }
   }
 
   function renderEvaluation(evaluation) {
@@ -150,13 +200,7 @@
     renderedCanEvaluate = readyBinding !== null;
     elements.retry.hidden = !(["SAFE_ERROR", "BACKEND_OFFLINE"].includes(state) && lastRequestKey !== null);
     renderEvaluation(data && data.evaluation);
-    if (data && data.origin && data.order_id) {
-      elements.historyLink.href = `${data.origin}/orders/${encodeURIComponent(data.order_id)}#history`;
-      elements.historyLink.hidden = false;
-    } else {
-      elements.historyLink.hidden = true;
-      elements.historyLink.removeAttribute("href");
-    }
+    renderDashboardLinks(data);
     synchronizeControls();
   }
 

@@ -13,6 +13,7 @@ from synthetic_sales_assist.audit import audit_bundle
 from synthetic_sales_assist.persistence.migrations import apply_migrations, discover_migrations
 from synthetic_sales_assist.safety.chrome import (
     ALLOWED_CHROME_HOST_PATTERNS,
+    CHROME_EXTENSION_VERSION,
     validate_chrome_permissions,
 )
 from synthetic_sales_assist.safety.content import assert_payload_safe, scan_payload
@@ -152,7 +153,7 @@ def _chrome_report(root: Path) -> dict[str, object]:
         "description": (
             "Read-only localhost extraction and evaluation for reserved synthetic scenarios."
         ),
-        "version": "0.1.0",
+        "version": CHROME_EXTENSION_VERSION,
         "minimum_chrome_version": "114",
         "permissions": ["sidePanel"],
         "host_permissions": allowed_patterns,

@@ -13,7 +13,11 @@ from synthetic_sales_assist.application.manifest import (
     ordered_line_manifest_digest_from_mappings,
 )
 from synthetic_sales_assist.domain.canonical import canonical_json_bytes
-from synthetic_sales_assist.domain.numeric import Money, MoneyViolation
+from synthetic_sales_assist.domain.numeric import (
+    JSON_SAFE_INTEGER_MAXIMUM,
+    Money,
+    MoneyViolation,
+)
 from synthetic_sales_assist.domain.timestamps import (
     CanonicalTimestamp,
     TimestampValidationError,
@@ -28,6 +32,27 @@ API_REQUEST_SCHEMA_VERSION = "synthetic-sales-assist-api-request/v1"
 DOM_SCHEMA_VERSION = "synthetic-sales-assist-dom/v1"
 RUNTIME_RECEIPT_SCHEMA_VERSION = "synthetic-sales-assist-runtime-receipt/v1"
 APPLICATION_SCHEMA_VERSION = "synthetic-sales-assist-application/v1"
+CONTROL_CENTER_SCHEMA_VERSION = "synthetic-sales-assist-control-center/v1"
+EXTENSION_HANDSHAKE_SCHEMA_VERSION = (
+    "synthetic-sales-assist-extension-handshake/v1"
+)
+MANAGER_OUTCOME_REQUEST_SCHEMA_VERSION = (
+    "synthetic-sales-assist-manager-outcome-request/v1"
+)
+DOI_SCENARIO_SELECTION_REQUEST_SCHEMA_VERSION = (
+    "synthetic-sales-assist-doi-scenario-selection-request/v1"
+)
+DATABASE_VERIFY_REQUEST_SCHEMA_VERSION = (
+    "synthetic-sales-assist-database-verify-request/v1"
+)
+BACKUP_CREATE_REQUEST_SCHEMA_VERSION = "synthetic-sales-assist-backup-request/v1"
+HUMAN_ACTION_RESULT_SCHEMA_VERSION = "synthetic-sales-assist-human-action-result/v1"
+BACKUP_ACTION_RESULT_SCHEMA_VERSION = (
+    "synthetic-sales-assist-backup-action-result/v1"
+)
+M8_EVIDENCE_SURFACES_SCHEMA_VERSION = (
+    "synthetic-sales-assist-m8-evidence-surfaces/v1"
+)
 
 MAX_REQUEST_BODY_BYTES = 16 * 1024
 MAX_RESPONSE_BODY_BYTES = 512 * 1024
@@ -44,6 +69,10 @@ FAIL_CLOSED_RENDER_MODES: Final = frozenset(
 )
 
 _REQUEST_KEY = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\Z", re.ASCII)
+_EXTENSION_VERSION = re.compile(
+    r"\A(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\Z",
+    re.ASCII,
+)
 _ALIAS = re.compile(r"\A[a-z][a-z0-9-]{0,62}[a-z0-9]\Z", re.ASCII)
 _MODE = re.compile(r"\A[a-z][a-z0-9-]{0,62}[a-z0-9]\Z", re.ASCII)
 _LOWER_SHA256 = re.compile(r"\A[0-9a-f]{64}\Z", re.ASCII)
@@ -52,7 +81,87 @@ _SAFE_MEMBER = re.compile(r"\A[A-Za-z][A-Za-z0-9_]{0,95}\Z", re.ASCII)
 _CANONICAL_DECIMAL = re.compile(r"\A(?:0|[1-9][0-9]*)(?:\.[0-9]+)?\Z", re.ASCII)
 _CANONICAL_TOKEN = re.compile(r"\A[A-Z][A-Z0-9_.:/-]{0,255}\Z", re.ASCII)
 _TRANSITION_ID = re.compile(r"\ATR-(?:00[1-9]|0[1-9][0-9]|1[01][0-5])\Z")
+_DASHBOARD_PRIVATE_PATH = re.compile(
+    r"(?:\A[/\\~]|(?<![A-Za-z])[A-Za-z]:[/\\]|"
+    r"[/\\]users[/\\]|\\\\|file:|device:)",
+    re.IGNORECASE,
+)
+_DASHBOARD_LOOPBACK_ORIGIN = re.compile(
+    r"\Ahttp://(?:127\.0\.0\.1|localhost):[0-9]{1,5}/\Z",
+    re.ASCII,
+)
+_DASHBOARD_LOCAL_ROUTE = re.compile(r"\A/[A-Za-z0-9_/-]*\Z", re.ASCII)
 _EMPTY_MEMBERS: Final[frozenset[str]] = frozenset()
+_DASHBOARD_GOVERNED_TEXT_MEMBERS: Final = frozenset(
+    {
+        "aggregate_potential_state",
+        "amount_minor_units",
+        "application_schema_version",
+        "application_version",
+        "attribution",
+        "audit_subject_kind",
+        "build_version",
+        "currency_code",
+        "currency_registry_version",
+        "currency_scale",
+        "database_location_class",
+        "database_size_bytes",
+        "database_status",
+        "direction",
+        "doi_state",
+        "doi_state_distribution",
+        "domain",
+        "empty_display",
+        "event_kind",
+        "exclusions",
+        "extension_status",
+        "foreign_key_status",
+        "inclusions",
+        "integrity_check",
+        "interaction_count",
+        "label",
+        "lifecycle_state",
+        "limit",
+        "location_class",
+        "manager_outcome",
+        "median_latency_ms",
+        "metric_id",
+        "mutual_exclusion_group_id",
+        "name",
+        "network_policy",
+        "numerator",
+        "offset",
+        "opportunity_type",
+        "opportunity_type_counts",
+        "opportunity_types",
+        "order_value_status",
+        "owned_pid",
+        "potential_state",
+        "p95_latency_ms",
+        "potential_by_currency",
+        "projection_status",
+        "quick_check",
+        "reason_codes",
+        "realized_by_currency",
+        "required_action",
+        "runtime_directory_class",
+        "scenario_selection_state",
+        "safety_counters",
+        "schema_version",
+        "service_origin",
+        "service_status",
+        "stale_after_seconds",
+        "source_completeness_state",
+        "state",
+        "status",
+        "subject_kind",
+        "time_basis",
+        "total_count",
+        "transition_id",
+        "window",
+        "workflow_state",
+    }
+)
 _MONEY_MEMBERS: Final = frozenset(
     {"amount", "currency_code", "currency_registry_version", "currency_scale"}
 )
@@ -441,6 +550,190 @@ def parse_shutdown_request(raw: bytes) -> None:
         raise PortalContractError("REQUEST_SCHEMA_VERSION_UNSUPPORTED")
 
 
+def _required_request_key(value: object) -> str:
+    request_key = validate_request_key(value)
+    if request_key is None:
+        raise PortalContractError("REQUEST_KEY_REQUIRED")
+    if len(request_key) > 96:
+        raise PortalContractError("REQUEST_KEY_INVALID")
+    return request_key
+
+
+def _confirmed(value: object) -> None:
+    if value is not True:
+        raise PortalContractError("ACTION_CONFIRMATION_REQUIRED")
+
+
+def _action_version(
+    value: Mapping[str, object],
+    *,
+    action_schema_version: str,
+) -> None:
+    if value["schema_version"] != action_schema_version:
+        raise PortalContractError("ACTION_SCHEMA_VERSION_UNSUPPORTED")
+    if value["request_schema_version"] != API_REQUEST_SCHEMA_VERSION:
+        raise PortalContractError("REQUEST_SCHEMA_VERSION_UNSUPPORTED")
+
+
+def parse_manager_outcome_request(raw: bytes) -> dict[str, object]:
+    """Parse the closed Sales Credit manager-outcome command transport."""
+
+    value = parse_closed_json(
+        raw,
+        expected_members=frozenset(
+            {
+                "actor_id",
+                "amount_minor_units",
+                "confirmed",
+                "currency_code",
+                "decided_at",
+                "outcome",
+                "request_key",
+                "request_schema_version",
+                "schema_version",
+            }
+        ),
+    )
+    _action_version(value, action_schema_version=MANAGER_OUTCOME_REQUEST_SCHEMA_VERSION)
+    _confirmed(value["confirmed"])
+    actor_id = validate_synthetic_id(value["actor_id"], "REP")
+    request_key = _required_request_key(value["request_key"])
+    decided_at = value["decided_at"]
+    try:
+        CanonicalTimestamp(cast(str, decided_at))
+    except (TimestampValidationError, TypeError, ValueError) as exc:
+        raise PortalContractError("MANAGER_OUTCOME_TIMESTAMP_INVALID") from exc
+    outcome = value["outcome"]
+    if outcome not in {
+        "APPROVED",
+        "DENIED",
+        "PARTIAL",
+        "OTHER_REP",
+        "NOT_PURSUED",
+    }:
+        raise PortalContractError("MANAGER_OUTCOME_INVALID")
+    amount = value["amount_minor_units"]
+    currency = value["currency_code"]
+    if outcome == "PARTIAL":
+        if (
+            type(amount) is not int
+            or amount <= 0
+            or amount > JSON_SAFE_INTEGER_MAXIMUM
+        ):
+            raise PortalContractError("MANAGER_OUTCOME_AMOUNT_INVALID")
+        if currency not in {"EUR", "JPY", "KWD", "USD"}:
+            raise PortalContractError("MANAGER_OUTCOME_CURRENCY_INVALID")
+    elif amount is not None or currency is not None:
+        raise PortalContractError("MANAGER_OUTCOME_MONEY_PROHIBITED")
+    return {
+        "actor_id": actor_id,
+        "amount_minor_units": amount,
+        "confirmed": True,
+        "currency_code": currency,
+        "decided_at": decided_at,
+        "outcome": outcome,
+        "request_key": request_key,
+    }
+
+
+def parse_doi_scenario_selection_request(raw: bytes) -> dict[str, object]:
+    """Parse one exact, bounded overlap-scenario selection command."""
+
+    value = parse_closed_json(
+        raw,
+        expected_members=frozenset(
+            {
+                "actor_id",
+                "confirmed",
+                "evaluation_id",
+                "option_opportunity_ids",
+                "occurred_at",
+                "request_key",
+                "request_schema_version",
+                "schema_version",
+                "selected_opportunity_id",
+            }
+        ),
+    )
+    _action_version(
+        value,
+        action_schema_version=DOI_SCENARIO_SELECTION_REQUEST_SCHEMA_VERSION,
+    )
+    _confirmed(value["confirmed"])
+    actor_id = validate_synthetic_id(value["actor_id"], "REP")
+    evaluation_id = validate_synthetic_id(value["evaluation_id"], "EVALUATION")
+    request_key = _required_request_key(value["request_key"])
+    occurred_at = value["occurred_at"]
+    try:
+        CanonicalTimestamp(cast(str, occurred_at))
+    except (TimestampValidationError, TypeError, ValueError) as exc:
+        raise PortalContractError("DOI_SCENARIO_TIMESTAMP_INVALID") from exc
+    selected = validate_synthetic_id(value["selected_opportunity_id"], "EVIDENCE")
+    options_value = value["option_opportunity_ids"]
+    if type(options_value) is not list or not 2 <= len(options_value) <= 32:
+        raise PortalContractError("DOI_SCENARIO_OPTIONS_INVALID")
+    options = tuple(
+        validate_synthetic_id(item, "EVIDENCE") for item in options_value
+    )
+    if options != tuple(sorted(set(options))) or selected not in options:
+        raise PortalContractError("DOI_SCENARIO_OPTIONS_INVALID")
+    return {
+        "actor_id": actor_id,
+        "confirmed": True,
+        "evaluation_id": evaluation_id,
+        "option_opportunity_ids": options,
+        "occurred_at": occurred_at,
+        "request_key": request_key,
+        "selected_opportunity_id": selected,
+    }
+
+
+def parse_database_verify_request(raw: bytes) -> dict[str, object]:
+    value = parse_closed_json(
+        raw,
+        expected_members=frozenset({"schema_version"}),
+    )
+    if value["schema_version"] != DATABASE_VERIFY_REQUEST_SCHEMA_VERSION:
+        raise PortalContractError("ACTION_SCHEMA_VERSION_UNSUPPORTED")
+    return {}
+
+
+def parse_backup_create_request(raw: bytes) -> dict[str, object]:
+    value = parse_closed_json(
+        raw,
+        expected_members=frozenset(
+            {
+                "confirmed",
+                "request_key",
+                "request_schema_version",
+                "schema_version",
+            }
+        ),
+    )
+    _action_version(value, action_schema_version=BACKUP_CREATE_REQUEST_SCHEMA_VERSION)
+    _confirmed(value["confirmed"])
+    return {
+        "confirmed": True,
+        "request_key": _required_request_key(value["request_key"]),
+    }
+
+
+def parse_extension_handshake_request(raw: bytes) -> str:
+    value = parse_closed_json(
+        raw,
+        expected_members=frozenset({"extension_version", "schema_version"}),
+    )
+    if value["schema_version"] != EXTENSION_HANDSHAKE_SCHEMA_VERSION:
+        raise PortalContractError("EXTENSION_HANDSHAKE_SCHEMA_UNSUPPORTED")
+    extension_version = value["extension_version"]
+    if (
+        type(extension_version) is not str
+        or _EXTENSION_VERSION.fullmatch(extension_version) is None
+    ):
+        raise PortalContractError("EXTENSION_VERSION_INVALID")
+    return extension_version
+
+
 def _view_value(value: object) -> object:
     serializer = getattr(value, "to_dict", None)
     if callable(serializer):
@@ -452,6 +745,7 @@ def public_value(
     value: object,
     *,
     omit_members: frozenset[str] = _EMPTY_MEMBERS,
+    safety_exempt_members: frozenset[str] = _EMPTY_MEMBERS,
 ) -> object:
     """Convert one closed application view into bounded, privacy-safe JSON data."""
 
@@ -512,6 +806,8 @@ def public_value(
             for key, child in item.items():
                 if child is None and key.endswith("_id"):
                     continue
+                if key in safety_exempt_members:
+                    continue
                 if key == "throughput_per_second" and child is not None:
                     if (
                         type(child) is not str
@@ -538,6 +834,15 @@ def public_value(
 
 def _response_error(code: str) -> NoReturn:
     raise PortalContractError(code, status=500)
+
+
+def _response_synthetic_id(value: object, namespace: str, code: str) -> str:
+    if type(value) is not str or not is_reserved_identity(
+        value,
+        expected_namespace=namespace,
+    ):
+        _response_error(code)
+    return value
 
 
 def _exact_mapping(
@@ -1511,9 +1816,239 @@ def validate_shutdown_response(value: object) -> dict[str, object]:
         _response_error("RESPONSE_SHUTDOWN_STATUS_INVALID")
     return item
 
+
+def validate_dashboard_response(value: object) -> object:
+    """Apply the common bounded/privacy-safe boundary to an M7 closed view."""
+
+    closed = public_value(
+        value,
+        safety_exempt_members=_DASHBOARD_GOVERNED_TEXT_MEMBERS,
+    )
+
+    def reject_private_paths(item: object, *, member: str | None = None) -> None:
+        if type(item) is str:
+            if member == "service_origin" and _DASHBOARD_LOOPBACK_ORIGIN.fullmatch(item):
+                port = int(item.rsplit(":", 1)[1][:-1])
+                if 1 <= port <= 65_535:
+                    return
+            if member == "dashboard_routes" and _DASHBOARD_LOCAL_ROUTE.fullmatch(item):
+                return
+            if _DASHBOARD_PRIVATE_PATH.search(item):
+                raise PortalContractError(
+                    "DASHBOARD_PRIVATE_PATH_PROHIBITED",
+                    status=500,
+                )
+        if type(item) is dict:
+            for key, child in item.items():
+                reject_private_paths(child, member=key)
+        elif type(item) is list:
+            for child in item:
+                reject_private_paths(child, member=member)
+
+    reject_private_paths(closed)
+    return closed
+
+
+def validate_human_action_response(
+    value: object,
+    *,
+    expected_subject_id: str,
+    expected_subject_namespace: str,
+    evaluation_required: bool,
+) -> dict[str, object]:
+    """Validate one route-bound human-action receipt without business inference."""
+
+    if type(evaluation_required) is not bool:
+        _response_error("RESPONSE_HUMAN_ACTION_CONTEXT_INVALID")
+    accepted_subject = _response_synthetic_id(
+        expected_subject_id,
+        expected_subject_namespace,
+        "RESPONSE_HUMAN_ACTION_CONTEXT_INVALID",
+    )
+    item = _exact_mapping(
+        validate_dashboard_response(value),
+        frozenset(
+            {
+                "command_id",
+                "evaluation_id",
+                "recorded_at",
+                "replayed",
+                "schema_version",
+                "status",
+                "subject_id",
+            }
+        ),
+        "RESPONSE_HUMAN_ACTION_MEMBERS_INVALID",
+    )
+    if item["schema_version"] != HUMAN_ACTION_RESULT_SCHEMA_VERSION:
+        _response_error("RESPONSE_HUMAN_ACTION_VERSION_INVALID")
+    _response_synthetic_id(
+        item["command_id"],
+        "EVIDENCE",
+        "RESPONSE_HUMAN_ACTION_COMMAND_INVALID",
+    )
+    subject = _response_synthetic_id(
+        item["subject_id"],
+        expected_subject_namespace,
+        "RESPONSE_HUMAN_ACTION_SUBJECT_INVALID",
+    )
+    if subject != accepted_subject:
+        _response_error("RESPONSE_HUMAN_ACTION_SUBJECT_INVALID")
+    evaluation = item["evaluation_id"]
+    if evaluation_required:
+        _response_synthetic_id(
+            evaluation,
+            "EVALUATION",
+            "RESPONSE_HUMAN_ACTION_EVALUATION_INVALID",
+        )
+    elif evaluation is not None:
+        _response_error("RESPONSE_HUMAN_ACTION_EVALUATION_INVALID")
+    _timestamp(item["recorded_at"], "RESPONSE_HUMAN_ACTION_TIMESTAMP_INVALID")
+    replayed = item["replayed"]
+    status = item["status"]
+    if type(replayed) is not bool or status not in {"EXACT_REPLAY", "RECORDED"}:
+        _response_error("RESPONSE_HUMAN_ACTION_STATUS_INVALID")
+    if (status == "EXACT_REPLAY") != replayed:
+        _response_error("RESPONSE_HUMAN_ACTION_STATUS_INVALID")
+    return item
+
+
+def validate_backup_action_response(value: object) -> dict[str, object]:
+    """Validate the closed privacy-safe result of one local backup action."""
+
+    item = _exact_mapping(
+        validate_dashboard_response(value),
+        frozenset(
+            {
+                "backup_id",
+                "backup_sha256",
+                "completed_at",
+                "location_class",
+                "replayed",
+                "schema_version",
+                "status",
+                "verified_schema_version",
+            }
+        ),
+        "RESPONSE_BACKUP_ACTION_MEMBERS_INVALID",
+    )
+    if item["schema_version"] != BACKUP_ACTION_RESULT_SCHEMA_VERSION:
+        _response_error("RESPONSE_BACKUP_ACTION_VERSION_INVALID")
+    _response_synthetic_id(
+        item["backup_id"],
+        "EVIDENCE",
+        "RESPONSE_BACKUP_ACTION_ID_INVALID",
+    )
+    sha256 = item["backup_sha256"]
+    if type(sha256) is not str or _LOWER_SHA256.fullmatch(sha256) is None:
+        _response_error("RESPONSE_BACKUP_ACTION_HASH_INVALID")
+    _timestamp(item["completed_at"], "RESPONSE_BACKUP_ACTION_TIMESTAMP_INVALID")
+    replayed = item["replayed"]
+    status = item["status"]
+    if (
+        item["location_class"] != "OWNED_LOCAL_BACKUP_DIRECTORY"
+        or item["verified_schema_version"] != 4
+        or type(replayed) is not bool
+        or status not in {"EXACT_REPLAY", "RECORDED"}
+        or (status == "EXACT_REPLAY") != replayed
+    ):
+        _response_error("RESPONSE_BACKUP_ACTION_STATUS_INVALID")
+    return item
+
+
+def validate_dashboard_evidence_response(
+    value: object,
+    *,
+    expected_routes: Collection[str],
+) -> dict[str, object]:
+    item = _exact_mapping(
+        validate_dashboard_response(value),
+        frozenset(
+            {
+                "dashboard_routes",
+                "manager_demo_steps",
+                "schema_version",
+                "selector_prefix",
+            }
+        ),
+        "RESPONSE_DASHBOARD_EVIDENCE_MEMBERS_INVALID",
+    )
+    routes = _exact_list(
+        item["dashboard_routes"],
+        "RESPONSE_DASHBOARD_EVIDENCE_ROUTES_INVALID",
+    )
+    expected = sorted(expected_routes)
+    routes_are_local = all(
+        type(route) is str and _DASHBOARD_LOCAL_ROUTE.fullmatch(route) is not None
+        for route in routes
+    )
+    if (
+        routes != expected
+        or not routes_are_local
+        or item["manager_demo_steps"] != 12
+        or item["schema_version"] != M8_EVIDENCE_SURFACES_SCHEMA_VERSION
+        or item["selector_prefix"] != "data-ssa-dashboard-"
+    ):
+        _response_error("RESPONSE_DASHBOARD_EVIDENCE_INVALID")
+    return item
+
+
+def validate_extension_handshake_response(value: object) -> dict[str, object]:
+    item = _exact_mapping(
+        public_value(value),
+        frozenset(
+            {
+                "expected_extension_version",
+                "last_seen_at",
+                "observed_extension_version",
+                "stale_after_seconds",
+                "status",
+            }
+        ),
+        "RESPONSE_EXTENSION_HANDSHAKE_MEMBERS_INVALID",
+    )
+    expected = item["expected_extension_version"]
+    observed = item["observed_extension_version"]
+    if (
+        type(expected) is not str
+        or _EXTENSION_VERSION.fullmatch(expected) is None
+        or type(observed) is not str
+        or _EXTENSION_VERSION.fullmatch(observed) is None
+        or item["status"] not in {"LAST_SEEN_HEALTHY", "VERSION_MISMATCH"}
+        or type(item["stale_after_seconds"]) is not int
+        or cast(int, item["stale_after_seconds"]) != 300
+    ):
+        _response_error("RESPONSE_EXTENSION_HANDSHAKE_INVALID")
+    _timestamp(item["last_seen_at"], "RESPONSE_EXTENSION_HANDSHAKE_TIMESTAMP_INVALID")
+    return item
+
 def response_bytes(data: object) -> bytes:
     envelope = {
         "data": public_value(data),
+        "schema_version": API_SCHEMA_VERSION,
+    }
+    encoded = canonical_json_bytes(envelope, expected_members=set(envelope))
+    if len(encoded) > MAX_RESPONSE_BODY_BYTES:
+        raise PortalContractError("RESPONSE_BODY_TOO_LARGE", status=500)
+    return encoded
+
+
+def dashboard_response_bytes(data: object) -> bytes:
+    envelope = {
+        "data": validate_dashboard_response(data),
+        "schema_version": API_SCHEMA_VERSION,
+    }
+    encoded = canonical_json_bytes(envelope, expected_members=set(envelope))
+    if len(encoded) > MAX_RESPONSE_BODY_BYTES:
+        raise PortalContractError("RESPONSE_BODY_TOO_LARGE", status=500)
+    return encoded
+
+
+def route_validated_dashboard_response_bytes(data: object) -> bytes:
+    """Encode data only after an exact route renderer validated shape and privacy."""
+
+    envelope = {
+        "data": data,
         "schema_version": API_SCHEMA_VERSION,
     }
     encoded = canonical_json_bytes(envelope, expected_members=set(envelope))
@@ -1539,22 +2074,43 @@ __all__ = [
     "APPLICATION_SCHEMA_VERSION",
     "API_REQUEST_SCHEMA_VERSION",
     "API_SCHEMA_VERSION",
+    "BACKUP_CREATE_REQUEST_SCHEMA_VERSION",
+    "BACKUP_ACTION_RESULT_SCHEMA_VERSION",
+    "CONTROL_CENTER_SCHEMA_VERSION",
+    "DATABASE_VERIFY_REQUEST_SCHEMA_VERSION",
+    "DOI_SCENARIO_SELECTION_REQUEST_SCHEMA_VERSION",
     "DOM_SCHEMA_VERSION",
+    "EXTENSION_HANDSHAKE_SCHEMA_VERSION",
     "FAIL_CLOSED_RENDER_MODES",
+    "MANAGER_OUTCOME_REQUEST_SCHEMA_VERSION",
+    "HUMAN_ACTION_RESULT_SCHEMA_VERSION",
+    "M8_EVIDENCE_SURFACES_SCHEMA_VERSION",
     "MAX_REQUEST_BODY_BYTES",
     "MAX_RESPONSE_BODY_BYTES",
     "PortalContractError",
     "RUNTIME_RECEIPT_SCHEMA_VERSION",
     "ScenarioApplicationProtocol",
+    "dashboard_response_bytes",
     "error_bytes",
+    "parse_backup_create_request",
     "parse_closed_json",
+    "parse_database_verify_request",
+    "parse_doi_scenario_selection_request",
     "parse_evaluate_request",
+    "parse_extension_handshake_request",
     "parse_instantiate_request",
+    "parse_manager_outcome_request",
     "parse_shutdown_request",
     "public_value",
     "response_bytes",
+    "route_validated_dashboard_response_bytes",
     "validate_alias",
+    "validate_dashboard_response",
+    "validate_backup_action_response",
+    "validate_dashboard_evidence_response",
+    "validate_human_action_response",
     "validate_evaluation_response",
+    "validate_extension_handshake_response",
     "validate_fact_mapping",
     "validate_health_response",
     "validate_history_response",

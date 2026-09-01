@@ -101,9 +101,9 @@ class MilestoneBoundaryTests(unittest.TestCase):
         matrix_path = ROOT / "docs" / "audit-finding-closure-matrix.md"
         self.assertTrue(matrix_path.is_file())
         matrix_text = matrix_path.read_text(encoding="utf-8")
-        self.assertIn("- Matrix version: `milestone6/v1`", matrix_text)
-        self.assertNotIn("DEFERRED", matrix_text)
-        self.assertNotIn("PARTIAL", matrix_text)
+        self.assertIn("- Matrix version: `milestone7/v1`", matrix_text)
+        self.assertNotIn("| DEFERRED |", matrix_text)
+        self.assertNotIn("| PARTIAL |", matrix_text)
         rows = [
             line
             for line in matrix_text.splitlines()
@@ -121,8 +121,26 @@ class MilestoneBoundaryTests(unittest.TestCase):
             self.assertNotIn(cells[0], parsed)
             parsed[cells[0]] = cells
         self.assertEqual(set(parsed), expected)
-        allowed_statuses = {"CLOSED_M6"}
-        self.assertTrue(all(cells[1] in allowed_statuses for cells in parsed.values()))
+        self.assertTrue(all(cells[1] == "CLOSED_M6" for cells in parsed.values()))
+        m7_rows = [
+            line
+            for line in matrix_text.splitlines()
+            if line.startswith("| M7-R01-") or line.startswith("| M7-R02-")
+        ]
+        m7_parsed: dict[str, list[str]] = {}
+        for row in m7_rows:
+            cells = [cell.strip() for cell in row.split("|")[1:-1]]
+            self.assertEqual(len(cells), 4)
+            self.assertTrue(all(cells))
+            self.assertNotIn(cells[0], m7_parsed)
+            m7_parsed[cells[0]] = cells
+        self.assertEqual(
+            set(m7_parsed),
+            {f"M7-{finding}" for finding in expected},
+        )
+        self.assertTrue(
+            all(cells[1] == "CLOSED_M7" for cells in m7_parsed.values())
+        )
         collected_methods = {
             node.name
             for path in (ROOT / "tests").glob("test_*.py")
@@ -149,6 +167,23 @@ class MilestoneBoundaryTests(unittest.TestCase):
                 accepted = set(re.findall(r"`(test_[a-z0-9_]+)`", cells[4]))
                 self.assertTrue(accepted & m6_methods)
                 self.assertIn("ADR 0022", cells[3])
+        m7_methods = {
+            node.name
+            for path in (ROOT / "tests").glob("test_milestone7*.py")
+            for node in ast.walk(
+                ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            )
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name.startswith("test_")
+        }
+        for finding, cells in m7_parsed.items():
+            with self.subTest(m7_finding=finding):
+                accepted = set(re.findall(r"`(test_[a-z0-9_]+)`", cells[3]))
+                self.assertTrue(accepted)
+                self.assertTrue(accepted <= m7_methods)
+        for adr in ("ADR 0023", "ADR 0024", "ADR 0025", "ADR 0026"):
+            self.assertIn(adr, matrix_text)
+        self.assertIn("M7_MANUAL_ACCEPTANCE = PENDING", matrix_text)
 
     def test_public_domain_facade_exports_every_declared_shared_type(self) -> None:
         exported = domain_package.__all__
@@ -170,8 +205,9 @@ class MilestoneBoundaryTests(unittest.TestCase):
     def test_milestone_seven_dashboard_connector_and_embedded_extension_are_absent(
         self,
     ) -> None:
-        discovered = {path.stem for path in PACKAGE.rglob("*.py")}
-        discovered.update(path.name for path in PACKAGE.iterdir() if path.is_dir())
+        domain = PACKAGE / "domain"
+        discovered = {path.stem for path in domain.rglob("*.py")}
+        discovered.update(path.name for path in domain.iterdir() if path.is_dir())
         self.assertFalse(discovered & FORBIDDEN_FEATURE_NAMES)
 
     def test_milestone_five_and_user_interface_modules_are_absent(self) -> None:

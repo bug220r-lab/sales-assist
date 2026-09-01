@@ -29,7 +29,11 @@ from synthetic_sales_assist.doi.demo import (
     DOIDemoFixture,
     build_doi_demo_fixture,
 )
-from synthetic_sales_assist.doi.models import DOIEvaluation, DOILineItemSnapshot
+from synthetic_sales_assist.doi.models import (
+    DOIEvaluation,
+    DOIEvaluationInput,
+    DOILineItemSnapshot,
+)
 from synthetic_sales_assist.domain.canonical import canonical_json_bytes, domain_hash
 from synthetic_sales_assist.domain.idempotency import IdempotencyConflictError
 from synthetic_sales_assist.domain.identities import EvaluationId, InteractionId, OrderId, RunId
@@ -2126,6 +2130,16 @@ class ScenarioApplication:
                 completed_at=None if run.completed_at is None else run.completed_at.value,
                 event_count=history_count,
             )
+
+    def doi_selection_input(self, order_id: str) -> DOIEvaluationInput:
+        """Return the retained/restored synthetic DOI input to the internal M7 adapter."""
+
+        order = self._validated_order(order_id)
+        with self._lock:
+            source = self._instances[order].source
+            if type(source) is not DOIDemoFixture:
+                raise ApplicationError("DOI_SELECTION_SOURCE_UNAVAILABLE", "UNAVAILABLE")
+            return source.request
 
     def metrics_summary(self) -> MetricsSummaryView:
         with self.database.read() as connection:
