@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-21
 - Amended: 2026-08-30 (M5 launcher compatibility only)
+- Amended: 2026-08-31 (M6 lifecycle concurrency-test remediation only)
 - Decision scope: Milestone 5 localhost service and synthetic portal only
 
 ## Context
@@ -84,6 +85,12 @@ holds the same lifecycle mutex across backup, owned shutdown, exact-file deletio
 reinitialization, and deep verification. Concurrent start/start and start/reset attempts therefore
 fail closed instead of racing database lifecycle work.
 
+Start retains the lifecycle mutex through its optional browser handoff. If any post-launch step
+fails, the launcher terminates, waits for, and disposes the child and removes only its stale owned
+receipt/lease before releasing the mutex. This keeps failure cleanup inside the same exclusion
+interval; the success path disposes only the local process wrapper and leaves the owned service
+running.
+
 After owned shutdown, reset also takes the same byte-range service lease used by the direct
 `python -m synthetic_sales_assist.portal` entry point and retains it through exact deletion,
 reinitialization, and deep verification. This closes the direct-entry handoff window: a direct
@@ -130,6 +137,8 @@ portable-release claim.
 - A stale receipt is removable only when no matching process exists and the lease is not held.
 - Database initialization never precedes service-lease acquisition, and destructive reset work
   never occurs outside the shared lifecycle-operation mutex.
+- A failed start does not release the lifecycle-operation mutex before its launched child and stale
+  owned lease have been cleaned up.
 - Reset additionally retains the service lease across its destructive interval, so the documented
   direct module entry point and scripts share one exclusion primitive.
 - A live PID with any ownership mismatch is never stopped automatically.

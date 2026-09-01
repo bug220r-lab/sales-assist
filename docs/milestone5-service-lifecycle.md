@@ -36,6 +36,19 @@ reinitialization, and deep verification. A concurrent start/start or start/reset
 closed. The mutex file may remain as an inert runtime artifact; ownership is the operating-system
 byte-range lock, not file existence.
 
+Start also retains the mutex through the optional browser handoff. On any failure after launching
+the child, it terminates and waits for that child, removes only the now-stale owned receipt/lease,
+and then releases the mutex. Successful start disposes only its local process wrapper; the owned
+service continues running.
+
+The lifecycle concurrency tests do not infer overlap from timing or file existence. A test-only,
+per-process PowerShell wrapper uses a random 256-bit token to pause the real start or reset script
+at its first source-directory entry after the real byte-range lock has been acquired. The parent
+independently proves byte 0 is locked, runs the competing independent PowerShell process, and then
+releases the holder with the exact token. This wrapper exists only in the test process; no
+test-only environment variable, barrier, delay, or test command is accepted by production
+scripts.
+
 After stopping the prior instance, reset acquires `service.json.lock` as a maintenance lease and
 holds it through database deletion, initialization, and deep verification. The direct module entry
 point contends on that same lease before opening the database, so direct-entry/reset races are

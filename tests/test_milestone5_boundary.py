@@ -229,6 +229,24 @@ class Milestone5BoundaryTests(unittest.TestCase):
             start.index("Enter-SsaLifecycleOperationLock"),
             start.index("Start-Process"),
         )
+        self.assertLess(
+            start.index("if (-not $NoBrowser)"),
+            start.index("Exit-SsaLifecycleOperationLock"),
+        )
+        self.assertLess(
+            start.index("Write-SsaJsonResult"),
+            start.index("Exit-SsaLifecycleOperationLock"),
+        )
+        failure_cleanup = start[start.index("catch {\n    $failureMessage") :]
+        self.assertIn("$childWasLaunched -and", failure_cleanup)
+        self.assertLess(
+            failure_cleanup.index("$child.Kill()"),
+            failure_cleanup.index("Exit-SsaLifecycleOperationLock"),
+        )
+        self.assertLess(
+            failure_cleanup.index("Remove-SsaStaleLease"),
+            failure_cleanup.index("Exit-SsaLifecycleOperationLock"),
+        )
         self.assertNotIn("@('db', 'init')", start)
         server = (PORTAL / "server.py").read_text(encoding="utf-8")
         self.assertLess(

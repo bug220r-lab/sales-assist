@@ -13,7 +13,9 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lifecycle-common.ps1')
 
 $child = $null
+$childWasLaunched = $false
 $operationLock = $null
+$paths = $null
 try {
     $pythonRuntime = Select-SsaPythonRuntime -PythonPath $PythonPath `
         -PythonPathWasBound ($PSBoundParameters.ContainsKey('PythonPath'))
@@ -49,6 +51,7 @@ try {
     $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\src'))
     $child = Start-Process -FilePath $python -ArgumentList $argumentLine -PassThru `
         -WindowStyle Hidden -WorkingDirectory $repository
+    $childWasLaunched = $true
 
     $deadline = [DateTime]::UtcNow.AddSeconds($StartupTimeoutSeconds)
     $receipt = $null
@@ -75,9 +78,6 @@ try {
         -DataRoot $root `
         -ReceiptPath $paths.Receipt -LockPath $paths.Lock
     if ($null -eq $owned -or $owned.Id -ne $child.Id) { throw 'PROCESS_OWNERSHIP_MISMATCH' }
-    Exit-SsaLifecycleOperationLock -Stream $operationLock
-    $operationLock = $null
-
     if (-not $NoBrowser) {
         Start-Process -FilePath ([string]$receipt.origin + '/scenarios')
     }
@@ -93,21 +93,66 @@ try {
         port = [int]$receipt.port
         receipt_path = $paths.Receipt
     }
+    $child.Dispose()
+    $child = $null
+    Exit-SsaLifecycleOperationLock -Stream $operationLock
+    $operationLock = $null
     exit 0
 }
 catch {
-    if ($null -ne $operationLock) {
-        Exit-SsaLifecycleOperationLock -Stream $operationLock
-        $operationLock = $null
-    }
-    if ($null -ne $child) {
-        $child.Refresh()
-        if (-not $child.HasExited) {
-            $child.Kill()
+    $failureMessage = [string]$_.Exception.Message
+    $cleanupFailed = $false
+    $childExited = $false
+    try {
+        if ($childWasLaunched -and $null -ne $child) {
+            try {
+                try {
+                    $child.Refresh()
+                    if (-not $child.HasExited) {
+                        try { $child.Kill() }
+                        catch { }
+                    }
+                }
+                catch { }
+                try {
+                    $childExited = [bool]$child.WaitForExit(5000)
+                }
+                catch {
+                    try {
+                        $child.Refresh()
+                        $childExited = [bool]$child.HasExited
+                    }
+                    catch { $childExited = $false }
+                }
+                if (-not $childExited) { $cleanupFailed = $true }
+            }
+            finally {
+                $child.Dispose()
+                $child = $null
+            }
         }
-        [void]$child.WaitForExit(5000)
-        $child.Dispose()
+        if (
+            $childWasLaunched -and
+            $childExited -and
+            $null -ne $paths -and
+            (
+                [IO.File]::Exists($paths.Receipt) -or
+                [IO.File]::Exists($paths.Lock)
+            )
+        ) {
+            try { Remove-SsaStaleLease -Paths $paths }
+            catch { $cleanupFailed = $true }
+        }
     }
-    Write-Error -ErrorId 'SSA_START_FAILED' -Message ([string]$_.Exception.Message)
+    finally {
+        if ($null -ne $operationLock) {
+            Exit-SsaLifecycleOperationLock -Stream $operationLock
+            $operationLock = $null
+        }
+    }
+    if ($cleanupFailed) {
+        $failureMessage += '; START_FAILURE_CLEANUP_FAILED'
+    }
+    Write-Error -ErrorId 'SSA_START_FAILED' -Message $failureMessage
     exit 1
 }

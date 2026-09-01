@@ -3,15 +3,18 @@ from __future__ import annotations
 import http.client
 import json
 import os
+import queue
+import secrets
 import shutil
 import socket
 import sqlite3
 import subprocess
 import sys
 import tempfile
-import time
+import threading
 import unittest
-from contextlib import closing
+from collections.abc import Iterator
+from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -52,6 +55,133 @@ STATUS_MEMBERS = {
     "safety_counters",
     "state",
 }
+
+_LIFECYCLE_BARRIER_READY = "SSA_TEST_LIFECYCLE_OPERATION_LOCK_READY"
+_LIFECYCLE_BARRIER_RELEASE = "SSA_TEST_LIFECYCLE_OPERATION_LOCK_RELEASE"
+_START_CLEANUP_READY = "SSA_TEST_START_CHILD_CLEANUP_READY"
+_START_CLEANUP_RELEASE = "SSA_TEST_START_CHILD_CLEANUP_RELEASE"
+_MAINTENANCE_BARRIER_READY = "SSA_TEST_SERVICE_MAINTENANCE_LEASE_READY"
+_MAINTENANCE_BARRIER_RELEASE = "SSA_TEST_SERVICE_MAINTENANCE_LEASE_RELEASE"
+_LIFECYCLE_BARRIER_COMMAND = r"""
+$ErrorActionPreference = 'Stop'
+if ($env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN -cnotmatch '\A[0-9a-f]{64}\z') {
+    throw 'SSA_TEST_LIFECYCLE_BARRIER_TOKEN_INVALID'
+}
+$global:SsaTestLifecycleBarrierReached = $false
+function global:Push-Location {
+    param([Parameter(Mandatory = $true)][string]$LiteralPath)
+    $actual = [IO.Path]::GetFullPath($LiteralPath)
+    $expected = [IO.Path]::GetFullPath($env:SSA_TEST_LIFECYCLE_SOURCE)
+    if (
+        -not $global:SsaTestLifecycleBarrierReached -and
+        $actual.Equals($expected, [StringComparison]::OrdinalIgnoreCase)
+    ) {
+        $global:SsaTestLifecycleBarrierReached = $true
+        [Console]::Out.WriteLine(
+            'SSA_TEST_LIFECYCLE_OPERATION_LOCK_READY|' +
+            $env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN
+        )
+        [Console]::Out.Flush()
+        $release = [Console]::In.ReadLine()
+        if ($release -cne (
+            'SSA_TEST_LIFECYCLE_OPERATION_LOCK_RELEASE|' +
+            $env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN
+        )) {
+            throw 'SSA_TEST_LIFECYCLE_BARRIER_RELEASE_INVALID'
+        }
+    }
+    Microsoft.PowerShell.Management\Push-Location -LiteralPath $LiteralPath
+}
+if ($env:SSA_TEST_LIFECYCLE_OPERATION -ceq 'START') {
+    & $env:SSA_TEST_LIFECYCLE_SCRIPT -DataDir $env:SSA_TEST_LIFECYCLE_DATA_DIR `
+        -Port ([int]$env:SSA_TEST_LIFECYCLE_PORT) -NoBrowser
+}
+elseif ($env:SSA_TEST_LIFECYCLE_OPERATION -ceq 'RESET') {
+    & $env:SSA_TEST_LIFECYCLE_SCRIPT -DataDir $env:SSA_TEST_LIFECYCLE_DATA_DIR `
+        -ConfirmReset
+}
+else {
+    throw 'SSA_TEST_LIFECYCLE_OPERATION_INVALID'
+}
+"""
+_START_CLEANUP_BARRIER_COMMAND = r"""
+$ErrorActionPreference = 'Stop'
+if ($env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN -cnotmatch '\A[0-9a-f]{64}\z') {
+    throw 'SSA_TEST_LIFECYCLE_BARRIER_TOKEN_INVALID'
+}
+$global:SsaTestChildStarted = $false
+function global:Start-Process {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, Position = 0)][string]$FilePath,
+        [object[]]$ArgumentList,
+        [switch]$PassThru,
+        [Diagnostics.ProcessWindowStyle]$WindowStyle,
+        [string]$WorkingDirectory
+    )
+    if ($PassThru) {
+        $global:SsaTestChildStarted = $true
+        return Microsoft.PowerShell.Management\Start-Process @PSBoundParameters
+    }
+    if (-not $global:SsaTestChildStarted) {
+        throw 'SSA_TEST_START_CHILD_NOT_STARTED'
+    }
+    [Console]::Out.WriteLine(
+        'SSA_TEST_START_CHILD_CLEANUP_READY|' +
+        $env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN
+    )
+    [Console]::Out.Flush()
+    $release = [Console]::In.ReadLine()
+    if ($release -cne (
+        'SSA_TEST_START_CHILD_CLEANUP_RELEASE|' +
+        $env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN
+    )) {
+        throw 'SSA_TEST_START_CHILD_CLEANUP_RELEASE_INVALID'
+    }
+    throw 'SSA_TEST_BROWSER_START_FAILED'
+}
+& $env:SSA_TEST_LIFECYCLE_SCRIPT -DataDir $env:SSA_TEST_LIFECYCLE_DATA_DIR `
+    -Port ([int]$env:SSA_TEST_LIFECYCLE_PORT)
+"""
+_MAINTENANCE_BARRIER_COMMAND = r"""
+$ErrorActionPreference = 'Stop'
+if ($env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN -cnotmatch '\A[0-9a-f]{64}\z') {
+    throw 'SSA_TEST_LIFECYCLE_BARRIER_TOKEN_INVALID'
+}
+$global:SsaTestMaintenanceBarrierReached = $false
+function global:Remove-Item {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)][string[]]$LiteralPath,
+        [switch]$Force
+    )
+    if (
+        -not $global:SsaTestMaintenanceBarrierReached -and
+        $LiteralPath.Count -eq 1 -and
+        [IO.Path]::GetFullPath($LiteralPath[0]).Equals(
+            [IO.Path]::GetFullPath($env:SSA_TEST_LIFECYCLE_DATABASE),
+            [StringComparison]::OrdinalIgnoreCase
+        )
+    ) {
+        $global:SsaTestMaintenanceBarrierReached = $true
+        [Console]::Out.WriteLine(
+            'SSA_TEST_SERVICE_MAINTENANCE_LEASE_READY|' +
+            $env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN
+        )
+        [Console]::Out.Flush()
+        $release = [Console]::In.ReadLine()
+        if ($release -cne (
+            'SSA_TEST_SERVICE_MAINTENANCE_LEASE_RELEASE|' +
+            $env:SSA_TEST_LIFECYCLE_BARRIER_TOKEN
+        )) {
+            throw 'SSA_TEST_SERVICE_MAINTENANCE_RELEASE_INVALID'
+        }
+    }
+    Microsoft.PowerShell.Management\Remove-Item @PSBoundParameters
+}
+& $env:SSA_TEST_LIFECYCLE_SCRIPT -DataDir $env:SSA_TEST_LIFECYCLE_DATA_DIR `
+    -ConfirmReset
+"""
 
 
 @unittest.skipUnless(os.name == "nt" and POWERSHELL, "Windows PowerShell lifecycle test")
@@ -493,53 +623,294 @@ class Milestone5LifecycleTests(unittest.TestCase):
         self.assertEqual(len(counters), 9)
         self.assertEqual(set(counters.values()), {0})
 
-    def _wait_for_operation_lock(self, process: subprocess.Popen[str]) -> None:
+    def _assert_operation_lock_held(self, process: subprocess.Popen[str]) -> None:
         import msvcrt
 
+        self.assertIsNone(process.poll(), "lifecycle holder exited after READY")
         lock_path = self.root / "runtime" / "lifecycle-operation.lock"
-        deadline = time.monotonic() + 10
-        while time.monotonic() < deadline:
-            if process.poll() is not None:
-                self.fail("lifecycle process exited before acquiring operation lock")
-            if lock_path.is_file():
-                try:
-                    with lock_path.open("r+b", buffering=0) as stream:
-                        stream.seek(0)
-                        try:
-                            msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
-                        except OSError:
-                            return
-                        else:
-                            stream.seek(0)
-                            msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
-                except OSError:
-                    pass
-            time.sleep(0.01)
-        self.fail("lifecycle operation lock was not acquired")
+        self.assertTrue(lock_path.is_file())
+        acquired = False
+        with lock_path.open("r+b", buffering=0) as stream:
+            stream.seek(0)
+            try:
+                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                acquired = True
+            except OSError:
+                pass
+            finally:
+                if acquired:
+                    stream.seek(0)
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+        self.assertFalse(acquired, "READY was emitted without the operation lock")
 
-    def _wait_for_service_lock(self, process: subprocess.Popen[str]) -> None:
+    def _assert_operation_lock_available(self, data_dir: Path | None = None) -> None:
         import msvcrt
 
+        selected_root = self.root if data_dir is None else data_dir
+        lock_path = selected_root / "runtime" / "lifecycle-operation.lock"
+        self.assertTrue(lock_path.is_file())
+        with lock_path.open("r+b", buffering=0) as stream:
+            stream.seek(0)
+            msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+            stream.seek(0)
+            msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+
+    def _read_barrier_line(self, process: subprocess.Popen[str]) -> str:
+        assert process.stdout is not None
+        lines: queue.Queue[str] = queue.Queue(maxsize=1)
+        threading.Thread(
+            target=lambda: lines.put(process.stdout.readline()),
+            daemon=True,
+        ).start()
+        try:
+            return lines.get(timeout=30)
+        except queue.Empty:
+            self._abort_lifecycle_holder(process)
+            self.fail("lifecycle holder did not reach the explicit lock barrier")
+
+    def _abort_lifecycle_holder(self, process: subprocess.Popen[str]) -> None:
+        failed_to_exit = False
+        if process.poll() is None:
+            process.kill()
+            try:
+                process.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                failed_to_exit = True
+        for stream in (process.stdin, process.stdout, process.stderr):
+            if stream is not None and not stream.closed:
+                stream.close()
+        if failed_to_exit:
+            self.fail("killed lifecycle holder did not exit")
+
+    @contextmanager
+    def _lifecycle_operation_barrier(
+        self,
+        operation: str,
+        *,
+        port: int | None = None,
+    ) -> Iterator[tuple[subprocess.Popen[str], str]]:
+        self.assertIn(operation, {"START", "RESET"})
+        if operation == "START":
+            self.assertIsNotNone(port)
+        selected_root = self.root
+        temporary_root = Path(tempfile.gettempdir()).resolve()
+        self.assertEqual(selected_root.parent, temporary_root)
+        self.assertTrue(
+            selected_root.name.startswith("synthetic-sales-assist-m5-lifecycle-")
+        )
+        nonce = secrets.token_hex(32)
+        environment = dict(self.env)
+        environment.update(
+            {
+                "SSA_TEST_LIFECYCLE_BARRIER_TOKEN": nonce,
+                "SSA_TEST_LIFECYCLE_DATA_DIR": str(selected_root),
+                "SSA_TEST_LIFECYCLE_OPERATION": operation,
+                "SSA_TEST_LIFECYCLE_PORT": str(0 if port is None else port),
+                "SSA_TEST_LIFECYCLE_SCRIPT": str(
+                    SCRIPTS
+                    / ("start.ps1" if operation == "START" else "reset-demo.ps1")
+                ),
+                "SSA_TEST_LIFECYCLE_SOURCE": str(SOURCE),
+            }
+        )
+        process = subprocess.Popen(
+            [
+                str(POWERSHELL),
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                _LIFECYCLE_BARRIER_COMMAND,
+            ],
+            cwd=SOURCE,
+            env=environment,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+        )
+        try:
+            ready = self._read_barrier_line(process).rstrip("\r\n")
+            self.assertEqual(ready, f"{_LIFECYCLE_BARRIER_READY}|{nonce}")
+            self._assert_operation_lock_held(process)
+            yield process, nonce
+        finally:
+            self._abort_lifecycle_holder(process)
+
+    def _release_lifecycle_holder(
+        self,
+        process: subprocess.Popen[str],
+        nonce: str,
+        *,
+        supplied_nonce: str | None = None,
+    ) -> subprocess.CompletedProcess[str]:
+        release_nonce = nonce if supplied_nonce is None else supplied_nonce
+        try:
+            stdout, stderr = process.communicate(
+                input=f"{_LIFECYCLE_BARRIER_RELEASE}|{release_nonce}\n",
+                timeout=60,
+            )
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate(timeout=5)
+            self.fail(f"released lifecycle holder did not exit: {stderr or stdout}")
+        return subprocess.CompletedProcess(
+            process.args,
+            process.returncode,
+            stdout,
+            stderr,
+        )
+
+    @contextmanager
+    def _start_child_cleanup_barrier(
+        self,
+        port: int,
+    ) -> Iterator[tuple[subprocess.Popen[str], str]]:
+        nonce = secrets.token_hex(32)
+        environment = dict(self.env)
+        environment.update(
+            {
+                "SSA_TEST_LIFECYCLE_BARRIER_TOKEN": nonce,
+                "SSA_TEST_LIFECYCLE_DATA_DIR": str(self.root),
+                "SSA_TEST_LIFECYCLE_PORT": str(port),
+                "SSA_TEST_LIFECYCLE_SCRIPT": str(SCRIPTS / "start.ps1"),
+            }
+        )
+        process = subprocess.Popen(
+            [
+                str(POWERSHELL),
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                _START_CLEANUP_BARRIER_COMMAND,
+            ],
+            cwd=SOURCE,
+            env=environment,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+        )
+        try:
+            ready = self._read_barrier_line(process).rstrip("\r\n")
+            self.assertEqual(ready, f"{_START_CLEANUP_READY}|{nonce}")
+            self._assert_operation_lock_held(process)
+            yield process, nonce
+        finally:
+            self._abort_lifecycle_holder(process)
+
+    def _release_start_child_cleanup_holder(
+        self,
+        process: subprocess.Popen[str],
+        nonce: str,
+    ) -> subprocess.CompletedProcess[str]:
+        try:
+            stdout, stderr = process.communicate(
+                input=f"{_START_CLEANUP_RELEASE}|{nonce}\n",
+                timeout=60,
+            )
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate(timeout=5)
+            self.fail(f"start cleanup holder did not exit: {stderr or stdout}")
+        return subprocess.CompletedProcess(
+            process.args,
+            process.returncode,
+            stdout,
+            stderr,
+        )
+
+    def _assert_service_maintenance_lease_held(
+        self,
+        process: subprocess.Popen[str],
+    ) -> None:
+        import msvcrt
+
+        self.assertIsNone(process.poll(), "reset exited after maintenance READY")
         lock_path = self.root / "runtime" / "service.json.lock"
-        deadline = time.monotonic() + 20
-        while time.monotonic() < deadline:
-            if process.poll() is not None:
-                self.fail("reset exited before acquiring service maintenance lease")
-            if lock_path.is_file() and lock_path.stat().st_size >= 64:
-                try:
-                    with lock_path.open("r+b", buffering=0) as stream:
-                        stream.seek(64)
-                        try:
-                            msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
-                        except OSError:
-                            return
-                        else:
-                            stream.seek(64)
-                            msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
-                except OSError:
-                    pass
-            time.sleep(0.01)
-        self.fail("reset service maintenance lease was not acquired")
+        self.assertTrue(lock_path.is_file())
+        self.assertGreaterEqual(lock_path.stat().st_size, 64)
+        acquired = False
+        with lock_path.open("r+b", buffering=0) as stream:
+            stream.seek(64)
+            try:
+                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                acquired = True
+            except OSError:
+                pass
+            finally:
+                if acquired:
+                    stream.seek(64)
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+        self.assertFalse(acquired, "READY was emitted without the maintenance lease")
+
+    @contextmanager
+    def _service_maintenance_barrier(
+        self,
+    ) -> Iterator[tuple[subprocess.Popen[str], str]]:
+        nonce = secrets.token_hex(32)
+        environment = dict(self.env)
+        environment.update(
+            {
+                "SSA_TEST_LIFECYCLE_BARRIER_TOKEN": nonce,
+                "SSA_TEST_LIFECYCLE_DATABASE": str(
+                    self.root / "data" / "synthetic_sales_assist.sqlite3"
+                ),
+                "SSA_TEST_LIFECYCLE_DATA_DIR": str(self.root),
+                "SSA_TEST_LIFECYCLE_SCRIPT": str(SCRIPTS / "reset-demo.ps1"),
+            }
+        )
+        process = subprocess.Popen(
+            [
+                str(POWERSHELL),
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                _MAINTENANCE_BARRIER_COMMAND,
+            ],
+            cwd=SOURCE,
+            env=environment,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+        )
+        try:
+            ready = self._read_barrier_line(process).rstrip("\r\n")
+            self.assertEqual(ready, f"{_MAINTENANCE_BARRIER_READY}|{nonce}")
+            self._assert_service_maintenance_lease_held(process)
+            yield process, nonce
+        finally:
+            self._abort_lifecycle_holder(process)
+
+    def _release_service_maintenance_holder(
+        self,
+        process: subprocess.Popen[str],
+        nonce: str,
+    ) -> subprocess.CompletedProcess[str]:
+        try:
+            stdout, stderr = process.communicate(
+                input=f"{_MAINTENANCE_BARRIER_RELEASE}|{nonce}\n",
+                timeout=60,
+            )
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate(timeout=5)
+            self.fail(f"maintenance holder did not exit: {stderr or stdout}")
+        return subprocess.CompletedProcess(
+            process.args,
+            process.returncode,
+            stdout,
+            stderr,
+        )
 
     def _receipt(self, pid: int, *, equal_tokens: bool = False) -> dict[str, object]:
         csrf = "a" * 64
@@ -969,9 +1340,19 @@ class Milestone5LifecycleTests(unittest.TestCase):
         value = self._receipt(2_147_483_000)
         value["process_identity_token"] = value["csrf_token"]
         receipt, _lock = self._write_receipt(value)
+        before = receipt.read_bytes()
         result = self._run("stop.ps1")
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(receipt.is_file())
+        started = self._run(
+            "start.ps1",
+            "-Port",
+            str(self._reserve_port()),
+            "-NoBrowser",
+        )
+        self.assertNotEqual(started.returncode, 0)
+        self.assertNotIn("START_FAILURE_CLEANUP_FAILED", started.stderr)
+        self.assertEqual(receipt.read_bytes(), before)
 
     def test_path_policy_rejects_relative_device_ads_repository_and_drive_root(self) -> None:
         candidates = (
@@ -1107,95 +1488,242 @@ class Milestone5LifecycleTests(unittest.TestCase):
 
     def test_concurrent_start_attempt_is_rejected_by_operation_lock(self) -> None:
         port = self._reserve_port()
-        first = subprocess.Popen(
-            self._script_command(
+        with self._lifecycle_operation_barrier("START", port=port) as (
+            first,
+            nonce,
+        ):
+            second = self._run(
                 "start.ps1",
                 "-Port",
                 str(port),
                 "-NoBrowser",
-            ),
-            cwd=SOURCE,
-            env=self.env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        self._wait_for_operation_lock(first)
-        second = self._run(
-            "start.ps1",
-            "-Port",
-            str(port),
-            "-NoBrowser",
-            timeout=30,
-        )
+                timeout=30,
+            )
+            first_result = self._release_lifecycle_holder(first, nonce)
         self.assertNotEqual(second.returncode, 0)
-        first_stdout, first_stderr = first.communicate(timeout=60)
-        self.assertEqual(first.returncode, 0, first_stderr or first_stdout)
+        self.assertIn("LIFECYCLE_OPERATION_ACTIVE", second.stderr)
+        self.assertEqual(
+            first_result.returncode,
+            0,
+            first_result.stderr or first_result.stdout,
+        )
+        self._assert_operation_lock_available()
         stopped = self._run("stop.ps1", timeout=30)
         self.assertEqual(stopped.returncode, 0, stopped.stderr or stopped.stdout)
 
     def test_concurrent_start_and_reset_are_serialized(self) -> None:
         port = self._reserve_port()
-        start = subprocess.Popen(
-            self._script_command(
+        with self._lifecycle_operation_barrier("START", port=port) as (
+            start,
+            nonce,
+        ):
+            overlapping_reset = self._run(
+                "reset-demo.ps1",
+                "-ConfirmReset",
+                timeout=30,
+            )
+            start_result = self._release_lifecycle_holder(start, nonce)
+        self.assertNotEqual(overlapping_reset.returncode, 0)
+        self.assertIn("LIFECYCLE_OPERATION_ACTIVE", overlapping_reset.stderr)
+        self.assertEqual(
+            start_result.returncode,
+            0,
+            start_result.stderr or start_result.stdout,
+        )
+        sequential_reset = self._run(
+            "reset-demo.ps1",
+            "-ConfirmReset",
+            timeout=60,
+        )
+        self.assertEqual(
+            sequential_reset.returncode,
+            0,
+            sequential_reset.stderr or sequential_reset.stdout,
+        )
+        self._assert_operation_lock_available()
+        verification = self._cli("db", "verify", "--deep")
+        self.assertTrue(verification["result"]["healthy"])
+
+    def test_concurrent_reset_and_start_are_serialized(self) -> None:
+        self._initialize()
+        port = self._reserve_port()
+        with self._lifecycle_operation_barrier("RESET") as (reset, nonce):
+            overlapping_start = self._run(
                 "start.ps1",
                 "-Port",
                 str(port),
                 "-NoBrowser",
-            ),
-            cwd=SOURCE,
-            env=self.env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
+                timeout=30,
+            )
+            reset_result = self._release_lifecycle_holder(reset, nonce)
+        self.assertNotEqual(overlapping_start.returncode, 0)
+        self.assertIn("LIFECYCLE_OPERATION_ACTIVE", overlapping_start.stderr)
+        self.assertEqual(
+            reset_result.returncode,
+            0,
+            reset_result.stderr or reset_result.stdout,
         )
-        self._wait_for_operation_lock(start)
-        reset = self._run("reset-demo.ps1", "-ConfirmReset", timeout=30)
-        self.assertNotEqual(reset.returncode, 0)
-        start_stdout, start_stderr = start.communicate(timeout=60)
-        self.assertEqual(start.returncode, 0, start_stderr or start_stdout)
-        verification = self._cli("db", "verify", "--deep")
-        self.assertTrue(verification["result"]["healthy"])
+        self._assert_operation_lock_available()
+        sequential_start = self._run(
+            "start.ps1",
+            "-Port",
+            str(port),
+            "-NoBrowser",
+            timeout=60,
+        )
+        self.assertEqual(
+            sequential_start.returncode,
+            0,
+            sequential_start.stderr or sequential_start.stdout,
+        )
+        stopped = self._run("stop.ps1", timeout=30)
+        self.assertEqual(stopped.returncode, 0, stopped.stderr or stopped.stdout)
+
+    def test_invalid_barrier_release_fails_and_unlocks_operation(self) -> None:
+        port = self._reserve_port()
+        with self._lifecycle_operation_barrier("START", port=port) as (
+            start,
+            nonce,
+        ):
+            wrong_nonce = ("0" if nonce[0] != "0" else "1") + nonce[1:]
+            failed = self._release_lifecycle_holder(
+                start,
+                nonce,
+                supplied_nonce=wrong_nonce,
+            )
+        self.assertNotEqual(failed.returncode, 0)
+        self.assertIn("SSA_TEST_LIFECYCLE_BARRIER_RELEASE_INVALID", failed.stderr)
+        self.assertFalse((self.root / "runtime" / "service.json").exists())
+        self._assert_operation_lock_available()
+        recovered = self._run(
+            "start.ps1",
+            "-Port",
+            str(port),
+            "-NoBrowser",
+            timeout=60,
+        )
+        self.assertEqual(recovered.returncode, 0, recovered.stderr or recovered.stdout)
+        stopped = self._run("stop.ps1", timeout=30)
+        self.assertEqual(stopped.returncode, 0, stopped.stderr or stopped.stdout)
+
+    def test_owner_process_crash_releases_operation_lock(self) -> None:
+        port = self._reserve_port()
+        with self._lifecycle_operation_barrier("START", port=port) as (start, _nonce):
+            start.kill()
+            stdout, stderr = start.communicate(timeout=10)
+            crashed = subprocess.CompletedProcess(
+                start.args,
+                start.returncode,
+                stdout,
+                stderr,
+            )
+        self.assertNotEqual(crashed.returncode, 0)
+        self.assertFalse((self.root / "runtime" / "service.json").exists())
+        self._assert_operation_lock_available()
+        reset = self._run("reset-demo.ps1", "-ConfirmReset", timeout=60)
+        self.assertEqual(reset.returncode, 0, reset.stderr or reset.stdout)
+
+    def test_inert_lifecycle_lock_file_is_reused_after_owner_exit(self) -> None:
+        runtime = self.root / "runtime"
+        runtime.mkdir(parents=True)
+        lock_path = runtime / "lifecycle-operation.lock"
+        lock_path.write_bytes(b"0")
+        reset = self._run("reset-demo.ps1", "-ConfirmReset", timeout=60)
+        self.assertEqual(reset.returncode, 0, reset.stderr or reset.stdout)
+        self.assertTrue(lock_path.is_file())
+        self._assert_operation_lock_available()
+
+    def test_distinct_data_directories_do_not_contend(self) -> None:
+        other = tempfile.TemporaryDirectory(
+            prefix="synthetic-sales-assist-m5-lifecycle-distinct-"
+        )
+        self.addCleanup(other.cleanup)
+        other_root = Path(other.name).resolve()
+        with self._lifecycle_operation_barrier("RESET") as (first, nonce):
+            second_result = self._run(
+                "reset-demo.ps1",
+                "-ConfirmReset",
+                data_dir=other_root,
+                timeout=60,
+            )
+            first_result = self._release_lifecycle_holder(first, nonce)
+        self.assertEqual(
+            second_result.returncode,
+            0,
+            second_result.stderr or second_result.stdout,
+        )
+        self.assertEqual(
+            first_result.returncode,
+            0,
+            first_result.stderr or first_result.stdout,
+        )
+        self._assert_operation_lock_available()
+        self._assert_operation_lock_available(other_root)
+
+    def test_live_child_failure_is_cleaned_before_operation_unlock(self) -> None:
+        port = self._reserve_port()
+        with self._start_child_cleanup_barrier(port) as (start, nonce):
+            overlapping_reset = self._run(
+                "reset-demo.ps1",
+                "-ConfirmReset",
+                timeout=30,
+            )
+            failed_start = self._release_start_child_cleanup_holder(start, nonce)
+        self.assertNotEqual(overlapping_reset.returncode, 0)
+        self.assertIn("LIFECYCLE_OPERATION_ACTIVE", overlapping_reset.stderr)
+        self.assertNotEqual(failed_start.returncode, 0)
+        self.assertIn("SSA_TEST_BROWSER_START_FAILED", failed_start.stderr)
+        self.assertNotIn("START_FAILURE_CLEANUP_FAILED", failed_start.stderr)
+        self.assertFalse((self.root / "runtime" / "service.json").exists())
+        self.assertFalse((self.root / "runtime" / "service.json.lock").exists())
+        self._assert_operation_lock_available()
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            probe.settimeout(1)
+            self.assertNotEqual(probe.connect_ex(("127.0.0.1", port)), 0)
+        recovered = self._run(
+            "start.ps1",
+            "-Port",
+            str(port),
+            "-NoBrowser",
+            timeout=60,
+        )
+        self.assertEqual(recovered.returncode, 0, recovered.stderr or recovered.stdout)
         stopped = self._run("stop.ps1", timeout=30)
         self.assertEqual(stopped.returncode, 0, stopped.stderr or stopped.stdout)
 
     def test_direct_entry_cannot_cross_reset_maintenance_lease(self) -> None:
         self._initialize()
-        reset = subprocess.Popen(
-            self._script_command("reset-demo.ps1", "-ConfirmReset"),
-            cwd=SOURCE,
-            env=self.env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        self._wait_for_service_lock(reset)
         receipt = self.root / "runtime" / "service.json"
-        direct = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "synthetic_sales_assist.portal",
-                "--data-dir",
-                str(self.root),
-                "--host",
-                "127.0.0.1",
-                "--port",
-                str(self._reserve_port()),
-                "--runtime-receipt",
-                str(receipt),
-            ],
-            cwd=SOURCE,
-            env=self.env,
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
+        with self._service_maintenance_barrier() as (reset, nonce):
+            direct = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "synthetic_sales_assist.portal",
+                    "--data-dir",
+                    str(self.root),
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    str(self._reserve_port()),
+                    "--runtime-receipt",
+                    str(receipt),
+                ],
+                cwd=SOURCE,
+                env=self.env,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=20,
+            )
+            reset_result = self._release_service_maintenance_holder(reset, nonce)
         self.assertNotEqual(direct.returncode, 0)
         self.assertFalse(receipt.exists())
-        reset_stdout, reset_stderr = reset.communicate(timeout=60)
-        self.assertEqual(reset.returncode, 0, reset_stderr or reset_stdout)
+        self.assertEqual(
+            reset_result.returncode,
+            0,
+            reset_result.stderr or reset_result.stdout,
+        )
         verification = self._cli("db", "verify", "--deep")
         self.assertTrue(verification["result"]["healthy"])
 
@@ -1255,6 +1783,12 @@ class Milestone5LifecycleTests(unittest.TestCase):
 
         second = self._run("start.ps1", "-Port", str(port), "-NoBrowser")
         self.assertNotEqual(second.returncode, 0)
+        self.assertIn("SERVICE_ALREADY_RUNNING", second.stderr)
+        self.assertNotIn("START_FAILURE_CLEANUP_FAILED", second.stderr)
+        self.assertEqual(
+            receipt_path.read_bytes(),
+            json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+        )
         connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
         connection.request("GET", "/health", headers={"Host": f"127.0.0.1:{port}"})
         response = connection.getresponse()
