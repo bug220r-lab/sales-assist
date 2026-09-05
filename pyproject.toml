@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "synthetic-sales-assist"
-version = "0.1.1"
+version = "0.1.2"
 description = "Synthetic-only Sales Assist rule packs, SQLite persistence, and local CLI"
 readme = "README.md"
 requires-python = ">=3.12"

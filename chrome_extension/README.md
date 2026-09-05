@@ -2,7 +2,7 @@
 # Synthetic Sales Assist localhost side panel
 
 This unpacked Chrome Manifest V3 extension is a DEVELOPMENT / LOCALHOST ONLY companion to
-Synthetic Sales Assist. Version `0.1.1` preserves the accepted Milestone 6 extraction and
+Synthetic Sales Assist. Version `0.1.2` preserves the accepted Milestone 6 extraction and
 evaluation behavior and adds only Milestone 7 localhost Control Center links and truthful
 last-seen registration. It is not a portable release, is not published to a store, and requires
 no administrator rights.
@@ -29,7 +29,7 @@ extension handshake, and evaluation requests originate in that content script as
 constructed only from the independently validated current loopback origin and exact closed paths.
 This makes document base elements irrelevant while the M5 Host, Origin, and CSRF controls remain
 authoritative. The handshake uses the existing page-scoped local CSRF value and sends only the
-exact schema `synthetic-sales-assist-extension-handshake/v1` and extension version `0.1.1`.
+exact schema `synthetic-sales-assist-extension-handshake/v1` and extension version `0.1.2`.
 
 The manifest intentionally declares no custom icon and the package contains no icon asset; Chrome
 uses its generic extension presentation. This avoids an unnecessary asset surface. If a custom

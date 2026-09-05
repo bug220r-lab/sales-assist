@@ -27,7 +27,7 @@ def _minimal_safe_manifest() -> dict[str, object]:
         "description": (
             "Read-only localhost extraction and evaluation for reserved synthetic scenarios."
         ),
-        "version": "0.1.1",
+        "version": "0.1.2",
         "minimum_chrome_version": "114",
         "permissions": ["sidePanel"],
         "host_permissions": [

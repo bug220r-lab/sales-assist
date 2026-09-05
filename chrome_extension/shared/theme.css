@@ -1,0 +1,37 @@
+/* SYNTHETIC-SALES-ASSIST-AUTHORED-M6; shared local presentation tokens */
+:root {
+  --ssa-color-background: #f3f4f5;
+  --ssa-color-surface: #ffffff;
+  --ssa-color-header: #181a1d;
+  --ssa-color-text: #202327;
+  --ssa-color-muted: #555b63;
+  --ssa-color-border: #ccd0d5;
+  --ssa-color-input-border: #747b84;
+  --ssa-color-primary: #bc1827;
+  --ssa-color-primary-hover: #971320;
+  --ssa-color-primary-active: #77101a;
+  --ssa-color-secondary: #454b52;
+  --ssa-color-focus: #246bce;
+  --ssa-color-success: #23663c;
+  --ssa-color-success-surface: #e6f3e9;
+  --ssa-color-warning: #6b4b00;
+  --ssa-color-warning-surface: #fff3cf;
+  --ssa-color-warning-border: #b77b00;
+  --ssa-color-error: #8a2030;
+  --ssa-color-error-surface: #fde7ec;
+  --ssa-color-info: #2c4c6b;
+  --ssa-color-info-surface: #eaf0f6;
+  --ssa-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ssa-space-1: .25rem;
+  --ssa-space-2: .5rem;
+  --ssa-space-3: .75rem;
+  --ssa-space-4: 1rem;
+  --ssa-space-5: 1.25rem;
+  --ssa-space-6: 1.5rem;
+  --ssa-radius-control: .35rem;
+  --ssa-radius-surface: .5rem;
+  --ssa-border-width: 1px;
+  --ssa-focus-width: 3px;
+  --ssa-disabled-opacity: .62;
+  --ssa-shadow-surface: 0 2px 8px rgb(24 26 29 / 6%);
+}

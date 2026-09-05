@@ -93,7 +93,7 @@ ALLOWED_MANIFEST_KEYS = frozenset(
         "version",
     }
 )
-CHROME_EXTENSION_VERSION = "0.1.1"
+CHROME_EXTENSION_VERSION = "0.1.2"
 CHROME_EXTENSION_NAME = "Synthetic Sales Assist Local Side Panel"
 CHROME_EXTENSION_DESCRIPTION = (
     "Read-only localhost extraction and evaluation for reserved synthetic scenarios."
@@ -368,7 +368,7 @@ def validate_chrome_permissions(manifest: object) -> ChromePermissionInventory:
         )
     version = candidate.get("version")
     if version != CHROME_EXTENSION_VERSION:
-        raise ChromePermissionViolation("manifest.version must be exactly 0.1.1")
+        raise ChromePermissionViolation("manifest.version must be exactly 0.1.2")
     if candidate.get("minimum_chrome_version") != "114":
         raise ChromePermissionViolation("manifest.minimum_chrome_version must be exactly 114")
 

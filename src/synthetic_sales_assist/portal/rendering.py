@@ -327,14 +327,15 @@ def _page(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="ssa-csrf-token" content="{_h(csrf_token)}">
-  <title>{_h(title)} · Synthetic Sales Assist</title>
+  <title>{_h(title)} · ECS Sales Assist</title>
   <link rel="stylesheet" href="/static/ssa.css">
   <script src="/static/ssa.js" defer></script>
 </head>
 <body>
-  <div class="synthetic-banner">SYNTHETIC DATA ONLY · LOCALHOST</div>
+  <div class="synthetic-banner">
+    Synthetic demo · Localhost only · Not connected to live systems</div>
   <header>
-    <strong>Synthetic Sales Assist v0.1</strong>
+    <strong>ECS Sales Assist</strong>
     <nav aria-label="Primary">
       <a href="/scenarios">Scenarios</a>
       <a href="/orders">Orders</a>

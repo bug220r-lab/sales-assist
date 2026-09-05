@@ -496,7 +496,7 @@ class Milestone6StaticExtensionTests(unittest.TestCase):
 
     def test_manifest_permission_and_static_page_inventory_is_exact(self) -> None:
         self.assertEqual(self.manifest["manifest_version"], 3)
-        self.assertEqual(self.manifest["version"], "0.1.1")
+        self.assertEqual(self.manifest["version"], "0.1.2")
         self.assertEqual(self.manifest["permissions"], ["sidePanel"])
         self.assertEqual(
             self.manifest["host_permissions"],

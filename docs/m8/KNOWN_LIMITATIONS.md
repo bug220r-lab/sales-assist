@@ -13,10 +13,10 @@ or realized value. Restore and reset are separate confirmed maintenance workflow
 CPython 3.12 and Windows tzdata 2026.3 are external prerequisites, not bundled.
 The exact Codex fallback is DEVELOPMENT/NONPORTABLE.
 No portable runtime, compiled executable, installer, updater, remote publication, or
-Chrome Web Store deployment is supplied. The extension remains 0.1.1 with sidePanel and
+Chrome Web Store deployment is supplied. The extension remains 0.1.2 with sidePanel and
 only the two loopback host permissions. Its last-seen state is event-bound and process-local.
 
-The app is 0.1.1, build synthetic-sales-assist-m8/v1; API, portal DOM, dashboard DOM, and
+The app is 0.1.2, build synthetic-sales-assist-m8/v1; API, portal DOM, dashboard DOM, and
 database remain their compatible v1/v1/v1/schema-4 contracts. Migrations 0001–0004 and all
 138 reasons, 138 ownership rows, and 115 transitions remain unchanged.
 

@@ -165,9 +165,9 @@ def _opportunities() -> list[dict[str, object]]:
 def _extension() -> dict[str, object]:
     return {
         "expected_package_sha256": (
-            "595044d03c0aa843f7e751167b27b8d16de4cb8cf8fbc7064409f30e88ba885c"
+            "3c0d145c789fb990c9fe849f16a031f397285de020ec14b6bb97551ddf1aca55"
         ),
-        "expected_version": "0.1.1",
+        "expected_version": "0.1.2",
         "last_seen_at": None,
         "observed_version": None,
         "schema_version": EXTENSION_STATUS_SCHEMA_VERSION,
@@ -461,7 +461,7 @@ def _views() -> dict[str, dict[str, object]]:
             "api_request_schema_version": "synthetic-sales-assist-api-request/v1",
             "api_schema_version": "synthetic-sales-assist-api/v1",
             "application_schema_version": "synthetic-sales-assist-application/v1",
-            "application_version": "0.1.1",
+            "application_version": "0.1.2",
             "benchmark_reference": M4_BENCHMARK_REFERENCE.to_dict(),
             "build_version": "synthetic-sales-assist-m8/v1",
             "database": _database(),
@@ -1448,7 +1448,7 @@ class DashboardRenderingTests(unittest.TestCase):
                     stale if state == "LAST_SEEN_STALE" else fresh
                 )
                 extension["observed_version"] = (
-                    "0.2.0" if state == "VERSION_MISMATCH" else "0.1.1"
+                    "0.2.0" if state == "VERSION_MISMATCH" else "0.1.2"
                 )
             if state == "UNKNOWN":
                 extension["last_seen_at"] = None
@@ -2130,7 +2130,7 @@ class DashboardRenderingTests(unittest.TestCase):
                 ("extension", "last_seen_at"),
                 "2026-09-01T12:00:00Z",
             )
-            _replace_path(view, ("extension", "observed_version"), "0.1.1")
+            _replace_path(view, ("extension", "observed_version"), "0.1.2")
 
         def package_only_with_observation(view: dict[str, object]) -> None:
             add_matching_observation(view)
@@ -2141,7 +2141,7 @@ class DashboardRenderingTests(unittest.TestCase):
 
         def healthy_with_ancient_observation(view: dict[str, object]) -> None:
             _replace_path(view, ("extension", "state"), "LAST_SEEN_HEALTHY")
-            _replace_path(view, ("extension", "observed_version"), "0.1.1")
+            _replace_path(view, ("extension", "observed_version"), "0.1.2")
             _replace_path(
                 view,
                 ("extension", "last_seen_at"),
@@ -2150,7 +2150,7 @@ class DashboardRenderingTests(unittest.TestCase):
 
         def stale_with_future_observation(view: dict[str, object]) -> None:
             _replace_path(view, ("extension", "state"), "LAST_SEEN_STALE")
-            _replace_path(view, ("extension", "observed_version"), "0.1.1")
+            _replace_path(view, ("extension", "observed_version"), "0.1.2")
             _replace_path(
                 view,
                 ("extension", "last_seen_at"),
@@ -2165,7 +2165,7 @@ class DashboardRenderingTests(unittest.TestCase):
                     lambda view: _replace_path(
                         view,
                         ("extension", "expected_version"),
-                        {"version": "0.1.1"},
+                        {"version": "0.1.2"},
                     ),
                 ),
                 (
@@ -2173,7 +2173,7 @@ class DashboardRenderingTests(unittest.TestCase):
                     lambda view: _replace_path(
                         view,
                         ("extension", "expected_version"),
-                        "0.1.2",
+                        "9.9.9",
                     ),
                 ),
                 (

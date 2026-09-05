@@ -2,7 +2,7 @@
 "use strict";
 
 (() => {
-  const EXTENSION_VERSION = "0.1.1";
+  const EXTENSION_VERSION = "0.1.2";
   const API_SCHEMA_VERSION = "synthetic-sales-assist-api/v1";
   const API_REQUEST_SCHEMA_VERSION = "synthetic-sales-assist-api-request/v1";
   const APPLICATION_SCHEMA_VERSION = "synthetic-sales-assist-application/v1";

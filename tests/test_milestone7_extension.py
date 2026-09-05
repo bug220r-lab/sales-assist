@@ -69,8 +69,8 @@ class Milestone7ExtensionTests(unittest.TestCase):
         manifest = json.loads((EXTENSION / "manifest.json").read_text("utf-8"))
         inventory = validate_chrome_permissions(manifest)
         self.assertEqual(manifest["manifest_version"], 3)
-        self.assertEqual(manifest["version"], "0.1.1")
-        self.assertEqual(CHROME_EXTENSION_VERSION, "0.1.1")
+        self.assertEqual(manifest["version"], "0.1.2")
+        self.assertEqual(CHROME_EXTENSION_VERSION, "0.1.2")
         self.assertEqual(set(inventory.api_permissions), ALLOWED_CHROME_API_PERMISSIONS)
         self.assertEqual(set(inventory.host_permissions), ALLOWED_CHROME_HOST_PATTERNS)
         self.assertEqual(
@@ -101,7 +101,7 @@ class Milestone7ExtensionTests(unittest.TestCase):
             '"synthetic-sales-assist-extension-handshake/v1";',
             contracts,
         )
-        self.assertIn('const EXTENSION_VERSION = "0.1.1";', contracts)
+        self.assertIn('const EXTENSION_VERSION = "0.1.2";', contracts)
         self.assertIn(
             'const HANDSHAKE_PATH = "/api/v1/system/extension/handshake";',
             content,
@@ -277,7 +277,7 @@ for (const item of invalid) {
     def test_current_package_inventory_and_deterministic_bytes_are_exact(self) -> None:
         packager = self._packager()
         manifest = packager.check_package()
-        self.assertEqual(manifest["version"], "0.1.1")
+        self.assertEqual(manifest["version"], "0.1.2")
         snapshot = packager._snapshot_files()
         first = packager._zip_bytes(snapshot)
         second = packager._zip_bytes(snapshot)

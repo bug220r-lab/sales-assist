@@ -66,10 +66,10 @@ identity is:
 
 ```text
 manifest_version = 3
-version = 0.1.1
+version = 0.1.2
 permissions = sidePanel
 host_permissions = http://127.0.0.1/*, http://localhost/*
-deterministic ZIP SHA-256 = 595044d03c0aa843f7e751167b27b8d16de4cb8cf8fbc7064409f30e88ba885c
+deterministic ZIP SHA-256 = 3c0d145c789fb990c9fe849f16a031f397285de020ec14b6bb97551ddf1aca55
 ```
 
 The patch-version change adds only closed loopback deep links and a version-only, event-bound

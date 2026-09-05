@@ -51,7 +51,7 @@ ACTOR_ID = "SYN-REP-M7-MANAGER-0001"
 
 def _status() -> dict[str, object]:
     return {
-        "app_version": "0.1.1",
+        "app_version": "0.1.2",
         "build_version": "synthetic-sales-assist-m8/v1",
         "database_schema_version": 4,
         "database_status": "PASS",
@@ -473,7 +473,7 @@ class Milestone7ServerTest(unittest.TestCase):
         self.assertEqual(self.server.extension_observation()[0], EXPECTED_EXTENSION_VERSION)
         self.assertEqual(
             EXPECTED_EXTENSION_PACKAGE_SHA256,
-            "595044d03c0aa843f7e751167b27b8d16de4cb8cf8fbc7064409f30e88ba885c",
+            "3c0d145c789fb990c9fe849f16a031f397285de020ec14b6bb97551ddf1aca55",
         )
 
         status, _, payload = self.request(

@@ -26,7 +26,7 @@ from synthetic_sales_assist.portal.server import (
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_EXTENSION_SHA256 = (
-    "595044d03c0aa843f7e751167b27b8d16de4cb8cf8fbc7064409f30e88ba885c"
+    "3c0d145c789fb990c9fe849f16a031f397285de020ec14b6bb97551ddf1aca55"
 )
 REQUIRED_M7_DOCS = {
     "docs/acceptance/milestone6-acceptance.md",
@@ -286,16 +286,16 @@ class Milestone7DocumentationTests(unittest.TestCase):
             (ROOT / "chrome_extension/manifest.json").read_text(encoding="utf-8")
         )
         self.assertEqual(manifest["manifest_version"], 3)
-        self.assertEqual(manifest["version"], "0.1.1")
+        self.assertEqual(manifest["version"], "0.1.2")
         self.assertEqual(manifest["permissions"], ["sidePanel"])
         self.assertEqual(
             manifest["host_permissions"],
             ["http://127.0.0.1/*", "http://localhost/*"],
         )
-        self.assertEqual(EXPECTED_EXTENSION_VERSION, "0.1.1")
+        self.assertEqual(EXPECTED_EXTENSION_VERSION, "0.1.2")
         self.assertEqual(EXPECTED_EXTENSION_PACKAGE_SHA256, EXPECTED_EXTENSION_SHA256)
         development = (ROOT / "DEVELOPMENT.md").read_text(encoding="utf-8")
-        self.assertIn("version = 0.1.1", development)
+        self.assertIn("version = 0.1.2", development)
         self.assertIn(EXPECTED_EXTENSION_SHA256, development)
         self.assertIn("database schema remains version `4`", development.casefold())
         self.assertIn("M7_MANUAL_ACCEPTANCE = PENDING", development)

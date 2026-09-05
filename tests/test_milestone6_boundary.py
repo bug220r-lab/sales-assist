@@ -33,6 +33,7 @@ EXPECTED_EXTENSION_FILES = {
     "shared/origin.js",
     "side_panel/index.html",
     "side_panel/panel.css",
+    "shared/theme.css",
     "side_panel/panel.js",
 }
 EXPECTED_MANIFEST_RESOURCES = {
@@ -165,7 +166,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
         self.assertEqual(
             inventory["author_marker"], "SYNTHETIC-SALES-ASSIST-AUTHORED-M6"
         )
-        self.assertEqual(inventory["extension_version"], "0.1.1")
+        self.assertEqual(inventory["extension_version"], "0.1.2")
         self.assertEqual(inventory["inventory_excludes"], ["package_inventory.json"])
         expected_paths = sorted(
             EXPECTED_EXTENSION_FILES - {"package_inventory.json"}, key=str.casefold
@@ -414,7 +415,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
             second = packager.package(Path(second_directory))
             first_package, first_digest, first_inventory, first_checksum = first
             second_package, second_digest, second_inventory, second_checksum = second
-            package_name = "synthetic-sales-assist-m6-extension-0.1.1.zip"
+            package_name = "synthetic-sales-assist-m6-extension-0.1.2.zip"
             self.assertEqual(first_package.name, package_name)
             self.assertEqual(second_package.name, package_name)
             first_raw = first_package.read_bytes()
@@ -423,7 +424,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
             self.assertEqual(first_digest, second_digest)
             self.assertEqual(first_digest, hashlib.sha256(first_raw).hexdigest())
             generation_name = (
-                "synthetic-sales-assist-m6-extension-0.1.1-" + first_digest
+                "synthetic-sales-assist-m6-extension-0.1.2-" + first_digest
             )
             self.assertEqual(first_package.parent.name, generation_name)
             self.assertEqual(second_package.parent.name, generation_name)
@@ -452,7 +453,7 @@ class Milestone6BoundaryTests(unittest.TestCase):
                     "archive_sha256": first_digest,
                     "archive_size": len(first_raw),
                     "author_marker": "SYNTHETIC-SALES-ASSIST-AUTHORED-M6",
-                    "extension_version": "0.1.1",
+                    "extension_version": "0.1.2",
                     "files": expected_records,
                     "schema_version": "synthetic-sales-assist-extension-package/v1",
                 },

@@ -1250,7 +1250,7 @@ class ControlCenterCoreTests(unittest.TestCase):
         self._insert_operational_receipts_and_error()
         self.database.clock = lambda: NOW
         system = self.application.system_view(
-            expected_extension_version="0.1.1",
+            expected_extension_version="0.1.2",
             expected_extension_package_sha256=SHA_A,
             extension_package_available=True,
             observed_extension_version=None,
@@ -1974,7 +1974,7 @@ class ControlCenterCoreTests(unittest.TestCase):
         self.assertEqual(metrics.material_conflicts, 1)
 
     def test_all_five_extension_states(self) -> None:
-        expected = "0.1.1"
+        expected = "0.1.2"
         states = {
             classify_extension_status(
                 expected_version=expected,

@@ -1,4 +1,4 @@
-Synthetic Sales Assist 0.1.1 - Windows development/demo package
+Synthetic Sales Assist 0.1.2 - Windows development/demo package
 
 Extract the Windows demo ZIP, then double-click START.cmd in the extracted folder.
 Startup verifies the package, prepares fictional demo records on first use, and opens
@@ -17,7 +17,7 @@ The installation-key separates two extracted copies of the same release.
 The existing working database is not used. Stop/restart preserves the demo history.
 
 Use a dedicated Chrome demo profile. In chrome://extensions choose Developer mode,
-Load unpacked, and the extracted chrome_extension directory (version 0.1.1).
+Load unpacked, and the extracted chrome_extension directory (version 0.1.2).
 Visit a synthetic order page, then open the side panel from Chrome's extension controls.
 Package presence does not prove the extension is installed or running.
 

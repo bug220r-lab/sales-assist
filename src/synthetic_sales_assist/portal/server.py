@@ -161,9 +161,9 @@ _DASHBOARD_POST_ROUTES: Final = frozenset(
         "/api/v1/system/extension/handshake",
     }
 )
-EXPECTED_EXTENSION_VERSION: Final = "0.1.1"
+EXPECTED_EXTENSION_VERSION: Final = "0.1.2"
 EXPECTED_EXTENSION_PACKAGE_SHA256: Final = (
-    "595044d03c0aa843f7e751167b27b8d16de4cb8cf8fbc7064409f30e88ba885c"
+    "3c0d145c789fb990c9fe849f16a031f397285de020ec14b6bb97551ddf1aca55"
 )
 EXTENSION_STALE_AFTER_SECONDS: Final = 300
 _QUERY_KEY = re.compile(r"\A[a-z][a-z_]{0,31}\Z", re.ASCII)

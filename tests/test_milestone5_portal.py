@@ -234,7 +234,7 @@ def _history() -> dict[str, object]:
 def _status(*, healthy: bool = True) -> dict[str, object]:
     state = "PASS" if healthy else "FAIL"
     return {
-        "app_version": "0.1.1",
+        "app_version": "0.1.2",
         "build_version": "synthetic-sales-assist-m8/v1",
         "database_schema_version": 4,
         "database_status": state,
@@ -1152,7 +1152,7 @@ class PortalHTTPTestCase(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn(b"Synthetic &lt;b&gt; &amp; fictional", raw)
         self.assertNotIn(b"Synthetic <b>", raw)
-        self.assertIn(b'SYNTHETIC DATA ONLY', raw)
+        self.assertIn(b'Synthetic demo', raw)
         for path in ("/static/ssa.css", "/static/ssa.js"):
             asset_status, _, asset = self.request("GET", path)
             self.assertEqual(asset_status, 200)
@@ -1177,7 +1177,7 @@ class PortalHTTPTestCase(unittest.TestCase):
                 self.assertIn(page_kind, raw)
                 self.assertIn(b'<main ', raw)
                 self.assertIn(b'<nav aria-label="Primary">', raw)
-                self.assertIn(b'SYNTHETIC DATA ONLY', raw)
+                self.assertIn(b'Synthetic demo', raw)
                 self.assertNotIn(b'https://', raw)
         self.assertIn(b'<table>', self.request("GET", "/orders")[2])
         scenarios = self.request("GET", "/scenarios")[2]

@@ -26,6 +26,7 @@ RUNTIME_FILES = frozenset({
     *LAUNCHERS, "README.md", "BUNDLE_MANIFEST.json", "SHA256SUMS.txt", "pyproject.toml",
     "tools/prepare_milestone7_demo.py", "tools/release_support.py", "tools/measure_demo_release.py",
     "docs/m8/START_HERE.txt", "docs/m8/MANAGER_DEMO.md", "docs/m8/KNOWN_LIMITATIONS.md",
+    "docs/m8/THEME_PROVENANCE.md",
 })
 
 

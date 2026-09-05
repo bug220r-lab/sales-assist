@@ -348,7 +348,7 @@ class Milestone4BackupRestoreTests(unittest.TestCase):
             source = sqlite3.connect(backup)
             try:
                 source.execute(
-                    "UPDATE application_metadata SET application_version = '0.1.1'"
+                    "UPDATE application_metadata SET application_version = '0.1.2'"
                 )
                 source.commit()
             finally:

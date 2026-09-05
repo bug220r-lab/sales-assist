@@ -10,31 +10,33 @@ from __future__ import annotations
 
 from typing import Final
 
+from synthetic_sales_assist.portal.theme import THEME_CSS
+
 
 DASHBOARD_ASSET_MARKER: Final = "SYNTHETIC-SALES-ASSIST-AUTHORED-M7"
 
-DASHBOARD_CSS: Final = f"""/* {DASHBOARD_ASSET_MARKER} */
+DASHBOARD_CSS: Final = THEME_CSS + f"""/* {DASHBOARD_ASSET_MARKER} */
 :root {{
   color-scheme: light;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #edf3f5;
-  color: #17242d;
+  font-family: var(--ssa-font-family);
+  background: var(--ssa-color-background);
+  color: var(--ssa-color-text);
 }}
 * {{ box-sizing: border-box; }}
 html {{ min-width: 320px; }}
 body {{ margin: 0; overflow-wrap: anywhere; }}
-a {{ color: #075f76; text-underline-offset: .16em; }}
-a:hover {{ color: #034a5d; }}
+a {{ color: var(--ssa-color-primary); text-underline-offset: .16em; }}
+a:hover {{ color: var(--ssa-color-primary-hover); }}
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {{
-  outline: 3px solid #08a0c6;
+  outline: var(--ssa-focus-width) solid var(--ssa-color-focus);
   outline-offset: 3px;
 }}
 .dashboard-skip-link {{
-  background: #fff;
-  border: 3px solid #08a0c6;
+  background: var(--ssa-color-surface);
+  border: var(--ssa-focus-width) solid var(--ssa-color-focus);
   left: .75rem;
   padding: .65rem 1rem;
   position: fixed;
@@ -43,8 +45,8 @@ select:focus-visible {{
 }}
 .dashboard-skip-link:focus {{ top: .75rem; }}
 .dashboard-synthetic-banner {{
-  background: #063b4b;
-  color: #fff;
+  background: var(--ssa-color-header);
+  color: var(--ssa-color-surface);
   font-weight: 800;
   letter-spacing: .055em;
   padding: .65rem 1rem;
@@ -52,85 +54,94 @@ select:focus-visible {{
 }}
 .dashboard-header {{
   align-items: center;
-  background: #fff;
-  border-bottom: 1px solid #b9cbd2;
+  background: var(--ssa-color-surface);
+  border-bottom: var(--ssa-border-width) solid var(--ssa-color-border);
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--ssa-space-4);
   justify-content: space-between;
   padding: .9rem clamp(.9rem, 4vw, 3rem);
 }}
-.dashboard-brand {{ color: #063b4b; font-weight: 800; }}
+.dashboard-brand {{ color: var(--ssa-color-header); font-weight: 800; }}
 .dashboard-nav {{ display: flex; flex-wrap: wrap; gap: .4rem 1rem; }}
 .dashboard-nav a[aria-current="page"] {{ font-weight: 800; }}
 .dashboard-service-status {{
-  background: #dceef1;
-  border-bottom: 1px solid #b9cbd2;
-  color: #29434d;
+  background: var(--ssa-color-info-surface);
+  border-bottom: var(--ssa-border-width) solid var(--ssa-color-border);
+  color: var(--ssa-color-muted);
   padding: .55rem clamp(.9rem, 4vw, 3rem);
 }}
 .dashboard-main {{ margin: 0 auto; max-width: 1240px; padding: 1.25rem; }}
-h1, h2, h3 {{ color: #063b4b; line-height: 1.22; }}
+h1, h2, h3 {{ color: var(--ssa-color-header); line-height: 1.22; }}
 h1 {{ font-size: clamp(1.7rem, 4vw, 2.45rem); margin-top: 0; }}
 h2 {{ font-size: 1.3rem; }}
 h3 {{ font-size: 1.05rem; }}
-.dashboard-lede {{ color: #425a65; max-width: 78ch; }}
+.dashboard-lede {{ color: var(--ssa-color-muted); max-width: 78ch; }}
 .dashboard-grid {{
   display: grid;
-  gap: 1rem;
+  gap: var(--ssa-space-4);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }}
 .dashboard-card,
 .dashboard-panel {{
-  background: #fff;
-  border: 1px solid #b9cbd2;
-  border-radius: .55rem;
-  box-shadow: 0 2px 8px rgb(6 59 75 / 8%);
-  padding: 1rem;
+  background: var(--ssa-color-surface);
+  border: var(--ssa-border-width) solid var(--ssa-color-border);
+  border-radius: var(--ssa-radius-surface);
+  box-shadow: var(--ssa-shadow-surface);
+  padding: var(--ssa-space-4);
 }}
 .dashboard-card h2,
 .dashboard-card h3 {{ margin-top: 0; }}
 .dashboard-value {{
-  color: #063b4b;
+  color: var(--ssa-color-header);
   display: block;
   font-size: 1.85rem;
   font-variant-numeric: tabular-nums;
   font-weight: 800;
   margin: .35rem 0;
 }}
-.dashboard-meta {{ color: #4b626c; font-size: .9rem; }}
+.dashboard-meta {{ color: var(--ssa-color-muted); font-size: .9rem; }}
 .dashboard-state {{
-  background: #dceef1;
+  background: var(--ssa-color-info-surface);
   border-radius: 999px;
-  color: #075f76;
+  color: var(--ssa-color-primary);
   display: inline-block;
   font-size: .8rem;
   font-weight: 800;
   padding: .25rem .6rem;
 }}
-.dashboard-state[data-severity="attention"] {{ background: #fff0c2; color: #634900; }}
-.dashboard-state[data-severity="error"] {{ background: #fbdede; color: #7b1d1d; }}
-.dashboard-state[data-severity="success"] {{ background: #dcefdc; color: #225f28; }}
-.dashboard-callout {{ border-left: 5px solid #087f8c; }}
-.dashboard-warning {{ border-left: 5px solid #b98500; }}
-.dashboard-error {{ border-left: 5px solid #9a2525; }}
-.dashboard-stack {{ display: grid; gap: 1rem; }}
+.dashboard-state[data-severity="attention"] {{
+  background: var(--ssa-color-warning-surface);
+  color: var(--ssa-color-warning);
+  }}
+.dashboard-state[data-severity="error"] {{
+  background: var(--ssa-color-error-surface);
+  color: var(--ssa-color-error);
+  }}
+.dashboard-state[data-severity="success"] {{
+  background: var(--ssa-color-success-surface);
+  color: var(--ssa-color-success);
+  }}
+.dashboard-callout {{ border-left: 5px solid var(--ssa-color-primary); }}
+.dashboard-warning {{ border-left: 5px solid var(--ssa-color-warning-border); }}
+.dashboard-error {{ border-left: 5px solid var(--ssa-color-error); }}
+.dashboard-stack {{ display: grid; gap: var(--ssa-space-4); }}
 .dashboard-split {{
   display: grid;
-  gap: 1rem;
+  gap: var(--ssa-space-4);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
 }}
 .dashboard-table-wrap {{ overflow-x: auto; }}
 table {{ border-collapse: collapse; min-width: 46rem; width: 100%; }}
 caption {{ font-weight: 800; padding: .6rem 0; text-align: left; }}
 th, td {{
-  border-bottom: 1px solid #d7e1e5;
+  border-bottom: var(--ssa-border-width) solid var(--ssa-color-border);
   padding: .65rem;
   text-align: left;
   vertical-align: top;
 }}
-th {{ background: #e8f1f3; color: #063b4b; }}
-tbody tr:focus-within {{ background: #f0f8fa; }}
+th {{ background: var(--ssa-color-background); color: var(--ssa-color-header); }}
+tbody tr:focus-within {{ background: var(--ssa-color-info-surface); }}
 dl {{
   display: grid;
   gap: .5rem 1rem;
@@ -141,11 +152,11 @@ dd {{ margin: 0; }}
 .dashboard-form {{ display: grid; gap: .85rem; max-width: 48rem; }}
 .dashboard-field {{ display: grid; gap: .3rem; }}
 .dashboard-field > span:first-child {{ font-weight: 750; }}
-.dashboard-field-hint {{ color: #4b626c; font-size: .88rem; }}
+.dashboard-field-hint {{ color: var(--ssa-color-muted); font-size: .88rem; }}
 input, select {{
-  background: #fff;
-  border: 1px solid #718c98;
-  border-radius: .35rem;
+  background: var(--ssa-color-surface);
+  border: 1px solid var(--ssa-color-input-border);
+  border-radius: var(--ssa-radius-control);
   font: inherit;
   max-width: 100%;
   padding: .55rem;
@@ -153,26 +164,26 @@ input, select {{
 input[type="checkbox"], input[type="radio"] {{ height: 1.15rem; width: 1.15rem; }}
 .dashboard-confirmation {{
   align-items: start;
-  background: #fff8dc;
-  border: 1px solid #d1b45b;
-  border-radius: .35rem;
+  background: var(--ssa-color-warning-surface);
+  border: 1px solid var(--ssa-color-warning-border);
+  border-radius: var(--ssa-radius-control);
   display: flex;
   gap: .55rem;
   padding: .75rem;
 }}
 button {{
-  background: #087f8c;
+  background: var(--ssa-color-primary);
   border: 0;
-  border-radius: .35rem;
-  color: #fff;
+  border-radius: var(--ssa-radius-control);
+  color: var(--ssa-color-surface);
   cursor: pointer;
   font: inherit;
   font-weight: 800;
   justify-self: start;
   padding: .65rem .9rem;
 }}
-button:hover {{ background: #066874; }}
-button[disabled] {{ cursor: wait; opacity: .62; }}
+button:hover {{ background: var(--ssa-color-primary-hover); }}
+button[disabled] {{ cursor: wait; opacity: var(--ssa-disabled-opacity); }}
 .dashboard-live-region {{ min-height: 1.65rem; padding: .25rem 0; }}
 .dashboard-filter {{
   align-items: end;
@@ -182,9 +193,9 @@ button[disabled] {{ cursor: wait; opacity: .62; }}
 }}
 .dashboard-filter .dashboard-field {{ min-width: min(100%, 11rem); }}
 .dashboard-pagination {{ display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1rem; }}
-.dashboard-empty {{ color: #4b626c; font-style: italic; }}
+.dashboard-empty {{ color: var(--ssa-color-muted); font-style: italic; }}
 .dashboard-code {{ font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }}
-.dashboard-footer {{ color: #4b626c; padding: 2rem 1rem; text-align: center; }}
+.dashboard-footer {{ color: var(--ssa-color-muted); padding: 2rem 1rem; text-align: center; }}
 [data-ssa-dashboard-id] {{ overflow-wrap: anywhere; }}
 body[data-ssa-dashboard-presentation="true"] .dashboard-volatile {{ display: none; }}
 .dashboard-field[hidden] {{ display: none; }}
@@ -202,6 +213,37 @@ body[data-ssa-dashboard-presentation="true"] .dashboard-volatile {{ display: non
     transition-duration: .01ms !important;
   }}
 }}
+
+.dashboard-header {{
+  background: var(--ssa-color-header);
+  color: var(--ssa-color-surface);
+  border-bottom: 3px solid var(--ssa-color-primary);
+  }}
+.dashboard-brand {{
+  color: var(--ssa-color-surface);
+  font-size: 1.3rem;
+  }}
+.dashboard-header a {{
+  color: var(--ssa-color-surface);
+  }}
+.dashboard-header a[aria-current="page"] {{
+  text-decoration-color: var(--ssa-color-primary);
+  text-decoration-thickness: 3px;
+  }}
+.dashboard-synthetic-banner {{
+  font-size: .85rem;
+  letter-spacing: 0;
+  }}
+h1 {{
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  }}
+button:active {{
+  background: var(--ssa-color-primary-active);
+  }}
+input[type="checkbox"], input[type="radio"] {{
+  flex-shrink: 0;
+  accent-color: var(--ssa-color-primary);
+  }}
 """
 
 DASHBOARD_JS: Final = f"""/* {DASHBOARD_ASSET_MARKER} */

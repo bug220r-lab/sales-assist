@@ -38,8 +38,8 @@ class FoundationAuditTests(unittest.TestCase):
     def test_exact_milestone6_extension_inventory_is_admitted(self) -> None:
         inventory = self.report["chrome_permission_inventory"]
         self.assertEqual(inventory["manifest_count"], 1)
-        self.assertEqual(inventory["extension_artifacts_created"], 12)
-        self.assertEqual(inventory["extension_root_file_count"], 12)
+        self.assertEqual(inventory["extension_artifacts_created"], 13)
+        self.assertEqual(inventory["extension_root_file_count"], 13)
         self.assertEqual(inventory["api_permission_inventory"], ["sidePanel"])
         self.assertEqual(
             inventory["allowed_host_patterns"],

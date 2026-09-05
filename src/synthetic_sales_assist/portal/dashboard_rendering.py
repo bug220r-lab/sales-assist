@@ -291,7 +291,7 @@ _MIGRATION_INVENTORY: Final = (
     ),
 )
 _EXPECTED_EXTENSION_PACKAGE_SHA256: Final = (
-    "595044d03c0aa843f7e751167b27b8d16de4cb8cf8fbc7064409f30e88ba885c"
+    "3c0d145c789fb990c9fe849f16a031f397285de020ec14b6bb97551ddf1aca55"
 )
 _CANONICAL_DECIMAL = re.compile(
     r"\A(?:0|[1-9][0-9]*)\.[0-9]+\Z",
@@ -1164,16 +1164,17 @@ def _page(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="ssa-csrf-token" content="{_h(csrf_token)}">
-  <title>{_h(_PAGE_TITLES[route_name])} · Synthetic Sales Assist</title>
+  <title>{_h(_PAGE_TITLES[route_name])} · ECS Sales Assist</title>
   <link rel="stylesheet" href="/static/ssa-dashboard.css">
   <script src="/static/ssa-dashboard.js" defer></script>
 </head>
 <body data-ssa-dashboard-page="{_h(route_name)}"
       data-ssa-dashboard-presentation="{str(presentation).lower()}">
   <a class="dashboard-skip-link" href="#ssa-dashboard-main">Skip to main content</a>
-  <div class="dashboard-synthetic-banner">SYNTHETIC DATA ONLY · LOCALHOST</div>
+  <div class="dashboard-synthetic-banner">
+    Synthetic demo · Localhost only · Not connected to live systems</div>
   <header class="dashboard-header">
-    <span class="dashboard-brand">Synthetic Sales Assist · Local Control Center</span>
+    <span class="dashboard-brand">ECS Sales Assist</span>
     <nav class="dashboard-nav" aria-label="Primary">{navigation}</nav>
   </header>
   <aside class="dashboard-service-status" role="status" aria-label="Local service status"
