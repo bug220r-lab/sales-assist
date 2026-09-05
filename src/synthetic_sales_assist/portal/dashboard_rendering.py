@@ -1341,11 +1341,8 @@ def _validated_metrics(value: object) -> dict[str, object]:
         + accepted_counts["active_doi_cases"]
     ):
         _fail("DASHBOARD_METRIC_RECONCILIATION_INVALID")
-    if (
-        window == "ALL_DURABLE_HISTORY"
-        and accepted_counts["unique_evaluations"] > requests
-    ):
-        _fail("DASHBOARD_METRIC_RECONCILIATION_INVALID")
+    # Human selection can append a durable evaluation outside processing telemetry.
+    # These independently defined populations have no cross-population cardinality bound.
 
     rates = {
         member: _validated_rate(metrics[member], "DASHBOARD_RATE_INVALID")
@@ -2295,7 +2292,7 @@ or any source-order fact.</p>
 <label class="dashboard-confirmation">
  <input type="checkbox" name="confirmed" data-ssa-value-type="boolean" required>
  <span>I confirm this exact fictional manager outcome for {_h(order_id)}. The system
- classification remains unchanged.</span>
+ classification remains unchanged. <strong data-ssa-manager-confirmation></strong></span>
 </label>
 <button type="submit">Record synthetic manager outcome</button>
 <p class="dashboard-live-region" role="status" tabindex="-1"

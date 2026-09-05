@@ -1,10 +1,11 @@
-# Milestone 7 development
+# Synthetic demo development and release
 
 This repository is a synthetic-only local application. Milestone 7 adds a browser-based local
 Control Center over the existing Shared Domain Engine, Sales Credit and DOI rule packs, schema-4
 SQLite persistence, Milestone 5 portal/API, and Milestone 6 Chrome extension. Business rules remain
 in the committed domain and application services. The Control Center is a local presentation and
-closed-command boundary; it is not a production connector or a release package.
+closed-command boundary. M8 adds deterministic offline demo/source packaging and local
+Windows launchers; it adds no production connector.
 
 All listeners and runtime requests remain loopback-only. There is no production-system access,
 external action, remote asset, remote analytics, automatic updater, or non-loopback bind.
@@ -12,11 +13,13 @@ external action, remote asset, remote analytics, automatic updater, or non-loopb
 ## Requirements
 
 - CPython 3.12.x for the Windows lifecycle launcher
+- tzdata 2026.3 installed in that interpreter on Windows (time-zone data, Apache-2.0)
 - Git
 - Chrome 114 or newer for manual unpacked-extension acceptance
 - no production credential, connector, or external data source
 
-Runtime code uses only the Python standard library. Optional development tools are declared in
+Runtime code uses the Python standard library plus Windows time-zone data. Dependencies are
+never downloaded by the launcher. Optional development tools are declared in
 `pyproject.toml`; verification runs offline. Run commands from the repository root and from a
 complete verified checkout because migrations and the closed business registries are
 repository-bound artifacts.
@@ -84,8 +87,9 @@ the deterministic package outside the repository:
   --output-dir (Join-Path $env:LOCALAPPDATA 'SyntheticSalesAssist\exports')
 ```
 
-The exported ZIP is a local development artifact for manual loading. It is not a portable release,
-Chrome Web Store submission, installer, or Milestone 8 package.
+The exported ZIP is a local development artifact for loading in a dedicated Chrome profile.
+M8 also includes those exact extension bytes in its release. No Chrome Web Store submission,
+portable interpreter, or machine installer is provided.
 
 ## Local data and database maintenance
 
@@ -142,8 +146,10 @@ tests, protected-file verification, synthetic-identity/prohibited-input/secret s
 localhost/no-network checks, Chrome permission audit, and milestone-boundary tests. Use actual
 collected counts from that run; do not carry a historical total forward.
 
-Manual M7 acceptance is a later user-visible gate. The current implementation document must remain
-`M7_MANUAL_ACCEPTANCE = PENDING` until the user completes it.
+Historical manual acceptance remains pending until actually performed by the user. Current
+`M7_MANUAL_ACCEPTANCE = PENDING` is preserved as a historical manual gate.
+release evidence separately records `AGENT_EXECUTED_ACCEPTANCE`, `HUMAN_MANUAL_ACCEPTANCE`, and
+`CLEAN_MACHINE_VALIDATION`; a browser capability gap is never converted into a manual PASS.
 
 ## Milestone boundary
 
@@ -158,7 +164,17 @@ Schema remains version 4 with exactly `migrations/0001_foundation.sql` through
 `BUNDLE_MANIFEST.json`, `SHA256SUMS.txt`, and checksummed root `README.md` remain byte-for-byte
 unchanged.
 
-Milestone 8 release construction, installer/portable ZIP, store publication, release tag,
-independent final audit, benchmark run, screenshot capture, and publication remain absent. The M7
-machine-readable evidence endpoint and stable selectors are inputs for a future M8 task; they are
-not an M8 implementation or acceptance verdict.
+M8 packaging is implemented by `tools/build_demo_release.py --commit <full-commit-id>
+--output-dir <new-external-directory>`. Freeze and fully test a candidate before committing,
+then build twice from that immutable commit and test the exact extracted archives. Reports,
+hashes, measurements, and reviewer attestations belong outside the source commit. See
+`docs/adr/0028-deterministic-demo-release-and-local-ownership.md` and `docs/m8/START_HERE.txt`.
+The launchers START/STOP/STATUS/BACKUP/RESET/REMOVE/UPGRADE.cmd need no Python command entry.
+Their default demo data is release-specific local application data; original data is untouched.
+Release construction does not itself establish acceptance, clean-machine portability, or review.
+
+`tools/measure_demo_release.py` measures exactly 1,000 or 10,000 mixed persistence-service
+calls in a fresh isolated data root. Every ten calls comprise six new evaluations, two
+replays, one changed-material conflict, and one history query. It retains the 256-order
+portal limit and reports actual Windows working set, CPU, growth, verified backup, and
+per-operation latency. UI and idle-service measurements are separate external evidence.

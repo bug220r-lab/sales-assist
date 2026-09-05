@@ -5,8 +5,8 @@ $ErrorActionPreference = 'Stop'
 $script:SsaReceiptSchema = 'synthetic-sales-assist-runtime-receipt/v1'
 $script:SsaApiSchema = 'synthetic-sales-assist-api/v1'
 $script:SsaApiRequestSchema = 'synthetic-sales-assist-api-request/v1'
-$script:SsaAppVersion = '0.1.0'
-$script:SsaBuildVersion = 'synthetic-sales-assist-m5/v1'
+$script:SsaAppVersion = '0.1.1'
+$script:SsaBuildVersion = 'synthetic-sales-assist-m8/v1'
 $script:SsaDatabaseFilename = 'synthetic_sales_assist.sqlite3'
 $script:SsaReceiptFilename = 'service.json'
 $script:SsaReceiptMembers = @(
@@ -565,6 +565,7 @@ function Invoke-SsaCliJson {
     )
 
     $arguments = @(
+        '-s', '-E',
         '-m',
         'synthetic_sales_assist.cli',
         '--json',

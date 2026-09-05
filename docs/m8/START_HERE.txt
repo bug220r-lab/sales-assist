@@ -1,0 +1,35 @@
+Synthetic Sales Assist 0.1.1 - Windows development/demo package
+
+Extract the Windows demo ZIP, then double-click START.cmd in the extracted folder.
+Startup verifies the package, prepares fictional demo records on first use, and opens
+http://127.0.0.1:8765/overview. Use STATUS.cmd, BACKUP.cmd, and STOP.cmd as needed.
+
+Requires local CPython 3.12 with the Windows tzdata 2026.3 package already installed.
+Python and tzdata are not included; no dependency is downloaded by the launcher.
+The launchers permit the previously validated exact Codex runtime fallback on this PC;
+when selected it prints DEVELOPMENT/NONPORTABLE and depends on that installation.
+No dependency is downloaded. Chrome 114+ is required for the optional side-panel demo.
+
+The default data directory is:
+%LOCALAPPDATA%\SyntheticSalesAssist\completion\<release-id>\<installation-key>\demo-data
+The exact release-id is in release-build.json. Source and OneDrive are not data roots.
+The installation-key separates two extracted copies of the same release.
+The existing working database is not used. Stop/restart preserves the demo history.
+
+Use a dedicated Chrome demo profile. In chrome://extensions choose Developer mode,
+Load unpacked, and the extracted chrome_extension directory (version 0.1.1).
+Visit a synthetic order page, then open the side panel from Chrome's extension controls.
+Package presence does not prove the extension is installed or running.
+
+MANAGER_DEMO.md is the 10-minute walkthrough. KNOWN_LIMITATIONS.md describes boundaries.
+Read the external release directory's FINAL_STATUS for actual validation and hashes.
+
+RESET.cmd requires typing RESET and backs up disposable demo data before resetting it.
+REMOVE.cmd requires typing REMOVE and removes only unchanged package files; modified or
+unknown files and external data/backups remain. Close the dedicated Chrome profile first.
+REMOVE.cmd itself remains so Windows can finish the running batch file successfully.
+
+To upgrade an older disposable demo: STOP its owned service, launch the new UPGRADE.cmd,
+and enter that demo's absolute data root. A verified backup precedes initialization.
+The old extracted package is preserved. Never select an existing working database.
+If startup fails, retain the error, use STATUS.cmd, and check the runtime prerequisite.

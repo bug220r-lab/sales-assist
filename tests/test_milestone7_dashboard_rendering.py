@@ -213,7 +213,7 @@ def _operational_status() -> dict[str, object]:
 def _database() -> dict[str, object]:
     return {
         "application_schema_version": "synthetic-sales-assist-application/v1",
-        "build_version": "synthetic-sales-assist-m5/v1",
+        "build_version": "synthetic-sales-assist-m8/v1",
         "database_location_class": "LOCAL_FILESYSTEM",
         "database_size_bytes": 4096,
         "database_status": "HEALTHY",
@@ -461,9 +461,9 @@ def _views() -> dict[str, dict[str, object]]:
             "api_request_schema_version": "synthetic-sales-assist-api-request/v1",
             "api_schema_version": "synthetic-sales-assist-api/v1",
             "application_schema_version": "synthetic-sales-assist-application/v1",
-            "application_version": "0.1.0",
+            "application_version": "0.1.1",
             "benchmark_reference": M4_BENCHMARK_REFERENCE.to_dict(),
-            "build_version": "synthetic-sales-assist-m5/v1",
+            "build_version": "synthetic-sales-assist-m8/v1",
             "database": _database(),
             "dom_schema_version": "synthetic-sales-assist-dom/v1",
             "extension": _extension(),
@@ -1917,7 +1917,7 @@ class DashboardRenderingTests(unittest.TestCase):
                     lambda view: _replace_path(
                         view,
                         ("application_version",),
-                        "0.1.1",
+                        "9.9.9",
                     ),
                 ),
                 (
@@ -2224,21 +2224,6 @@ class DashboardRenderingTests(unittest.TestCase):
         )
 
     def test_telemetry_semantic_mutations_fail_closed(self) -> None:
-        def all_history_evaluations_exceed_requests(
-            view: dict[str, object],
-        ) -> None:
-            _replace_path(view, ("metrics", "unique_evaluations"), 5)
-            _replace_path(
-                view,
-                ("metrics", "sales_credit_result_distribution"),
-                {"OUTBOUND_EVIDENCE_HUMAN_REVIEW": 4},
-            )
-            _replace_path(
-                view,
-                ("metrics", "human_review_rate"),
-                _rate(2, 5),
-            )
-
         def current_reviews_exceed_active_cases(view: dict[str, object]) -> None:
             _replace_path(view, ("metrics", "current_human_review_items"), 3)
 
@@ -2354,10 +2339,6 @@ class DashboardRenderingTests(unittest.TestCase):
                     ),
                 ),
                 ("negative-realized-total", negative_realized_total),
-                (
-                    "all-history-evaluations-exceed-requests",
-                    all_history_evaluations_exceed_requests,
-                ),
                 (
                     "current-reviews-exceed-active-cases",
                     current_reviews_exceed_active_cases,

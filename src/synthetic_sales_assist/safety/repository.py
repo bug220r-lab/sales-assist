@@ -31,6 +31,8 @@ TEXT_SUFFIXES = frozenset(
     {
         "",
         ".cfg",
+        ".cmd",
+        ".bat",
         ".css",
         ".editorconfig",
         ".gitignore",
@@ -54,6 +56,13 @@ IMPLEMENTATION_ROOTS = (
     ".gitattributes",
     ".gitignore",
     "DEVELOPMENT.md",
+    "START.cmd",
+    "STOP.cmd",
+    "STATUS.cmd",
+    "BACKUP.cmd",
+    "RESET.cmd",
+    "REMOVE.cmd",
+    "UPGRADE.cmd",
     "chrome_extension",
     "docs",
     "migrations",
@@ -100,6 +109,11 @@ AUTHORED_M5_SCRIPT_PATHS = frozenset(
     }
 )
 MAX_AUTHORED_M5_ASSET_BYTES = 512 * 1024
+AUTHORED_M8_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M8"
+AUTHORED_M8_SCRIPT_PATHS = frozenset({
+    "scripts/demo.ps1", "START.cmd", "STOP.cmd", "STATUS.cmd", "BACKUP.cmd",
+    "RESET.cmd", "REMOVE.cmd", "UPGRADE.cmd",
+})
 AUTHORED_M6_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M6"
 AUTHORED_M6_EXTENSION_ROOT = "chrome_extension"
 AUTHORED_M6_EXTENSION_SUFFIXES = frozenset(
@@ -317,7 +331,10 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
 
     root = root.resolve()
     findings: set[RepositoryFinding] = set()
-    for path in _walk_files(root, IMPLEMENTATION_ROOTS):
+    extra_launchers = tuple(path.name for path in root.iterdir()
+                            if path.suffix.lower() in {".cmd", ".bat"}
+                            and path.name not in IMPLEMENTATION_ROOTS)
+    for path in _walk_files(root, (*IMPLEMENTATION_ROOTS, *extra_launchers)):
         relative = path.relative_to(root).as_posix() if _is_within(root, path) else path.name
         if path.is_symlink() or not _is_within(root, path):
             findings.add(RepositoryFinding("linked_or_external_path", relative, 0))
@@ -354,7 +371,14 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
             text is not None and _is_approved_m5_portal_source(relative, path, text)
         )
         approved_portal_asset = approved_portal and suffix in AUTHORED_M5_PORTAL_SUFFIXES
-        approved_script = text is not None and _is_approved_m5_script(relative, path, text)
+        approved_script = text is not None and (
+            _is_approved_m5_script(relative, path, text)
+            or (relative in AUTHORED_M8_SCRIPT_PATHS and AUTHORED_M8_MARKER in text[:4096]
+                and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES)
+        )
+        if suffix in {".cmd", ".bat"} and not approved_script:
+            findings.add(RepositoryFinding("unapproved_demo_launcher", relative, 0))
+            continue
         if relative.startswith("scripts/") and suffix == ".ps1" and not approved_script:
             findings.add(RepositoryFinding("unapproved_lifecycle_script", relative, 0))
             continue

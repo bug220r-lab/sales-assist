@@ -4,7 +4,8 @@ param(
     [string]$PythonPath,
     [string]$DataDir,
     [ValidateRange(1024, 65535)][int]$Port = 8765,
-    [switch]$ConfirmReset
+    [switch]$ConfirmReset,
+    [switch]$SeedDemo
 )
 
 Set-StrictMode -Version Latest
@@ -79,6 +80,12 @@ try {
         -CommandArguments @('db', 'verify', '--deep')
     if ($verification.result.healthy -ne $true -or $verification.result.schema_version -ne 4) {
         throw 'RESET_VERIFICATION_FAILED'
+    }
+    if ($SeedDemo) {
+        $installation = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+        $demoTool = Join-Path $installation 'tools\release_support.py'
+        & $python -I $demoTool reseed --install-root $installation --data-dir $root
+        if ($LASTEXITCODE -ne 0) { throw 'RESET_DEMO_SEED_FAILED' }
     }
     try { $serviceMaintenanceLock.Unlock(64, 1) } catch { }
     $serviceMaintenanceLock.Dispose()

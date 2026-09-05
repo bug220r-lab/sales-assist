@@ -441,8 +441,8 @@ class PortalRuntimeSecurityTests(unittest.TestCase):
             port=8765,
             shutdown_token="b" * 64,
             database_path=str(Path(tempfile.gettempdir()).resolve() / "synthetic.sqlite3"),
-            app_version="0.1.0",
-            build_version="synthetic-sales-assist-m5/v1",
+            app_version="0.1.1",
+            build_version="synthetic-sales-assist-m8/v1",
             database_schema_version=4,
             origin="http" + f"://{authority}:8765",
         )
@@ -476,7 +476,7 @@ class PortalRuntimeSecurityTests(unittest.TestCase):
             self.assertEqual(raw, receipt.canonical_bytes())
             self.assertEqual(value["csrf_token"], runtime.csrf_token)
             self.assertNotEqual(value["csrf_token"], value["shutdown_token"])
-            self.assertEqual(value["build_version"], "synthetic-sales-assist-m5/v1")
+            self.assertEqual(value["build_version"], "synthetic-sales-assist-m8/v1")
             self.assertEqual(
                 value["database_path"], str(paths.database)  # type: ignore[attr-defined]
             )
@@ -546,7 +546,7 @@ class PortalRuntimeSecurityTests(unittest.TestCase):
         receipt = runtime.start()
         try:
             self.assertEqual(receipt.database_schema_version, 4)
-            self.assertEqual(receipt.build_version, "synthetic-sales-assist-m5/v1")
+            self.assertEqual(receipt.build_version, "synthetic-sales-assist-m8/v1")
             self.assertTrue(receipt_path.is_file())
         finally:
             runtime.close()
@@ -661,7 +661,7 @@ class PortalRuntimeSecurityTests(unittest.TestCase):
 
             status, page = request("GET", f"/orders/{order_id}")
             self.assertEqual(status, 200)
-            self.assertIn(b"synthetic-sales-assist-m5/v1", page)
+            self.assertIn(b"synthetic-sales-assist-m8/v1", page)
             self.assertIn(b"ssa-synthetic-order-payload", page)
 
             evaluate = json.dumps(

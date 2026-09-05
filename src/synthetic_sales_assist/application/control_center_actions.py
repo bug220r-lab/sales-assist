@@ -191,10 +191,12 @@ class ControlCenterActions:
                 outcome=manager_outcome,
                 request_key=request_key,
             )
-        except (SalesCreditPersistenceConflict, IdempotencyConflictError) as exc:
+        except SalesCreditPersistenceConflict as exc:
+            raise ControlCenterActionError(str(exc), "CONFLICT") from None
+        except IdempotencyConflictError as exc:
             raise ControlCenterActionError(exc.code, "CONFLICT") from None
         except SalesCreditRepositoryError as exc:
-            raise ControlCenterActionError(exc.code, "UNAVAILABLE") from None
+            raise ControlCenterActionError(str(exc), "UNAVAILABLE") from None
         return _action_result(
             command_id=result.command_id,
             recorded_at=result.recorded_at,

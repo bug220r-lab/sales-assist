@@ -187,6 +187,7 @@ button[disabled] {{ cursor: wait; opacity: .62; }}
 .dashboard-footer {{ color: #4b626c; padding: 2rem 1rem; text-align: center; }}
 [data-ssa-dashboard-id] {{ overflow-wrap: anywhere; }}
 body[data-ssa-dashboard-presentation="true"] .dashboard-volatile {{ display: none; }}
+.dashboard-field[hidden] {{ display: none; }}
 @media (max-width: 650px) {{
   .dashboard-main {{ padding: .75rem; }}
   dl {{ grid-template-columns: 1fr; }}
@@ -259,7 +260,32 @@ DASHBOARD_JS: Final = f"""/* {DASHBOARD_ASSET_MARKER} */
       }}
       payload[control.name] = value;
     }});
+    if (form.dataset.ssaDashboardAction === "manager-outcome" &&
+        payload.outcome !== "PARTIAL") {{
+      payload.amount_minor_units = null;
+      payload.currency_code = null;
+    }}
     return payload;
+  }}
+
+  function syncManagerOutcome(form, clearConfirmation) {{
+    const outcome = form.querySelector('[name="outcome"]');
+    const amount = form.querySelector('[name="amount_minor_units"]');
+    const currency = form.querySelector('[name="currency_code"]');
+    const partial = outcome.value === "PARTIAL";
+    [amount, currency].forEach((control) => {{
+      control.required = partial;
+      control.disabled = !partial;
+      control.closest("label").hidden = !partial;
+      if (!partial) control.value = "";
+    }});
+    if (clearConfirmation) form.querySelector('[name="confirmed"]').checked = false;
+    const actor = form.querySelector('[name="actor_id"]').value;
+    const summary = form.querySelector("[data-ssa-manager-confirmation]");
+    if (summary) {{
+      summary.textContent = `${{actor}}: ${{outcome.value || "choose an outcome"}}` +
+        (partial ? `; ${{amount.value || "enter amount"}} minor units ${{currency.value}}` : "");
+    }}
   }}
 
   async function submitLocal(form) {{
@@ -285,6 +311,12 @@ DASHBOARD_JS: Final = f"""/* {DASHBOARD_ASSET_MARKER} */
   }}
 
   document.querySelectorAll("form[data-ssa-dashboard-action]").forEach((form) => {{
+    if (form.dataset.ssaDashboardAction === "manager-outcome") {{
+      syncManagerOutcome(form, false);
+      ["input", "change"].forEach((kind) => form.addEventListener(kind, (event) => {{
+        if (event.target.name !== "confirmed") syncManagerOutcome(form, true);
+      }}));
+    }}
     form.addEventListener("submit", async (event) => {{
       event.preventDefault();
       const button = form.querySelector('button[type="submit"]');

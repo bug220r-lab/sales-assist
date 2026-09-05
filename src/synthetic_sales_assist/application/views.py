@@ -12,7 +12,7 @@ from typing import Final, TypeAlias
 
 
 APPLICATION_SCHEMA_VERSION: Final = "synthetic-sales-assist-application/v1"
-APPLICATION_BUILD_VERSION: Final = "synthetic-sales-assist-m5/v1"
+APPLICATION_BUILD_VERSION: Final = "synthetic-sales-assist-m8/v1"
 
 
 class ApplicationError(RuntimeError):

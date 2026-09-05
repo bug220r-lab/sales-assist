@@ -51,8 +51,8 @@ ACTOR_ID = "SYN-REP-M7-MANAGER-0001"
 
 def _status() -> dict[str, object]:
     return {
-        "app_version": "0.1.0",
-        "build_version": "synthetic-sales-assist-m5/v1",
+        "app_version": "0.1.1",
+        "build_version": "synthetic-sales-assist-m8/v1",
         "database_schema_version": 4,
         "database_status": "PASS",
         "evaluated_count": 0,
@@ -165,7 +165,7 @@ class _ControlCenter:
         return {
             "database": {
                 "application_schema_version": "synthetic-sales-assist-application/v1",
-                "build_version": "synthetic-sales-assist-m5/v1",
+                "build_version": "synthetic-sales-assist-m8/v1",
                 "database_location_class": "LOCAL_TEMPORARY",
                 "database_size_bytes": 4096,
                 "database_status": "HEALTHY",

@@ -8,6 +8,7 @@
 /docs/** text eol=lf
 /migrations/** text eol=lf
 /scripts/** text eol=crlf
+/*.cmd text eol=crlf
 /src/** text eol=lf
 /tests/** text eol=lf
 /tools/** text eol=lf

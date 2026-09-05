@@ -916,7 +916,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
         csrf = "a" * 64
         shutdown = csrf if equal_tokens else "b" * 64
         return {
-            "app_version": "0.1.0",
+            "app_version": "0.1.1",
             "build_version": "test-build",
             "csrf_token": csrf,
             "database_path": str(
@@ -953,8 +953,8 @@ class Milestone5LifecycleTests(unittest.TestCase):
         status = self._json(result)
         self.assertEqual(set(status), STATUS_MEMBERS)
         self.assertEqual(status["state"], "STOPPED")
-        self.assertEqual(status["app_version"], "0.1.0")
-        self.assertEqual(status["build_version"], "synthetic-sales-assist-m5/v1")
+        self.assertEqual(status["app_version"], "0.1.1")
+        self.assertEqual(status["build_version"], "synthetic-sales-assist-m8/v1")
         self.assertIsNone(status["database_schema_version"])
         self.assertEqual(status["database_size_bytes"], 0)
         self.assertIsNone(status["pid"])

@@ -1,0 +1,55 @@
+# Presentation-only amendment — ECS-themed synthetic demo
+
+Apply this amendment within the existing autonomous-completion task. Do not start a second writer, reset the repository to an earlier milestone, or discard current work. Read the current checkpoint and finish the active transaction/test phase before changing its candidate tree.
+
+## Intent and scope
+
+Make the Control Center, synthetic portal, and Chrome side panel visually consistent with ECS Tuning's branding while preserving all implemented behavior. This is a branding pass, not a business-rule change, real-data integration, new milestone series, or full GUI redesign.
+
+The proposed display title is:
+
+ECS Sales Assist
+
+Keep a plainly visible companion label on each principal surface:
+
+Synthetic demo · Localhost only · Not connected to live systems
+
+The title is a presentation label, not a claim of production deployment or corporate security approval. Keep internal package names, API/schema identifiers, source IDs, database paths, migrations, reasons, transitions, and command namespaces unchanged.
+
+## Visual direction
+
+Translate the public ECS identity into a restrained red, charcoal/black, white, and light-gray application theme. This description is a design proposal, not a verified corporate brand-standard specification.
+
+- Use a dark header/navigation treatment, light content surfaces, dark readable text, and red accents/primary actions.
+- Use one shared set of named theme tokens for colors, typography, spacing, borders, focus, and button states. Reuse them consistently across portal/dashboard and extension, within existing CSP and package boundaries.
+- Use the exact locally supplied brand logo if available and permitted for the demo. Preserve its aspect ratio and do not invent, redraw, or approximate a trademark logo. If unavailable, use the plain-text title and report logo matching as pending; do not block a working theme.
+- Use an installed system sans-serif font stack unless an approved local font is already part of the project. Do not download or redistribute a font merely to approximate the website.
+- Use compact headings, clear table headers, consistent buttons, restrained borders/shadows, and readable white-space. Do not copy storefront carts, promotions, vehicle selectors, third-party widgets, or website code.
+- Keep success, warning, error, unavailable, and human-review states clearly labeled and distinguishable from the red branding. Red must not be the only error indicator.
+- Preserve readable contrast, visible keyboard focus, 200% zoom usability, long-ID wrapping, and narrow side-panel behavior.
+
+Exact corporate colors/typefaces have not been verified by this amendment. Use locally available approved brand material as authority for exact matches; otherwise label the result ECS-inspired, not an exact corporate brand-guide match. Record the final chosen color tokens and their source/status.
+
+## Narrow exception to previous brand prohibitions
+
+The earlier no-company-branding instruction is amended ONLY for presentation labels, the selected brand assets, and their provenance/packaging documentation. Preserve protected original specifications. Record this scoped decision in repository-authored documentation.
+
+If repository scans flag the deliberate title/logo, implement a small, reviewable exception for exact approved text locations and exact asset digests. Do not suppress whole directories, allow arbitrary company domains, weaken secret/identity scans, or bypass runtime validation. Test that branding is permitted in those locations while real orders, customer identities, secrets, source URLs, and non-loopback destinations remain prohibited.
+
+All branding assets must be packaged locally and pass CSP/asset validation. Do not hotlink images, fonts, CSS, scripts, or analytics. Do not add ECS website host permissions to the extension. Asset acquisition is not permission for application traffic or production access. Do not broaden the active task's network permissions; if an asset is unavailable locally, use the text fallback.
+
+## Preserve existing function
+
+Do not change field meanings, request/response schemas, DOM extraction attributes, completeness proofs, request keys, replay/conflict semantics, confirmation requirements, business decisions, Money calculations, human authority, database schema, or retention. Keep the previously deferred GUI simplification deferred.
+
+Do not remove or alter working action handlers merely to restyle a control. The same inputs must produce the same decisions and persisted effects before and after the theme update.
+
+## Verification and release handling
+
+Capture before/after application-only screenshots in isolated synthetic data. Verify overview, Sales Credit outcome form, DOI overlap, audit history, system health, and the Chrome side panel at normal/narrow widths. Test a valid manager outcome, exact replay, a material conflict, a DOI evaluation, and a malformed-page rejection.
+
+Run affected UI/accessibility/security/extension tests and the final full regression on the changed candidate. Build and inspect the actual locally packaged assets. External application/test destinations remain zero; original-data and process-ownership safeguards remain unchanged.
+
+If release artifacts already exist, preserve them and build a versioned branded successor. Never overwrite evidence as if the old hashes describe the new UI. Update the affected component versions, extension package/inventory, screenshots, release manifests/checksums, and final review evidence. Do not unnecessarily rerun unrelated long endurance benchmarks solely because colors changed; rerun behavior/performance evidence where the changes affect it.
+
+Finish this branding pass as a separate ordinary commit, then continue the existing autonomous-completion goal without another user-approval pause. Include the theme/asset provenance, changed files, tests, component versions, fresh hashes, and any logo/brand-guide limitations in the final handoff. Do not claim this chat directly changed the repository.

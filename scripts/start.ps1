@@ -5,6 +5,8 @@ param(
     [string]$DataDir,
     [ValidateRange(1024, 65535)][int]$Port = 8765,
     [switch]$NoBrowser,
+    [switch]$PrepareDemo,
+    [switch]$AllowSchema4Upgrade,
     [ValidateRange(2, 60)][int]$StartupTimeoutSeconds = 20
 )
 
@@ -41,8 +43,29 @@ try {
         Remove-SsaStaleLease -Paths $paths
     }
 
+    if ($AllowSchema4Upgrade -and -not $PrepareDemo) {
+        throw 'UPGRADE_REQUIRES_DEMO_PREPARATION'
+    }
+    if ($PrepareDemo) {
+        $installation = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+        $support = Join-Path $installation 'tools\release_support.py'
+        $prepareArguments = @($support, 'prepare', '--install-root', $installation,
+            '--data-dir', $root)
+        if ($AllowSchema4Upgrade) { $prepareArguments += '--allow-schema4-upgrade' }
+        $preparationLease = Enter-SsaLeaseCleanupLock -LockPath $paths.Lock
+        try {
+            & $python -I @prepareArguments
+            if ($LASTEXITCODE -ne 0) { throw 'DEMO_PREPARATION_FAILED' }
+        }
+        finally {
+            try { $preparationLease.Unlock(64, 1) } catch { }
+            $preparationLease.Dispose()
+        }
+        Remove-SsaStaleLease -Paths $paths
+    }
+
     $argumentLine = @(
-        '-m synthetic_sales_assist.portal',
+        '-s -E -m synthetic_sales_assist.portal',
         '--data-dir ' + (ConvertTo-SsaQuotedProcessArgument $root),
         '--host 127.0.0.1',
         '--port ' + $Port,

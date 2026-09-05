@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from synthetic_sales_assist.application import ScenarioApplication
+from synthetic_sales_assist.application.control_center import ControlCenterApplication
 from synthetic_sales_assist.portal.contracts import (
     API_REQUEST_SCHEMA_VERSION,
     DOI_SCENARIO_SELECTION_REQUEST_SCHEMA_VERSION,
@@ -131,6 +132,36 @@ class Milestone7HumanActionHTTPTests(unittest.TestCase):
             ).fetchone()[0]
         self.assertEqual(count, 1)
 
+        stale_status, _, stale = self.request(
+            "POST", path, payload={**body, "outcome": "DENIED", "request_key": "new-after-close"},
+        )
+        self.assertEqual(stale_status, 409, stale)
+        self.assertEqual(stale["error"]["code"], "MANAGER_OUTCOME_CASE_INVALID")
+
+    def test_all_five_manager_outcomes_keep_exact_money_and_system_classification(self) -> None:
+        for outcome in ("APPROVED", "DENIED", "PARTIAL", "OTHER_REP", "NOT_PURSUED"):
+            with self.subTest(outcome=outcome):
+                order = self.application.instantiate("sales-credit-human-review", outcome)
+                self.application.evaluate(order.order_id, "evaluate-" + outcome)
+                body = {
+                    "actor_id": "SYN-REP-M7-HTTP-MANAGER", "confirmed": True,
+                    "outcome": outcome, "request_key": "manager-" + outcome,
+                    "decided_at": self.action_time(),
+                    "amount_minor_units": 1250 if outcome == "PARTIAL" else None,
+                    "currency_code": "USD" if outcome == "PARTIAL" else None,
+                    "request_schema_version": API_REQUEST_SCHEMA_VERSION,
+                    "schema_version": MANAGER_OUTCOME_REQUEST_SCHEMA_VERSION,
+                }
+                path = f"/api/v1/dashboard/sales-credit/{order.order_id}/manager-outcome"
+                status, _, result = self.request("POST", path, payload=body)
+                self.assertEqual(status, 200, result)
+                status, _, replay = self.request("POST", path, payload=body)
+                self.assertEqual(status, 200, replay)
+                self.assertEqual(replay["data"]["status"], "EXACT_REPLAY")
+                detail = self.server.control_center.sales_credit_detail(order.order_id)
+                self.assertEqual(detail["summary"]["attribution"], "UNKNOWN")
+                self.assertEqual(detail["summary"]["manager_outcome"], outcome)
+
     def test_doi_selection_success_replay_conflict_and_timeline(self) -> None:
         order = self.application.instantiate("doi-overlap", "m7-http-doi-instance")
         evaluated = self.application.evaluate(order.order_id, "m7-http-doi-evaluation")
@@ -201,6 +232,22 @@ class Milestone7HumanActionHTTPTests(unittest.TestCase):
                 ).fetchone()[0],
             )
         self.assertEqual(counts, (2, 2))
+        for retained in (False, True):
+            if retained:
+                reopened = ScenarioApplication.open(self.data_root)
+                self.server.control_center = ControlCenterApplication(
+                    reopened.database, scenario_application=reopened,
+                )
+            metrics = self.server.control_center.metrics()
+            self.assertEqual(metrics.unique_evaluations, 2)
+            self.assertEqual(metrics.requests_received, 1)
+            for route in (
+                "/overview", "/system/telemetry", "/api/v1/dashboard/overview",
+                "/api/v1/dashboard/system/telemetry",
+            ):
+                with self.subTest(route=route, reopened=retained):
+                    status, raw, _ = self.request("GET", route)
+                    self.assertEqual(status, 200, raw.decode(errors="replace"))
 
     def test_detail_and_audit_routes_reject_valid_but_wrong_synthetic_subjects(
         self,

@@ -2594,7 +2594,7 @@ class ControlCenterApplication:
             ).fetchall()
             doi_eval_where, doi_eval_params = _window_clause(window, "a.created_at")
             doi_evaluations = connection.execute(
-                "SELECT e.evaluation_id, e.top_level_state, e.order_id "
+                "SELECT e.evaluation_id, e.top_level_state, e.order_id, e.output_canonical_bytes "
                 "FROM doi_evaluations e JOIN doi_case_artifacts a "
                 "ON a.artifact_pk=e.record_artifact_pk "
                 + (f"WHERE {doi_eval_where}" if doi_eval_where else "")
@@ -2694,11 +2694,13 @@ class ControlCenterApplication:
             manager_outcome_count = 0
             if eligible_orders:
                 placeholders = ",".join("?" for _ in eligible_orders)
+                outcome_where, outcome_params = _window_clause(window, "recorded_at")
                 manager_outcome_count = int(
                     connection.execute(
                         "SELECT COUNT(DISTINCT order_id) FROM sc_manager_outcomes "
-                        f"WHERE order_id IN ({placeholders})",
-                        tuple(sorted(eligible_orders)),
+                        f"WHERE order_id IN ({placeholders})"
+                        + (f" AND {outcome_where}" if outcome_where else ""),
+                        tuple(sorted(eligible_orders)) + tuple(outcome_params),
                     ).fetchone()[0]
                 )
 
@@ -2710,7 +2712,7 @@ class ControlCenterApplication:
         database_errors = sum(int(row[8]) for row in telemetry_rows)
         unique_evaluations = len(sc_evaluations) + len(doi_evaluations)
         new_review_evaluations = sum(int(row[1]) for row in sc_evaluations) + sum(
-            str(row[1]) == "DOI_MANUAL_REVIEW" for row in doi_evaluations
+            int(_doi_output_facts(row[3])[2]) for row in doi_evaluations
         )
         latencies = [int(row[2]) for row in telemetry_rows]
         throughput: str | None = None

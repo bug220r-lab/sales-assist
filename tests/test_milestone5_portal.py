@@ -234,8 +234,8 @@ def _history() -> dict[str, object]:
 def _status(*, healthy: bool = True) -> dict[str, object]:
     state = "PASS" if healthy else "FAIL"
     return {
-        "app_version": "0.1.0",
-        "build_version": "synthetic-sales-assist-m5/v1",
+        "app_version": "0.1.1",
+        "build_version": "synthetic-sales-assist-m8/v1",
         "database_schema_version": 4,
         "database_status": state,
         "evaluated_count": 1,
@@ -953,7 +953,7 @@ class PortalHTTPTestCase(unittest.TestCase):
         self.assertNotIn("request_key", embedded)
         self.assertNotIn(b"&lt;script", raw)
         self.assertIn(b"Local service status", raw)
-        self.assertIn(b"synthetic-sales-assist-m5/v1", raw)
+        self.assertIn(b"synthetic-sales-assist-m8/v1", raw)
         self.assertIn(b"Processing stages", raw)
 
     def test_line_fact_policy_rejects_cross_field_reasons_and_wrong_codecs(self) -> None:

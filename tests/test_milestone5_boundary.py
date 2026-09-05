@@ -12,6 +12,8 @@ from synthetic_sales_assist.safety.repository import (
     AUTHORED_M5_MARKER,
     AUTHORED_M5_PORTAL_ROOTS,
     AUTHORED_M5_SCRIPT_PATHS,
+    AUTHORED_M8_MARKER,
+    AUTHORED_M8_SCRIPT_PATHS,
     scan_prohibited_repository_content,
 )
 
@@ -187,7 +189,10 @@ class Milestone5BoundaryTests(unittest.TestCase):
             for path in SCRIPTS.rglob("*.ps1")
             if path.is_file()
         }
-        self.assertEqual(paths, set(AUTHORED_M5_SCRIPT_PATHS))
+        current_scripts = set(AUTHORED_M5_SCRIPT_PATHS) | {
+            path for path in AUTHORED_M8_SCRIPT_PATHS if path.startswith("scripts/")
+        }
+        self.assertEqual(paths, current_scripts)
         forbidden = (
             "#requires -runasadministrator",
             "-verb runas",
@@ -199,7 +204,9 @@ class Milestone5BoundaryTests(unittest.TestCase):
         for relative in sorted(paths):
             text = (ROOT / relative).read_text(encoding="utf-8")
             lowered = text.lower()
-            self.assertIn(AUTHORED_M5_MARKER, text[:4096])
+            marker = AUTHORED_M5_MARKER if relative in AUTHORED_M5_SCRIPT_PATHS \
+                else AUTHORED_M8_MARKER
+            self.assertIn(marker, text[:4096])
             self.assertFalse(any(value in lowered for value in forbidden), relative)
 
         reset = (SCRIPTS / "reset-demo.ps1").read_text(encoding="utf-8")
