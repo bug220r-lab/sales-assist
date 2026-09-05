@@ -24,6 +24,7 @@ from synthetic_sales_assist.application.control_center import (
     MetricWindow,
     PageRequest,
 )
+from synthetic_sales_assist.domain.timestamps import canonicalize_timestamp
 from synthetic_sales_assist.persistence.database import SQLiteDatabase
 from synthetic_sales_assist.persistence.paths import DataPaths, resolve_data_paths
 from synthetic_sales_assist.portal.assets import STATIC_ASSETS
@@ -507,7 +508,7 @@ class PortalHTTPServer(HTTPServer):
             self.extension_observed_at = now
         return {
             "expected_extension_version": EXPECTED_EXTENSION_VERSION,
-            "last_seen_at": now.isoformat().replace("+00:00", "Z"),
+            "last_seen_at": canonicalize_timestamp(now.isoformat()),
             "observed_extension_version": version,
             "stale_after_seconds": EXTENSION_STALE_AFTER_SECONDS,
             "status": (

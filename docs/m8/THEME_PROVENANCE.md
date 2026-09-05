@@ -40,7 +40,8 @@ The shared set also defines spacing, borders, radii, focus, disabled state, and 
 | `color-info` | `#2c4c6b` |
 | `color-info-surface` | `#eaf0f6` |
 
-The application and extension versions are both 0.1.2. Internal names, API/DOM schemas,
+The theme was introduced in application and extension 0.1.2. The CLI history correction
+ships as application 0.1.3; extension bytes remain 0.1.2. Internal names, API/DOM schemas,
 command namespaces, rules, Money, database schema 4, and loopback host permissions remain
 unchanged. CSP remains local. No scanner exemption was needed for the authorized title.
 Safety rejection tests continue to cover real identities, secrets, and non-loopback URLs.

@@ -234,7 +234,7 @@ def _history() -> dict[str, object]:
 def _status(*, healthy: bool = True) -> dict[str, object]:
     state = "PASS" if healthy else "FAIL"
     return {
-        "app_version": "0.1.2",
+        "app_version": "0.1.3",
         "build_version": "synthetic-sales-assist-m8/v1",
         "database_schema_version": 4,
         "database_status": state,

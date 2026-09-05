@@ -12,7 +12,7 @@ The default demo paths and first-run scenario routes are in the data root's demo
 | 6–7 min | Open Human review and an Audit-only view from a case. Current work and immutable history have different purposes. |
 | 7–8 min | If extension validation is complete, open a supported synthetic order and the dedicated Chrome side panel. Evaluate and follow its Control Center link. Describe the actual last-seen state. If validation is pending, disclose that and omit this step. |
 | 8–9 min | Open System → Telemetry. Show the 15 denominator definitions, N/A empty rates, exact currency separation, and the labeled historical performance reference. Fresh measurements are in external release evidence. |
-| 9–10 min | Create a confirmed verified backup and inspect its receipt. Refresh, then STOP.cmd. Restart to show persisted history. Explain the limits below. |
+| 9–10 min | Open System → Backups, enter a new request key, confirm and create a verified backup. Select Refresh backup receipts, inspect its receipt, then STOP.cmd. Restart to show persisted history. Explain the limits below. |
 
 Use canonical UTC times later than the displayed case update, such as the current UTC time.
 After a decision is recorded, its form disappears on refresh because the action is complete.

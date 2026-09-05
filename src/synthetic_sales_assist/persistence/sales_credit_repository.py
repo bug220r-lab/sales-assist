@@ -22,6 +22,7 @@ from synthetic_sales_assist.domain.numeric import Money
 from synthetic_sales_assist.domain.timestamps import CanonicalTimestamp
 from synthetic_sales_assist.persistence.faults import FaultInjector, FaultPoint
 from synthetic_sales_assist.persistence.records import (
+    SalesCreditHistoryPage,
     SalesCreditPurgeResult,
     StoredSalesCreditCase,
     StoredSalesCreditEvent,
@@ -63,6 +64,20 @@ class SalesCreditRepositoryError(RuntimeError):
 
 class SalesCreditPersistenceConflict(SalesCreditRepositoryError):
     """A retained identity or expected projection was reused inconsistently."""
+
+
+def validate_history_page(after_sequence: int, through_sequence: int | None,
+                          limit: int, through_event_id: EvidenceId | None = None) -> None:
+    """Reject invalid cursors before opening a database read."""
+
+    if (type(after_sequence) is not int or not 0 <= after_sequence < 2**63
+            or type(limit) is not int or not 1 <= limit <= 1_000
+            or (through_sequence is not None and (
+                type(through_sequence) is not int or not 1 <= through_sequence < 2**63
+                or after_sequence > through_sequence))
+            or (through_sequence is None) != (through_event_id is None)
+            or (through_event_id is not None and type(through_event_id) is not EvidenceId)):
+        raise SalesCreditRepositoryError("CASE_HISTORY_PAGE_INVALID")
 
 
 def _canonical(value: dict[str, object]) -> bytes:
@@ -1790,6 +1805,50 @@ class SalesCreditRepository:
             "SELECT * FROM sc_case_events WHERE order_id = ? ORDER BY sequence",
             (order_id.value,),
         ).fetchall()
+        return self._history_records(rows)
+
+    def case_history_page(
+        self, order_id: OrderId, *, after_sequence: int = 0,
+        through_sequence: int | None = None, limit: int = 1_000,
+        through_event_id: EvidenceId | None = None,
+    ) -> SalesCreditHistoryPage:
+        validate_history_page(after_sequence, through_sequence, limit, through_event_id)
+        if type(order_id) is not OrderId:
+            raise SalesCreditRepositoryError("ORDER_ID_INVALID")
+        latest = self.connection.execute(
+            "SELECT COALESCE(MAX(sequence), 0) FROM sc_case_events WHERE order_id=?",
+            (order_id.value,),
+        ).fetchone()[0]
+        through = latest if through_sequence is None else through_sequence
+        if through > latest or after_sequence > through:
+            raise SalesCreditRepositoryError("CASE_HISTORY_CURSOR_INVALID")
+        count = self.connection.execute(
+            "SELECT COUNT(*) FROM sc_case_events WHERE order_id=? AND sequence<=?",
+            (order_id.value, through),
+        ).fetchone()[0]
+        final = self.connection.execute(
+            "SELECT workflow_state, event_id FROM sc_case_events WHERE order_id=? AND sequence=?",
+            (order_id.value, through),
+        ).fetchone()
+        if through and final is None:
+            raise SalesCreditRepositoryError("CASE_HISTORY_CURSOR_INVALID")
+        if through_event_id is not None and str(final[1]) != through_event_id.value:
+            raise SalesCreditRepositoryError("CASE_HISTORY_CURSOR_INVALID")
+        rows = self.connection.execute(
+            "SELECT * FROM sc_case_events WHERE order_id=? AND sequence>? "
+            "AND sequence<=? ORDER BY sequence LIMIT ?",
+            (order_id.value, after_sequence, through, limit + 1),
+        ).fetchall()
+        return SalesCreditHistoryPage(
+            events=self._history_records(rows[:limit]), event_count=count,
+            through_sequence=through,
+            through_event_id=None if final is None else EvidenceId(str(final[1])),
+            state=None if final is None else WorkflowState(str(final[0])),
+            has_more=len(rows) > limit,
+        )
+
+    @staticmethod
+    def _history_records(rows: list[sqlite3.Row]) -> tuple[StoredSalesCreditEvent, ...]:
         return tuple(
             StoredSalesCreditEvent(
                 event_id=EvidenceId(str(row["event_id"])),
@@ -1828,4 +1887,5 @@ __all__ = [
     "SalesCreditPersistenceConflict",
     "SalesCreditRepository",
     "SalesCreditRepositoryError",
+    "validate_history_page",
 ]

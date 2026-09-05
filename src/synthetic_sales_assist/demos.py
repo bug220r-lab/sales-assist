@@ -27,6 +27,13 @@ _AUDIT_KEYS: Final = frozenset(
         "event_count",
         "event_id",
         "event_type",
+        "after_sequence",
+        "through_sequence",
+        "through_event_id",
+        "next_after_sequence",
+        "returned_event_count",
+        "has_more",
+        "sequence",
         "found",
         "human_review_required",
         "opportunity_count",
@@ -280,7 +287,11 @@ class DemoAuditBackend(Protocol):
 
     def order_show(self, synthetic_order_id: str) -> AuditView: ...
 
-    def case_history(self, synthetic_order_id: str) -> AuditView: ...
+    def case_history(
+        self, synthetic_order_id: str, *, after_sequence: int = 0,
+        through_sequence: int | None = None, limit: int = 1_000,
+        through_event_id: str | None = None,
+    ) -> AuditView: ...
 
     def run_show(self, synthetic_run_id: str) -> AuditView: ...
 
@@ -302,8 +313,12 @@ class UnavailableDemoAuditBackend:
         self._unavailable()
         raise AssertionError("unreachable")
 
-    def case_history(self, synthetic_order_id: str) -> AuditView:
-        del synthetic_order_id
+    def case_history(
+        self, synthetic_order_id: str, *, after_sequence: int = 0,
+        through_sequence: int | None = None, limit: int = 1_000,
+        through_event_id: str | None = None,
+    ) -> AuditView:
+        del synthetic_order_id, after_sequence, through_sequence, limit, through_event_id
         self._unavailable()
         raise AssertionError("unreachable")
 

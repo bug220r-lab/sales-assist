@@ -11,6 +11,7 @@ from synthetic_sales_assist.persistence.database import SQLiteDatabase
 from synthetic_sales_assist.persistence.faults import FaultInjector
 from synthetic_sales_assist.persistence.idempotency import SQLiteIdempotencyRepository
 from synthetic_sales_assist.persistence.records import (
+    SalesCreditHistoryPage,
     DurableCommandResult,
     SalesCreditPurgeResult,
     StoredSalesCreditCase,
@@ -20,7 +21,10 @@ from synthetic_sales_assist.persistence.projections import (
     ProjectionVerification,
     verify_sales_credit_projections,
 )
-from synthetic_sales_assist.persistence.sales_credit_repository import SalesCreditRepository
+from synthetic_sales_assist.persistence.sales_credit_repository import (
+    SalesCreditRepository,
+    validate_history_page,
+)
 from synthetic_sales_assist.sales_credit.accumulator import CaseMutation, _search_run_bytes
 from synthetic_sales_assist.sales_credit.discovery import OrderSearchRun
 from synthetic_sales_assist.sales_credit.models import ManagerOutcome
@@ -326,6 +330,19 @@ class SalesCreditPersistenceService:
     def case_history(self, order_id: OrderId) -> tuple[StoredSalesCreditEvent, ...]:
         with self.database.read() as connection:
             return SalesCreditRepository(connection).case_history(order_id)
+
+    def case_history_page(
+        self, order_id: OrderId, *, after_sequence: int = 0,
+        through_sequence: int | None = None, limit: int = 1_000,
+        through_event_id: EvidenceId | None = None,
+    ) -> SalesCreditHistoryPage:
+        validate_history_page(after_sequence, through_sequence, limit, through_event_id)
+        with self.database.read() as connection:
+            return SalesCreditRepository(connection).case_history_page(
+                order_id, after_sequence=after_sequence,
+                through_sequence=through_sequence, limit=limit,
+                through_event_id=through_event_id,
+            )
 
     def manager_outcomes(
         self,

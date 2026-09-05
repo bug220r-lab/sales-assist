@@ -161,6 +161,27 @@ def run_workload(data_dir: Path, calls: int) -> dict[str, object]:
         metrics = aggregate_processing_telemetry(connection)
     if counts != expected or replay_count != calls // 5 or conflict_count != calls // 10:
         raise AssertionError("POST_WORKLOAD_COUNTS_INVALID")
+    # Both Sales Credit aliases append to the same fixture order. Traverse its entire
+    # captured history outside the timed workload, retaining the response safety bound.
+    sales_order = next(item for item in views[0].synthetic_ids if item.startswith("SYN-ORDER-"))
+    history_page = backend.case_history(sales_order)
+    history_summary = dict(history_page.summary)
+    through = history_summary["through_sequence"]
+    history_rows = [dict(item) for item in history_page.events]
+    history_pages = 1
+    while history_summary["has_more"]:
+        history_page = backend.case_history(
+            sales_order, after_sequence=history_summary["next_after_sequence"],
+            through_sequence=through,
+            through_event_id=history_summary["through_event_id"],
+        )
+        history_summary = dict(history_page.summary)
+        history_rows.extend(dict(item) for item in history_page.events)
+        history_pages += 1
+    if (history_summary["event_count"] != calls // 5
+            or [item["sequence"] for item in history_rows] != list(range(1, calls // 5 + 1))
+            or len({item["event_id"] for item in history_rows}) != calls // 5):
+        raise AssertionError("COMPLETE_HISTORY_TRAVERSAL_FAILED")
     if any(dict(metrics.safety_counters).values()):
         raise AssertionError("POST_WORKLOAD_SAFETY_INVALID")
     verification_ns = time.perf_counter_ns() - verification_start
@@ -173,6 +194,12 @@ def run_workload(data_dir: Path, calls: int) -> dict[str, object]:
     return {
         "schema": "synthetic-sales-assist-m8-measurement/v1", "status": "PASS",
         "method": "PERSISTENCE_SERVICE_BENCHMARK", "ui_registry_limit": 256,
+        "query_semantics": (
+            "Alternating order projection and one bounded first history page; "
+            "complete Sales Credit history traversal is untimed verification."
+        ),
+        "history_verification_event_count": len(history_rows),
+        "history_verification_pages": history_pages,
         "python": platform.python_version(), "sqlite": sqlite3.sqlite_version,
         "platform": platform.system(), "total_calls": calls,
         "operation_counts": {key: len(value) for key, value in durations.items()},

@@ -5,8 +5,10 @@ import json
 import tempfile
 import threading
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, cast
+from unittest.mock import patch
 
 from synthetic_sales_assist.application import ScenarioApplication
 from synthetic_sales_assist.application.control_center import (
@@ -51,7 +53,7 @@ ACTOR_ID = "SYN-REP-M7-MANAGER-0001"
 
 def _status() -> dict[str, object]:
     return {
-        "app_version": "0.1.2",
+        "app_version": "0.1.3",
         "build_version": "synthetic-sales-assist-m8/v1",
         "database_schema_version": 4,
         "database_status": "PASS",
@@ -445,6 +447,24 @@ class Milestone7ServerTest(unittest.TestCase):
                 status, _, payload = self.request("GET", path)
                 self.assertEqual(status, 400)
                 self.assertEqual(_error_code(payload), "REQUEST_TARGET_INVALID")
+
+    def test_extension_handshake_canonicalizes_fractional_clock_precision(self) -> None:
+        body = {
+            "extension_version": EXPECTED_EXTENSION_VERSION,
+            "schema_version": EXTENSION_HANDSHAKE_SCHEMA_VERSION,
+        }
+        for micros, expected in ((120000, ".12Z"), (123450, ".12345Z"), (0, "Z")):
+            with self.subTest(microsecond=micros):
+                instant = datetime(2026, 9, 5, 10, 0, 0, micros, tzinfo=timezone.utc)
+                with patch("synthetic_sales_assist.portal.server.datetime") as clock:
+                    clock.now.return_value = instant
+                    status, _, payload = self.request(
+                        "POST", "/api/v1/system/extension/handshake",
+                        payload=body, headers=self.post_headers(),
+                    )
+                self.assertEqual(status, 200, payload)
+                self.assertEqual(_data(payload)["last_seen_at"], "2026-09-05T10:00:00" + expected)
+                self.assertEqual(self.server.extension_observation()[1], instant)
 
     def test_extension_handshake_is_closed_same_origin_and_process_local(self) -> None:
         body = {

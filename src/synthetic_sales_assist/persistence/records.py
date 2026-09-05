@@ -157,6 +157,18 @@ class StoredSalesCreditEvent:
 
 
 @dataclass(frozen=True, slots=True)
+class SalesCreditHistoryPage:
+    """One bounded read of a captured immutable event prefix."""
+
+    events: tuple[StoredSalesCreditEvent, ...]
+    event_count: int
+    through_sequence: int
+    through_event_id: EvidenceId | None
+    state: WorkflowState | None
+    has_more: bool
+
+
+@dataclass(frozen=True, slots=True)
 class SalesCreditPurgeResult:
     cases_deleted: int
     closed_audits_deleted: int
@@ -184,6 +196,7 @@ __all__ = [
     "DurableCommandResult",
     "PersistenceRecordError",
     "SalesCreditPurgeResult",
+    "SalesCreditHistoryPage",
     "StoredSalesCreditCase",
     "StoredSalesCreditEvent",
 ]

@@ -461,7 +461,7 @@ def _views() -> dict[str, dict[str, object]]:
             "api_request_schema_version": "synthetic-sales-assist-api-request/v1",
             "api_schema_version": "synthetic-sales-assist-api/v1",
             "application_schema_version": "synthetic-sales-assist-application/v1",
-            "application_version": "0.1.2",
+            "application_version": "0.1.3",
             "benchmark_reference": M4_BENCHMARK_REFERENCE.to_dict(),
             "build_version": "synthetic-sales-assist-m8/v1",
             "database": _database(),

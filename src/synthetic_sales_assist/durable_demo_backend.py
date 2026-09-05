@@ -618,16 +618,35 @@ class DurableDemoAuditBackend:
         }
         return AuditView("ORDER", synthetic_order_id, tuple(sorted(summary.items())))
 
-    def case_history(self, synthetic_order_id: str) -> AuditView:
+    def case_history(
+        self, synthetic_order_id: str, *, after_sequence: int = 0,
+        through_sequence: int | None = None, limit: int = 1_000,
+        through_event_id: str | None = None,
+    ) -> AuditView:
         order_id = OrderId(synthetic_order_id)
-        events = self.sales_credit.case_history(order_id)
-        if events:
+        try:
+            endpoint = None if through_event_id is None else EvidenceId(through_event_id)
+        except (TypeError, ValueError):
+            raise DemoError("CASE_HISTORY_PAGE_INVALID") from None
+        try:
+            page = self.sales_credit.case_history_page(
+                order_id, after_sequence=after_sequence,
+                through_sequence=through_sequence, limit=limit,
+                through_event_id=endpoint,
+            )
+        except SalesCreditRepositoryError as error:
+            if str(error) in {"CASE_HISTORY_PAGE_INVALID", "CASE_HISTORY_CURSOR_INVALID"}:
+                raise DemoError(str(error)) from None
+            raise
+        events = page.events
+        if page.event_count:
             rendered = tuple(
                 tuple(
                     sorted(
                         {
                             "event_id": item.event_id.value,
                             "event_type": item.event_kind,
+                            "sequence": item.sequence,
                             "state": item.workflow_state.value,
                             "updated_at": item.occurred_at.value,
                         }.items()
@@ -638,10 +657,18 @@ class DurableDemoAuditBackend:
             summary = tuple(
                 sorted(
                     {
-                        "event_count": len(events),
+                        "event_count": page.event_count,
+                        "returned_event_count": len(events),
+                        "after_sequence": after_sequence,
+                        "through_sequence": page.through_sequence,
+                        "through_event_id": page.through_event_id.value,
+                        "has_more": page.has_more,
+                        "next_after_sequence": (
+                            events[-1].sequence if page.has_more else None
+                        ),
                         "order_id": synthetic_order_id,
                         "rule_pack": "SALES_CREDIT",
-                        "state": events[-1].workflow_state.value,
+                        "state": page.state.value,
                     }.items()
                 )
             )
@@ -649,6 +676,8 @@ class DurableDemoAuditBackend:
         doi_case = self.doi.get_case(synthetic_order_id)
         if doi_case is None:
             raise DemoError("CASE_NOT_FOUND")
+        if after_sequence or through_sequence is not None:
+            raise DemoError("CASE_HISTORY_PAGING_REQUIRES_SALES_CREDIT")
         evaluation = (
             None
             if doi_case.current_evaluation_id is None

@@ -41,7 +41,11 @@ class _Backend:
     def order_show(self, synthetic_order_id: str) -> AuditView:
         return AuditView("ORDER", synthetic_order_id, (("state", "KNOWN"),))
 
-    def case_history(self, synthetic_order_id: str) -> AuditView:
+    def case_history(
+        self, synthetic_order_id: str, *, after_sequence: int = 0,
+        through_sequence: int | None = None, limit: int = 1_000,
+        through_event_id: str | None = None,
+    ) -> AuditView:
         return AuditView("CASE_HISTORY", synthetic_order_id, (("state", "OPEN"),))
 
     def run_show(self, synthetic_run_id: str) -> AuditView:

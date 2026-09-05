@@ -148,6 +148,10 @@ def _parser() -> _Parser:
     case = commands.add_parser("case").add_subparsers(dest="case_command", required=True)
     case_history = case.add_parser("history")
     case_history.add_argument("synthetic_order_id")
+    case_history.add_argument("--after-sequence", type=int, default=0)
+    case_history.add_argument("--through-sequence", type=int)
+    case_history.add_argument("--through-event-id")
+    case_history.add_argument("--limit", type=int, default=1_000)
 
     run = commands.add_parser("run").add_subparsers(dest="run_command", required=True)
     run_show = run.add_parser("show")
@@ -490,7 +494,11 @@ class CLIApplication:
             )
         elif command == "case history":
             view = self.backend.case_history(
-                _synthetic_identifier(arguments.synthetic_order_id, namespace="ORDER")
+                _synthetic_identifier(arguments.synthetic_order_id, namespace="ORDER"),
+                after_sequence=arguments.after_sequence,
+                through_sequence=arguments.through_sequence,
+                through_event_id=arguments.through_event_id,
+                limit=arguments.limit,
             )
         elif command == "run show":
             view = self.backend.run_show(
