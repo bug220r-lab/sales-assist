@@ -441,7 +441,7 @@ class PortalRuntimeSecurityTests(unittest.TestCase):
             port=8765,
             shutdown_token="b" * 64,
             database_path=str(Path(tempfile.gettempdir()).resolve() / "synthetic.sqlite3"),
-            app_version="0.1.3",
+            app_version="0.1.4",
             build_version="synthetic-sales-assist-m8/v1",
             database_schema_version=4,
             origin="http" + f"://{authority}:8765",

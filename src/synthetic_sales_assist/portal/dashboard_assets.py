@@ -23,7 +23,7 @@ DASHBOARD_CSS: Final = THEME_CSS + f"""/* {DASHBOARD_ASSET_MARKER} */
   color: var(--ssa-color-text);
 }}
 * {{ box-sizing: border-box; }}
-html {{ min-width: 320px; }}
+html {{ min-width: 0; }}
 body {{ margin: 0; overflow-wrap: anywhere; }}
 a {{ color: var(--ssa-color-primary); text-underline-offset: .16em; }}
 a:hover {{ color: var(--ssa-color-primary-hover); }}
@@ -125,7 +125,11 @@ h3 {{ font-size: 1.05rem; }}
 .dashboard-callout {{ border-left: 5px solid var(--ssa-color-primary); }}
 .dashboard-warning {{ border-left: 5px solid var(--ssa-color-warning-border); }}
 .dashboard-error {{ border-left: 5px solid var(--ssa-color-error); }}
-.dashboard-stack {{ display: grid; gap: var(--ssa-space-4); }}
+.dashboard-stack {{
+  display: grid;
+  gap: var(--ssa-space-4);
+  grid-template-columns: minmax(0, 1fr);
+}}
 .dashboard-split {{
   display: grid;
   gap: var(--ssa-space-4);
@@ -149,8 +153,14 @@ dl {{
 }}
 dt {{ font-weight: 800; }}
 dd {{ margin: 0; }}
-.dashboard-form {{ display: grid; gap: .85rem; max-width: 48rem; }}
-.dashboard-field {{ display: grid; gap: .3rem; }}
+.dashboard-form {{
+  display: grid;
+  gap: .85rem;
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 48rem;
+}}
+.dashboard-form fieldset {{ min-inline-size: 0; }}
+.dashboard-field {{ display: grid; gap: .3rem; grid-template-columns: minmax(0, 1fr); }}
 .dashboard-field > span:first-child {{ font-weight: 750; }}
 .dashboard-field-hint {{ color: var(--ssa-color-muted); font-size: .88rem; }}
 input, select {{

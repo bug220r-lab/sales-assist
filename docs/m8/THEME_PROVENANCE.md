@@ -41,7 +41,13 @@ The shared set also defines spacing, borders, radii, focus, disabled state, and 
 | `color-info-surface` | `#eaf0f6` |
 
 The theme was introduced in application and extension 0.1.2. The CLI history correction
-ships as application 0.1.3; extension bytes remain 0.1.2. Internal names, API/DOM schemas,
+shipped as application 0.1.3. Application 0.1.4 constrains dashboard stack and form grid
+tracks to their container width, retaining horizontal scrolling inside wide table wrappers.
+Portal and dashboard minimum page widths also allow space for the browser's scrollbar
+inside a 320-pixel viewport.
+The portal's processing-stage table scrolls inside its existing result panel.
+This corrects narrow-screen overflow without changing action handlers or business behavior.
+Extension bytes remain 0.1.2. Internal names, API/DOM schemas,
 command namespaces, rules, Money, database schema 4, and loopback host permissions remain
 unchanged. CSP remains local. No scanner exemption was needed for the authorized title.
 Safety rejection tests continue to cover real identities, secrets, and non-loopback URLs.

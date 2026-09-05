@@ -1,4 +1,4 @@
-Synthetic Sales Assist 0.1.3 - Windows development/demo package
+Synthetic Sales Assist 0.1.4 - Windows development/demo package
 
 Extract the Windows demo ZIP, then double-click START.cmd in the extracted folder.
 Startup verifies the package, prepares fictional demo records on first use, and opens

@@ -20,7 +20,7 @@ PORTAL_CSS: Final = THEME_CSS + f"""/* {ASSET_MARKER} */
   color: var(--ssa-color-text);
 }}
 * {{ box-sizing: border-box; }}
-body {{ margin: 0; min-width: 320px; }}
+body {{ margin: 0; min-width: 0; }}
 a {{ color: var(--ssa-color-primary); }}
 a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {{
   outline: var(--ssa-focus-width) solid var(--ssa-color-focus);
@@ -103,9 +103,9 @@ th {{ background: var(--ssa-color-background); color: var(--ssa-color-header); }
 dl {{ display: grid; gap: .45rem 1rem; grid-template-columns: minmax(9rem, auto) 1fr; }}
 dt {{ font-weight: 700; }}
 dd {{ margin: 0; overflow-wrap: anywhere; }}
-.result {{ border-left: 5px solid var(--ssa-color-primary); }}
+.result {{ border-left: 5px solid var(--ssa-color-primary); overflow-x: auto; }}
 .status-message {{ min-height: 1.5rem; padding-top: .45rem; }}
-.stack {{ display: grid; gap: var(--ssa-space-4); }}
+.stack {{ display: grid; gap: var(--ssa-space-4); grid-template-columns: minmax(0, 1fr); }}
 footer {{ color: var(--ssa-color-muted); padding: 2rem 1rem; text-align: center; }}
 @media (max-width: 600px) {{
   main {{ padding: .75rem; }}

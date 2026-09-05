@@ -16,7 +16,7 @@ No portable runtime, compiled executable, installer, updater, remote publication
 Chrome Web Store deployment is supplied. The extension remains 0.1.2 with sidePanel and
 only the two loopback host permissions. Its last-seen state is event-bound and process-local.
 
-The app is 0.1.3, build synthetic-sales-assist-m8/v1; API, portal DOM, dashboard DOM, and
+The app is 0.1.4, build synthetic-sales-assist-m8/v1; API, portal DOM, dashboard DOM, and
 database remain their compatible v1/v1/v1/schema-4 contracts. Migrations 0001–0004 and all
 138 reasons, 138 ownership rows, and 115 transitions remain unchanged.
 

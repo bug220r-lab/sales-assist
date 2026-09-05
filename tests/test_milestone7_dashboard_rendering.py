@@ -461,7 +461,7 @@ def _views() -> dict[str, dict[str, object]]:
             "api_request_schema_version": "synthetic-sales-assist-api-request/v1",
             "api_schema_version": "synthetic-sales-assist-api/v1",
             "application_schema_version": "synthetic-sales-assist-application/v1",
-            "application_version": "0.1.3",
+            "application_version": "0.1.4",
             "benchmark_reference": M4_BENCHMARK_REFERENCE.to_dict(),
             "build_version": "synthetic-sales-assist-m8/v1",
             "database": _database(),
@@ -2370,7 +2370,11 @@ class DashboardRenderingTests(unittest.TestCase):
         )
         self.assertIn("prefers-reduced-motion", DASHBOARD_CSS)
         self.assertIn("focus-visible", DASHBOARD_CSS)
-        self.assertIn("min-width: 320px", DASHBOARD_CSS)
+        # A fixed 320px floor overflows when that viewport also has a scrollbar.
+        # Narrow visual regression evidence separately verifies the rendered layout.
+        self.assertNotIn("min-width: 320px", DASHBOARD_CSS)
+        self.assertIn("grid-template-columns: minmax(0, 1fr)", DASHBOARD_CSS)
+        self.assertIn(".dashboard-table-wrap { overflow-x: auto; }", DASHBOARD_CSS)
         self.assertIn("same-origin", DASHBOARD_JS)
         self.assertIn("endpointPattern", DASHBOARD_JS)
         for prohibited in (

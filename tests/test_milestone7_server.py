@@ -53,7 +53,7 @@ ACTOR_ID = "SYN-REP-M7-MANAGER-0001"
 
 def _status() -> dict[str, object]:
     return {
-        "app_version": "0.1.3",
+        "app_version": "0.1.4",
         "build_version": "synthetic-sales-assist-m8/v1",
         "database_schema_version": 4,
         "database_status": "PASS",
