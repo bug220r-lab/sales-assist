@@ -22,3 +22,54 @@ dist/
 *.db-shm
 .synthetic-sales-assist/
 .runtime/
+
+# Local credentials; only a reviewed placeholder example may be committed.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.ssh/
+.aws/
+.azure/
+
+# Dependency folders, caches, and temporary local output.
+node_modules/
+venv/
+env/
+.cache/
+*.tmp
+*.temp
+*.bak
+*.log
+*.har
+backups/
+exports/
+screenshots/
+
+# Browser state and data exports never belong in source control.
+browser-profiles/
+chrome-profile*/
+User Data/
+Cookies
+Cookies-journal
+Login Data
+Login Data-journal
+Local State
+Local Storage/
+Session Storage/
+Sessions/
+IndexedDB/
+helpscout-exports/
+help-scout-exports/
+writing-samples/
+customer-exports/
+campaign-queues/
+protection-manifests/
+suppression-lists/
+send-receipts/
+production-audit/
