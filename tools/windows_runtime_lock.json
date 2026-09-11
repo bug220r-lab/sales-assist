@@ -1,0 +1,28 @@
+{
+  "schema": "synthetic-sales-assist-windows-runtime-lock/v1",
+  "python": {
+    "repository": "astral-sh/python-build-standalone",
+    "release": "20260901",
+    "filename": "cpython-3.12.14+20260901-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+    "version": "3.12.14",
+    "architecture": "windows-x86_64",
+    "size": 21980728,
+    "sha256": "7c45c9622400d578709a9b2cddbe8124cc21d382409d9f13406d706d28e31b14",
+    "license": "Python-2.0",
+    "license_file": "python/LICENSE.txt",
+    "distribution_licenses": "Retain all upstream license and distribution files."
+  },
+  "timezone": {
+    "repository": "python/tzdata",
+    "registry": "PyPI",
+    "package": "tzdata",
+    "version": "2026.3",
+    "iana_version": "2026c",
+    "filename": "tzdata-2026.3-py2.py3-none-any.whl",
+    "size": 348168,
+    "sha256": "dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931",
+    "license": "Apache-2.0",
+    "license_file": "python/Lib/site-packages/tzdata-2026.3.dist-info/licenses/LICENSE",
+    "distribution_licenses": "Retain all upstream license and distribution files."
+  }
+}

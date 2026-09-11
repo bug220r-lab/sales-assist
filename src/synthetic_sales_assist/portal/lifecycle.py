@@ -63,37 +63,47 @@ def _canonical_process_start(value: datetime) -> str:
 
 
 def process_start_time() -> str:
-    """Return the OS process creation instant on Windows, with a safe test fallback."""
+    """Return native Windows creation time; import time is only a non-Windows fallback."""
 
     if os.name == "nt":
         try:
             import ctypes
             from ctypes import wintypes
 
+            native = ctypes.WinDLL("kernel32", use_last_error=True)
+            native.GetCurrentProcess.argtypes = []
+            native.GetCurrentProcess.restype = wintypes.HANDLE
+            native.GetProcessTimes.argtypes = [
+                wintypes.HANDLE,
+                ctypes.POINTER(wintypes.FILETIME),
+                ctypes.POINTER(wintypes.FILETIME),
+                ctypes.POINTER(wintypes.FILETIME),
+                ctypes.POINTER(wintypes.FILETIME),
+            ]
+            native.GetProcessTimes.restype = wintypes.BOOL
             creation = wintypes.FILETIME()
             exit_time = wintypes.FILETIME()
             kernel = wintypes.FILETIME()
             user = wintypes.FILETIME()
-            current = ctypes.windll.kernel32.GetCurrentProcess()
-            succeeded = ctypes.windll.kernel32.GetProcessTimes(
+            current = native.GetCurrentProcess()
+            succeeded = native.GetProcessTimes(
                 current,
                 ctypes.byref(creation),
                 ctypes.byref(exit_time),
                 ctypes.byref(kernel),
                 ctypes.byref(user),
             )
-            if succeeded:
-                ticks = (int(creation.dwHighDateTime) << 32) | int(
-                    creation.dwLowDateTime
-                )
-                unix_ticks = ticks - _WINDOWS_EPOCH_100NS
-                seconds, remainder = divmod(unix_ticks, 10_000_000)
-                created = datetime.fromtimestamp(seconds, timezone.utc) + timedelta(
-                    microseconds=remainder // 10
-                )
-                return _canonical_process_start(created)
-        except (AttributeError, OSError, OverflowError, ValueError):
-            pass
+            if not succeeded:
+                raise PortalLifecycleError("PROCESS_START_TIME_UNAVAILABLE")
+            ticks = (int(creation.dwHighDateTime) << 32) | int(creation.dwLowDateTime)
+            unix_ticks = ticks - _WINDOWS_EPOCH_100NS
+            seconds, remainder = divmod(unix_ticks, 10_000_000)
+            created = datetime.fromtimestamp(seconds, timezone.utc) + timedelta(
+                microseconds=remainder // 10
+            )
+            return _canonical_process_start(created)
+        except (AttributeError, OSError, OverflowError, ValueError) as exc:
+            raise PortalLifecycleError("PROCESS_START_TIME_UNAVAILABLE") from exc
     return _canonical_process_start(_MODULE_STARTED_AT)
 
 

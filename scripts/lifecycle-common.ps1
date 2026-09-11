@@ -248,7 +248,7 @@ function Invoke-SsaPythonVersionProbe {
         "sys.executable,os.path.realpath(sys.executable)))"
     $startInfo = [Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $PythonPath
-    $startInfo.Arguments = '-I -S -E -c "' + $probeCode + '"'
+    $startInfo.Arguments = '-B -I -S -E -c "' + $probeCode + '"'
     $startInfo.CreateNoWindow = $true
     $startInfo.UseShellExecute = $false
     $startInfo.RedirectStandardOutput = $true
@@ -281,7 +281,7 @@ function Resolve-SsaPythonCandidate {
     param(
         [Parameter(Mandatory = $true)][AllowEmptyString()][string]$PythonPath,
         [Parameter(Mandatory = $true)]
-        [ValidateSet('PATH', 'PARAMETER', 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE')]
+        [ValidateSet('PATH', 'PARAMETER', 'SSA_PYTHON_DEVELOPMENT_NONPORTABLE', 'BUNDLED')]
         [string]$Source,
         [switch]$RequireAbsolute
     )
@@ -380,12 +380,229 @@ function Resolve-SsaPythonCandidate {
     }
 }
 
+function Get-SsaBundledFileDigest {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    $stream = $null
+    try {
+        $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read,
+            [IO.FileShare]::Read)
+        return [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        if ($null -ne $stream) { $stream.Dispose() }
+        $algorithm.Dispose()
+    }
+}
+
+function Read-SsaBundledJson {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    Assert-SsaRuntimeFileNotReparsePoint -Path $Path
+    if (-not [IO.File]::Exists($Path)) { throw 'BUNDLED_PYTHON_METADATA_MISSING' }
+    $item = Get-Item -LiteralPath $Path -Force
+    if ($item.Length -gt 8MB) { throw 'BUNDLED_PYTHON_METADATA_TOO_LARGE' }
+    try { $value = [IO.File]::ReadAllText($Path) | ConvertFrom-Json }
+    catch { throw 'BUNDLED_PYTHON_METADATA_INVALID' }
+    if ($value -isnot [PSCustomObject]) { throw 'BUNDLED_PYTHON_METADATA_INVALID' }
+    return $value
+}
+
+function Get-SsaBundledPythonRuntime {
+    # A required private runtime is verified before any executable is probed. The
+    # package inventory is a corruption check; release authenticity is established
+    # separately by the published archive checksum/provenance.
+    $installation = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+    $metadataPath = Join-Path $installation 'release-build.json'
+    $manifestPath = Join-Path $installation 'python-runtime.json'
+    $pythonRoot = Join-Path $installation 'python'
+    $hasBundleFiles = (Test-Path -LiteralPath $manifestPath) -or
+        (Test-Path -LiteralPath $pythonRoot)
+    if (-not (Test-Path -LiteralPath $metadataPath)) {
+        if ($hasBundleFiles) { throw 'BUNDLED_PYTHON_METADATA_MISSING' }
+        return $null
+    }
+    $metadata = Read-SsaBundledJson -Path $metadataPath
+    $schema = $metadata.PSObject.Properties['schema']
+    if ($null -eq $schema -or
+        $schema.Value -cne 'synthetic-sales-assist-release-build/v1') {
+        throw 'BUNDLED_PYTHON_METADATA_INVALID'
+    }
+    $tier = $metadata.PSObject.Properties['runtime_tier']
+    if ($null -eq $tier -or
+        $tier.Value -cne 'WINDOWS_X64_BUNDLED_CPYTHON_3_12') {
+        if ($hasBundleFiles -or $null -ne $metadata.PSObject.Properties['bundled_runtime']) {
+            throw 'BUNDLED_PYTHON_METADATA_INVALID'
+        }
+        return $null
+    }
+    if (-not [Environment]::Is64BitOperatingSystem -or
+        -not [Environment]::Is64BitProcess) { throw 'BUNDLED_PYTHON_ARCHITECTURE_UNSUPPORTED' }
+    $ancestor = [IO.DirectoryInfo]::new($installation)
+    while ($null -ne $ancestor) {
+        if (($ancestor.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw 'BUNDLED_PYTHON_REPARSE_POINT'
+        }
+        $ancestor = $ancestor.Parent
+    }
+    $bundleProperty = $metadata.PSObject.Properties['bundled_runtime']
+    if ($null -eq $bundleProperty -or $bundleProperty.Value -isnot [PSCustomObject]) {
+        throw 'BUNDLED_PYTHON_METADATA_INVALID'
+    }
+    $bundle = $bundleProperty.Value
+    foreach ($name in @('manifest', 'sha256', 'executable', 'python_version', 'timezone_version')) {
+        if ($null -eq $bundle.PSObject.Properties[$name]) {
+            throw 'BUNDLED_PYTHON_METADATA_INVALID'
+        }
+    }
+    if ($bundle.manifest -cne 'python-runtime.json' -or
+        $bundle.executable -cne 'python/python.exe' -or
+        $bundle.python_version -cne '3.12.14' -or
+        $bundle.timezone_version -cne '2026.3' -or
+        $bundle.sha256 -isnot [string] -or $bundle.sha256 -cnotmatch '\A[0-9a-f]{64}\z') {
+        throw 'BUNDLED_PYTHON_METADATA_INVALID'
+    }
+    $manifest = Read-SsaBundledJson -Path $manifestPath
+    if ((Get-SsaBundledFileDigest -Path $manifestPath) -cne
+        $bundle.sha256) { throw 'BUNDLED_PYTHON_MANIFEST_MISMATCH' }
+    foreach ($name in @('schema', 'python_version', 'architecture', 'executable', 'files')) {
+        if ($null -eq $manifest.PSObject.Properties[$name]) {
+            throw 'BUNDLED_PYTHON_METADATA_INVALID'
+        }
+    }
+    if ($manifest.schema -cne 'synthetic-sales-assist-bundled-python/v1' -or
+        $manifest.python_version -cne $bundle.python_version -or
+        $manifest.architecture -cne 'windows-x86_64' -or
+        $manifest.executable -cne $bundle.executable -or
+        $manifest.files -isnot [PSCustomObject]) {
+        throw 'BUNDLED_PYTHON_METADATA_INVALID'
+    }
+    $expected = [Collections.Generic.Dictionary[string, string]]::new(
+        [StringComparer]::OrdinalIgnoreCase
+    )
+    foreach ($property in $manifest.files.PSObject.Properties) {
+        $name = [string]$property.Name
+        if ($name -cnotmatch '\Apython/(?:[A-Za-z0-9_+(). -]+/)*[A-Za-z0-9_+(). -]+\z' -or
+            $property.Value -isnot [string] -or $property.Value -cnotmatch '\A[0-9a-f]{64}\z') {
+            throw 'BUNDLED_PYTHON_MEMBER_INVALID'
+        }
+        foreach ($part in $name.Split('/')) {
+            if ($part -eq '.' -or $part -eq '..' -or $part.EndsWith('.') -or
+                $part.EndsWith(' ') -or
+                $part -match '\A(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?\z') {
+                throw 'BUNDLED_PYTHON_MEMBER_INVALID'
+            }
+        }
+        if ($expected.ContainsKey($name)) { throw 'BUNDLED_PYTHON_MEMBER_COLLISION' }
+        $expected.Add($name, [string]$property.Value)
+    }
+    if ($expected.Count -eq 0 -or $expected.Count -gt 20000 -or
+        -not $expected.ContainsKey('python/python.exe') -or
+        -not $expected.ContainsKey('python/python312._pth')) {
+        throw 'BUNDLED_PYTHON_INVENTORY_INVALID'
+    }
+    if (-not [IO.Directory]::Exists($pythonRoot)) { throw 'BUNDLED_PYTHON_FILES_MISSING' }
+    $pending = [Collections.Generic.Stack[IO.DirectoryInfo]]::new()
+    $pending.Push([IO.DirectoryInfo]::new($pythonRoot))
+    $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    while ($pending.Count -gt 0) {
+        $directory = $pending.Pop()
+        if (($directory.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw 'BUNDLED_PYTHON_REPARSE_POINT'
+        }
+        foreach ($item in $directory.GetFileSystemInfos()) {
+            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw 'BUNDLED_PYTHON_REPARSE_POINT'
+            }
+            if ($item -is [IO.DirectoryInfo]) { $pending.Push($item); continue }
+            if ($item -isnot [IO.FileInfo]) { throw 'BUNDLED_PYTHON_MEMBER_INVALID' }
+            $name = $item.FullName.Substring($installation.Length + 1).Replace('\', '/')
+            if (-not $expected.ContainsKey($name) -or -not $seen.Add($name)) {
+                throw 'BUNDLED_PYTHON_UNLISTED_FILE'
+            }
+            if ((Get-SsaBundledFileDigest -Path $item.FullName) -cne
+                $expected[$name]) { throw 'BUNDLED_PYTHON_FILE_MISMATCH' }
+        }
+    }
+    if ($seen.Count -ne $expected.Count) { throw 'BUNDLED_PYTHON_FILES_MISSING' }
+    $searchPaths = [IO.File]::ReadAllText((Join-Path $pythonRoot 'python312._pth'))
+    if ($searchPaths.Replace("`r`n", "`n").TrimEnd([char]10) -cne
+        "Lib`nDLLs`nLib/site-packages`n../src") {
+        throw 'BUNDLED_PYTHON_IMPORT_PATH_INVALID'
+    }
+    return [PSCustomObject]@{
+        Path = Join-Path $pythonRoot 'python.exe'
+        PythonVersion = [string]$bundle.python_version
+        TimezoneVersion = [string]$bundle.timezone_version
+    }
+}
+
+function Invoke-SsaBundledPythonProbe {
+    param([Parameter(Mandatory = $true)][string]$PythonPath)
+
+    $probeCode = "import platform,sqlite3,struct,sys,tzdata;from zoneinfo import ZoneInfo;" +
+        "assert sys.version_info[:3]==(3,12,14);assert struct.calcsize('P')==8;" +
+        "assert platform.machine().lower() in ('amd64','x86_64');" +
+        "assert tzdata.__version__=='2026.3';" +
+        "assert ZoneInfo('UTC').key=='UTC';" +
+        "assert ZoneInfo('America/New_York').key=='America/New_York';" +
+        "assert sqlite3.connect(':memory:').execute('select 1').fetchone()==(1,);" +
+        "print('SSA_BUNDLED_PYTHON_READY_V1')"
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $PythonPath
+    $startInfo.Arguments = '-B -I -S -E -c "' + $probeCode + '"'
+    $startInfo.CreateNoWindow = $true
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $startInfo
+    try {
+        try { $started = $process.Start() }
+        catch { throw 'BUNDLED_PYTHON_PREFLIGHT_FAILED' }
+        if (-not $started) { throw 'BUNDLED_PYTHON_PREFLIGHT_FAILED' }
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        if (-not $process.WaitForExit(10000)) {
+            try { $process.Kill() } catch { }
+            [void]$process.WaitForExit(1000)
+            throw 'BUNDLED_PYTHON_PREFLIGHT_TIMEOUT'
+        }
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        if ($process.ExitCode -ne 0 -or -not [string]::IsNullOrWhiteSpace($stderr) -or
+            $stdout.Trim() -cne 'SSA_BUNDLED_PYTHON_READY_V1') {
+            throw 'BUNDLED_PYTHON_PREFLIGHT_FAILED'
+        }
+    }
+    finally { $process.Dispose() }
+}
+
 function Select-SsaPythonRuntime {
     param(
         [AllowNull()][AllowEmptyString()][string]$PythonPath,
         [Parameter(Mandatory = $true)][bool]$PythonPathWasBound
     )
 
+    $bundled = Get-SsaBundledPythonRuntime
+    if ($null -ne $bundled) {
+        if ($PythonPathWasBound) {
+            if ([string]::IsNullOrWhiteSpace($PythonPath) -or
+                -not [IO.Path]::IsPathRooted($PythonPath)) {
+                throw 'BUNDLED_PYTHON_OVERRIDE_PROHIBITED'
+            }
+            try { $explicitPath = [IO.Path]::GetFullPath($PythonPath) }
+            catch { throw 'BUNDLED_PYTHON_OVERRIDE_PROHIBITED' }
+            if (-not $explicitPath.Equals($bundled.Path, [StringComparison]::OrdinalIgnoreCase)) {
+                throw 'BUNDLED_PYTHON_OVERRIDE_PROHIBITED'
+            }
+        }
+        $runtime = Resolve-SsaPythonCandidate -PythonPath $bundled.Path -Source 'BUNDLED' `
+            -RequireAbsolute
+        Invoke-SsaBundledPythonProbe -PythonPath $runtime.Path
+        return $runtime
+    }
     if ($PythonPathWasBound) {
         return Resolve-SsaPythonCandidate -PythonPath $PythonPath -Source 'PARAMETER'
     }
@@ -565,7 +782,7 @@ function Invoke-SsaCliJson {
     )
 
     $arguments = @(
-        '-s', '-E',
+        '-B', '-s', '-E',
         '-m',
         'synthetic_sales_assist.cli',
         '--json',
