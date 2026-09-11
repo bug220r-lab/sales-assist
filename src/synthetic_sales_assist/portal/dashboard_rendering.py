@@ -300,6 +300,7 @@ _CANONICAL_DECIMAL = re.compile(
 
 _PAGE_TITLES: Final = {
     "overview": "Control Center overview",
+    "campaign-replies": "Campaign Replies",
     "sales_credit_queue": "Sales Credit queue",
     "sales_credit_detail": "Sales Credit case",
     "doi_queue": "DOI queue",
@@ -1149,11 +1150,31 @@ def _page(
         ("sales-credit", "/sales-credit", "Sales Credit"),
         ("doi", "/doi", "DOI"),
         ("review", "/review", "Human review"),
+        ("campaign-replies", "/campaign-replies", "Campaign Replies"),
         ("system", "/system", "System"),
     )
     navigation = "".join(
         f'<a href="{path}"{(" aria-current=\"page\"" if key == active else "")}>{label}</a>'
         for key, path, label in nav_items
+    )
+    companion = route_name == "campaign-replies"
+    banner = (
+        '<div class="dashboard-synthetic-banner">'
+        'Campaign Replies · Local companion · Read-only review</div>'
+        if companion else
+        '<div class="dashboard-synthetic-banner">'
+        'Synthetic demo · Localhost only · Not connected to live systems</div>'
+    )
+    service_status = (
+        "Campaign review runs in its own local service. Sales Credit and DOI remain synthetic."
+        if companion else
+        "Local loopback response received. Dashboard actions remain synthetic and local only."
+    )
+    footer = (
+        "Review only. Editing and sending stay in the separate support application."
+        if companion else
+        "Fictional local demonstration · no external system access · current projections and "
+        "immutable history are labeled separately."
     )
     doctype = "<!" + "doctype html>"
     html_open = "<" + f'html lang="en" data-ssa-dashboard-contract="{DASHBOARD_DOM_VERSION}">'
@@ -1171,15 +1192,14 @@ def _page(
 <body data-ssa-dashboard-page="{_h(route_name)}"
       data-ssa-dashboard-presentation="{str(presentation).lower()}">
   <a class="dashboard-skip-link" href="#ssa-dashboard-main">Skip to main content</a>
-  <div class="dashboard-synthetic-banner">
-    Synthetic demo · Localhost only · Not connected to live systems</div>
+  {banner}
   <header class="dashboard-header">
     <span class="dashboard-brand">ECS Sales Assist</span>
     <nav class="dashboard-nav" aria-label="Primary">{navigation}</nav>
   </header>
   <aside class="dashboard-service-status" role="status" aria-label="Local service status"
          data-ssa-dashboard-status="LOCAL_RESPONSE">
-    Local loopback response received. Dashboard actions remain synthetic and local only.
+    {_h(service_status)}
   </aside>
   <main id="ssa-dashboard-main" class="dashboard-main dashboard-stack" tabindex="-1"
         data-ssa-page-kind="control-center-{_h(route_name)}"
@@ -1189,8 +1209,7 @@ def _page(
     {body}
   </main>
   <footer class="dashboard-footer">
-    Fictional local demonstration · no external system access · current projections and
-    immutable history are labeled separately.
+    {_h(footer)}
   </footer>
 </body>
 </html>"""
@@ -1198,6 +1217,38 @@ def _page(
     if len(encoded) > MAX_RESPONSE_BODY_BYTES:
         _fail("DASHBOARD_RESPONSE_BODY_TOO_LARGE")
     return encoded
+
+
+def render_campaign_replies(csrf_token: str, *, enabled: bool = False) -> bytes:
+    """Render only the companion shell; never accept or query customer records."""
+
+    if enabled:
+        body = """<section class="dashboard-companion" aria-label="Campaign reply review">
+<div class="dashboard-companion-tools">
+<p>Search drafts, review their context, and open the conversation to make changes.</p>
+<a href="http://127.0.0.1:8770/" target="_blank" rel="noopener noreferrer">
+Open dashboard separately ↗</a></div>
+<iframe class="dashboard-companion-frame" src="http://127.0.0.1:8770/?embedded=1"
+ title="Campaign reply review dashboard" referrerpolicy="no-referrer"
+ sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+<p class="dashboard-help">If the review panel does not load, start the campaign dashboard
+on this PC, then reload this page. Its review timestamps appear inside the panel.</p>
+</section>"""
+    else:
+        body = """<section class="dashboard-panel" aria-label="Campaign companion setup">
+<h2>Campaign dashboard is not enabled</h2>
+<p>This view connects to a separately running, read-only dashboard on this PC.</p>
+<p>Start the campaign dashboard, then start Sales Assist at
+<code>http://127.0.0.1:8765</code> with <code>SSA_CAMPAIGN_REPLIES=1</code>.</p>
+<p>The synthetic Sales Credit and DOI modules remain independent.</p></section>"""
+    return _page(
+        route_name="campaign-replies",
+        heading="Campaign Replies",
+        lede="Your draft review workspace, alongside Sales Credit and DOI.",
+        body=body,
+        csrf_token=csrf_token,
+        presentation=False,
+    )
 
 
 def _metric_card(
@@ -5623,6 +5674,7 @@ __all__ = [
     "MANAGER_OUTCOME_REQUEST_VERSION",
     "render_audit",
     "render_backups",
+    "render_campaign_replies",
     "render_dashboard_page",
     "render_database",
     "render_doi_detail",
