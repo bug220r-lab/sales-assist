@@ -83,6 +83,7 @@ from synthetic_sales_assist.portal.rendering import (
     render_scenarios,
 )
 from synthetic_sales_assist.portal.dashboard_rendering import (
+    render_campaign_replies,
     render_dashboard_page,
     validate_dashboard_page_data,
 )
@@ -195,6 +196,7 @@ _DOI_STATES: Final = frozenset(
 _GET_ROUTES: Final = frozenset(
     {
         "/",
+        "/campaign-replies",
         "/api/v1/metrics/summary",
         "/api/v1/orders",
         "/api/v1/scenarios",
@@ -1006,6 +1008,18 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         return False
 
     def _get(self, path: str) -> None:
+        if path == "/campaign-replies":
+            enabled = (
+                os.environ.get("SSA_CAMPAIGN_REPLIES") == "1"
+                and self.portal_server.origin == "http://127.0.0.1:8765"
+            )
+            self._send(
+                200,
+                render_campaign_replies(self.portal_server.csrf_token, enabled=enabled),
+                "text/html; charset=utf-8",
+                allow_campaign_frame=enabled,
+            )
+            return
         application = self.portal_server.application
         if path == "/":
             self._send(303, b"", "text/plain; charset=utf-8", {"Location": "/overview"})
@@ -1385,6 +1399,8 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         body: bytes,
         content_type: str,
         extra_headers: dict[str, str] | None = None,
+        *,
+        allow_campaign_frame: bool = False,
     ) -> None:
         try:
             if len(body) > MAX_RESPONSE_BODY_BYTES:
@@ -1416,6 +1432,13 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
                 "X-Content-Type-Options": "nosniff",
                 "X-Frame-Options": "DENY",
             }
+            if (
+                allow_campaign_frame
+                and status == 200
+                and self.path == "/campaign-replies"
+                and content_type == "text/html; charset=utf-8"
+            ):
+                headers["Content-Security-Policy"] += "; frame-src http://127.0.0.1:8770"
             if extra_headers:
                 headers.update(extra_headers)
             for name, value in sorted(headers.items()):

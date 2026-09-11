@@ -254,6 +254,31 @@ input[type="checkbox"], input[type="radio"] {{
   flex-shrink: 0;
   accent-color: var(--ssa-color-primary);
   }}
+
+body[data-ssa-dashboard-page="campaign-replies"] .dashboard-main {{
+  max-width: 1680px; padding: 18px 24px; gap: 12px;
+}}
+body[data-ssa-dashboard-page="campaign-replies"] .dashboard-main > header h1 {{
+  margin-bottom: 4px;
+}}
+body[data-ssa-dashboard-page="campaign-replies"] .dashboard-lede {{ margin: 0; }}
+.dashboard-companion {{ min-width: 0; }}
+.dashboard-companion-tools {{
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-bottom: 12px; font-size: 14px;
+}}
+.dashboard-companion-tools p {{ margin: 0; }}
+.dashboard-companion-tools a {{ white-space: nowrap; }}
+.dashboard-companion-frame {{
+  display: block; width: 100%; height: calc(100vh - 280px); min-height: 680px;
+  border: 1px solid var(--ssa-color-border); border-radius: 8px;
+  background: var(--ssa-color-surface);
+}}
+@media (max-width: 720px) {{
+  body[data-ssa-dashboard-page="campaign-replies"] .dashboard-main {{ padding: 16px 12px; }}
+  .dashboard-companion-tools {{ align-items: flex-start; flex-direction: column; gap: 8px; }}
+  .dashboard-companion-frame {{ height: 1050px; }}
+}}
 """
 
 DASHBOARD_JS: Final = f"""/* {DASHBOARD_ASSET_MARKER} */
