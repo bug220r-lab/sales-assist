@@ -27,6 +27,10 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"synthetic_sales_assist.campaign_replies" = ["data/*.json"]
+"synthetic_sales_assist.portal" = ["campaign_workspace.js", "campaign_workspace.css"]
+
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"
 pythonpath = ["src"]

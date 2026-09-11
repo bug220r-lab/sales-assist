@@ -1149,6 +1149,9 @@ def _page(
         ("sales-credit", "/sales-credit", "Sales Credit"),
         ("doi", "/doi", "DOI"),
         ("review", "/review", "Human review"),
+        ("campaigns", "/campaigns", "Campaigns"),
+        ("replies", "/replies", "Replies"),
+        ("writing-history", "/writing-history", "Writing history"),
         ("system", "/system", "System"),
     )
     navigation = "".join(

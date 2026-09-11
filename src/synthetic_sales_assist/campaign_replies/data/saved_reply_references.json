@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "purpose": "Reference wording to identify reusable templates in Jude Lewis's sent-email writing sample",
+  "captured_at_utc_date": "2026-09-11",
+  "source": "Six user-uploaded screenshots of Help Scout Saved Reply email editors",
+  "transcription_notes": [
+    "Visible email text transcribed; visual line wrapping removed and typographic apostrophes normalized.",
+    "Saved Reply numeric IDs and hyperlink destinations are not visible in these screenshots and are not inferred.",
+    "Screenshots show current template wording; older versions may differ.",
+    "This reference is not a completed personal writing-style analysis."
+  ],
+  "analysis_rules": [
+    "Use substantive matching passages, normalized duplicates and saved_reply_id metadata together; missing metadata does not prove original writing.",
+    "Keep each full template once as a template reference, rather than weighting it by send count.",
+    "Exclude unchanged template wording from the primary sample of personal replies.",
+    "For a customized template, retain substantive added or rewritten text with its source context and flag ambiguous boundaries for review.",
+    "Remove the shared signature and CTA from style measurements without discarding the rest of a personal reply.",
+    "Common short greetings and closings alone do not establish template use.",
+    "Compare long repeated passages across messages to identify historical variants and manually pasted templates.",
+    "Treat any custom additions, API attribution and unflagged messages as candidate authorship evidence, not proof of personally typed content."
+  ],
+  "shared_signature": {
+    "identity_line": "Jude Lewis - ECS Tuning / Turner Motorsport Ext. 1234",
+    "cta_label": "Get The Right Tool For The Job Here!",
+    "cta_href": null
+  },
+  "templates": [
+    {
+      "name": "JL - Sales Customer Follow Up",
+      "saved_reply_id": null,
+      "source_screenshot": "01-image.png",
+      "role": "sales_follow_up",
+      "text_before_signature": "Hello!\n\nThis is Jude from ECS Tuning/Turner Motorsport. I hope you're doing well.\n\nI wanted to follow up. If there is anything else I can help you with please let me know and I will be happy to assist you. I focus on working one-on-one with my customers, and every request matters, from full performance builds, to a quote on shipping.\n\nThank you for your time, and I look forward to hearing from you soon!\n\nTo automatically stay connected with me and keep all future orders running smoothly, you can reach out to me anytime.\n\nBest regards,",
+      "includes_shared_signature": true
+    },
+    {
+      "name": "JL 2ND FOLLOWUP",
+      "saved_reply_id": null,
+      "source_screenshot": "02-image.png",
+      "role": "second_follow_up",
+      "text_before_signature": "Hello!\n\nI hope all is well. I just wanted to follow up and see if there was anything else I can do for you. If so please let me know! I would love to earn your business :)\n\nThanks,",
+      "includes_shared_signature": true
+    },
+    {
+      "name": "JL Abandoned Cart",
+      "saved_reply_id": null,
+      "source_screenshot": "03-image.png",
+      "role": "cart_reminder",
+      "text_before_signature": "Hello,\n\nThis is Jude from ECS Tuning. I hope you're doing well. I'm one of the Sales Reps here at ECS Tuning and noticed you logged off without purchasing your items! Here is a direct link to your cart so you can pickup right where you left off :)\n\nINSERT LINK HERE\n\nLet me know if you have any questions or need help placing an order!\n\nThanks,",
+      "variable_placeholder": "INSERT LINK HERE",
+      "includes_shared_signature": true
+    },
+    {
+      "name": "JL DOI",
+      "saved_reply_id": null,
+      "source_screenshot": "04-image.png",
+      "role": "delayed_order_outreach",
+      "text_before_signature": "Hello!\n\nThis is Jude from ECS Tuning / Turner Motorsport reaching out about your order. It looks like you have one or more items delaying your order. If you would like me to split the order or modify it so it ships out faster please let me know. I can also swap delayed or back ordered items to in stock alternates so we can get you your order ASAP :)\n\nThanks,",
+      "includes_shared_signature": true
+    },
+    {
+      "name": "JL INBOX",
+      "saved_reply_id": null,
+      "source_screenshot": "05-image.png",
+      "role": "holding_acknowledgment",
+      "text_before_signature": "Hello!\n\nThis is Jude from ECS Tuning/Turner Motorsport. I hope you're doing well. Please give me some time to respond to your inbox request. I will get back to you ASAP!\n\nThanks,",
+      "includes_shared_signature": true
+    },
+    {
+      "name": "JL SIG",
+      "saved_reply_id": null,
+      "source_screenshot": "06-image.png",
+      "role": "signature_only",
+      "text_before_signature": "",
+      "includes_shared_signature": true
+    }
+  ]
+}

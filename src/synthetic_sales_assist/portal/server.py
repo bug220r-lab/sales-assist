@@ -24,6 +24,12 @@ from synthetic_sales_assist.application.control_center import (
     MetricWindow,
     PageRequest,
 )
+from synthetic_sales_assist.campaign_replies.web import (
+    WORKSPACE_GET_ROUTES,
+    WORKSPACE_ACTION_ROUTE,
+    WORKSPACE_API_ROUTE,
+    WorkspaceWeb,
+)
 from synthetic_sales_assist.domain.timestamps import canonicalize_timestamp
 from synthetic_sales_assist.persistence.database import SQLiteDatabase
 from synthetic_sales_assist.persistence.paths import DataPaths, resolve_data_paths
@@ -211,6 +217,10 @@ _GET_ROUTES: Final = frozenset(
 
 
 def _allowed_methods(path: str) -> tuple[str, ...] | None:
+    if path in WORKSPACE_GET_ROUTES:
+        return ("GET",)
+    if path == WORKSPACE_ACTION_ROUTE:
+        return ("POST",)
     if path == "/api/v1/dashboard/system/backups":
         return ("GET", "POST")
     if path in _GET_ROUTES:
@@ -479,6 +489,7 @@ class PortalHTTPServer(HTTPServer):
         ):
             raise PortalServerError("PORTAL_CONTROL_TOKEN_INVALID")
         self.application = application
+        self.campaign_workspace: WorkspaceWeb | None = None
         database = getattr(application, "database", None)
         self.control_center = (
             ControlCenterApplication(database, scenario_application=application)
@@ -666,7 +677,8 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
     @staticmethod
     def _dashboard_query_route(path: str) -> bool:
         return bool(
-            path in _DASHBOARD_HTML_ROUTES
+            path == WORKSPACE_API_ROUTE
+            or path in _DASHBOARD_HTML_ROUTES
             or path
             in {
                 "/api/v1/dashboard/overview",
@@ -731,14 +743,14 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         ):
             raise PortalContractError("CSRF_TOKEN_INVALID", status=403)
 
-    def _read_json_body(self) -> bytes:
+    def _read_json_body(self, maximum: int = MAX_REQUEST_BODY_BYTES) -> bytes:
         if self.headers.get("Transfer-Encoding") is not None:
             raise PortalContractError("TRANSFER_ENCODING_PROHIBITED")
         lengths = self.headers.get_all("Content-Length", failobj=[])
         if len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdigit():
             raise PortalContractError("CONTENT_LENGTH_INVALID", status=411)
         length = int(lengths[0])
-        if length > MAX_REQUEST_BODY_BYTES:
+        if length > maximum:
             raise PortalContractError("REQUEST_BODY_TOO_LARGE", status=413)
         content_types = self.headers.get_all("Content-Type", failobj=[])
         if len(content_types) != 1 or content_types[0].casefold() not in {
@@ -1007,6 +1019,12 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
 
     def _get(self, path: str) -> None:
         application = self.portal_server.application
+        if path in WORKSPACE_GET_ROUTES:
+            content_type, body = self._workspace().get(
+                path, self._query, self.portal_server.csrf_token
+            )
+            self._send(200, body, content_type)
+            return
         if path == "/":
             self._send(303, b"", "text/plain; charset=utf-8", {"Location": "/overview"})
             return
@@ -1159,6 +1177,10 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         self._route_error(path, "GET")
 
     def _post(self, path: str) -> None:
+        if path == WORKSPACE_ACTION_ROUTE:
+            body = self._workspace().post(self._read_json_body(8 * 1024 * 1024))
+            self._send(200, body, "application/json; charset=utf-8")
+            return
         application = self.portal_server.application
         if path == "/api/v1/system/extension/handshake":
             version = parse_extension_handshake_request(self._read_json_body())
@@ -1308,6 +1330,17 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             ).start()
             return
         self._route_error(path, "POST")
+
+    def _workspace(self) -> WorkspaceWeb:
+        server = self.portal_server
+        if server.campaign_workspace is None:
+            database = getattr(server.application, "database", None)
+            if type(database) is not SQLiteDatabase:
+                raise PortalServerError("CAMPAIGN_WORKSPACE_UNAVAILABLE")
+            server.campaign_workspace = WorkspaceWeb(
+                database.path.with_name("campaign_replies.sqlite3")
+            )
+        return server.campaign_workspace
 
     def _route_error(self, path: str, method: str) -> None:
         allowed = _allowed_methods(path)
