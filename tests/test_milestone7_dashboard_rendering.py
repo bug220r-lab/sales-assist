@@ -796,7 +796,8 @@ class DashboardRenderingTests(unittest.TestCase):
                 self.assertEqual(parser.h1_count, 1)
                 self.assertEqual(parser.main_count, 1)
                 self.assertEqual(parser.primary_navigation, 1)
-                self.assertGreaterEqual(parser.status_landmarks, 1)
+                if route not in {"overview", "sales_credit_queue", "doi_queue", "review"}:
+                    self.assertGreaterEqual(parser.status_landmarks, 1)
                 self.assertEqual(parser.caption_count, parser.table_count)
                 self.assertEqual(parser.th_without_scope, 0)
                 self.assertEqual(parser.inline_violations, [])
@@ -1142,6 +1143,7 @@ class DashboardRenderingTests(unittest.TestCase):
         self.assertIn('<option value="50" selected>50</option>', text)
         self.assertIn('<input type="hidden" name="page" value="1">', text)
         self.assertIn('<input type="hidden" name="presentation" value="1">', text)
+        self.assertIn('href="/sales-credit?presentation=1">Clear filters</a>', text)
         expected_prefix = (
             f"/sales-credit?q={ORDER_ID}&amp;state=OUTBOUND_EVIDENCE_HUMAN_REVIEW"
             "&amp;sort=workflow_state&amp;direction=asc"
@@ -1154,6 +1156,74 @@ class DashboardRenderingTests(unittest.TestCase):
             expected_prefix + "&amp;page=3&amp;page_size=50&amp;presentation=1",
             text,
         )
+
+    def test_sales_credit_list_keeps_current_review_needs_and_case_details(self) -> None:
+        view = _views()["sales_credit_queue"]
+        text = render_dashboard_page("sales_credit_queue", view, CSRF).decode("utf-8")
+        self.assertEqual(text.count('<th scope="col">'), 3)
+        self.assertIn('<th scope="col">Order</th>', text)
+        self.assertIn('<th scope="col">Status</th>', text)
+        self.assertIn('>View case</a>', text)
+        self.assertIn(f'href="/sales-credit/{ORDER_ID}"', text)
+        self.assertIn('>Needs review</p>', text)
+        self.assertIn('<details class="dashboard-more-filters">', text)
+        self.assertNotIn('Local loopback response received', text)
+        for extra_column in ("System classification", "Placed-value status", "Interactions"):
+            self.assertNotIn(f'<th scope="col">{extra_column}</th>', text)
+
+        view["items"][0]["unresolved_human_review"] = False
+        view["items"][0]["manager_outcome"] = "DENIED"
+        view["query"]["state"] = "OUTBOUND_EVIDENCE_HUMAN_REVIEW"
+        resolved = render_dashboard_page("sales_credit_queue", view, CSRF).decode("utf-8")
+        self.assertNotIn('>Needs review</p>', resolved)
+        self.assertIn('<details class="dashboard-more-filters" open>', resolved)
+        self.assertIn('>View case</a>', resolved)
+
+    def test_doi_list_omits_reasons_but_retains_review_signals_and_details(self) -> None:
+        view = _views()["doi_queue"]
+        item = view["items"][0]
+        item["opportunity_types"].append("FULFILLMENT_SPLIT")
+        text = render_dashboard_page("doi_queue", view, CSRF).decode("utf-8")
+        self.assertEqual(text.count('<th scope="col">'), 3)
+        self.assertEqual(text.count('<li>Split shipment</li>'), 1)
+        self.assertIn('<li>Recheck same product</li>', text)
+        self.assertIn(
+            '<option value="DOI_MANUAL_REVIEW">Manual review only</option>', text
+        )
+        self.assertNotIn('RC-087', text)
+        self.assertNotIn('<th scope="col">Reasons</th>', text)
+        self.assertIn(f'href="/doi/{CASE_ID}"', text)
+        self.assertIn('>Needs review</p>', text)
+        self.assertIn('<details class="dashboard-more-filters">', text)
+        self.assertEqual(item["reason_codes"], ["RC-087"])
+        self.assertEqual(len(item["opportunity_types"]), 3)
+        detail = render_dashboard_page("doi_detail", _views()["doi_detail"], CSRF)
+        self.assertIn(b"RC-087", detail)
+
+        for signal, value in (
+            ("attention_causes", ["RECHECK_REQUIRED"]),
+            ("scenario_selection_state", "REQUIRED"),
+            ("human_review_required", True),
+            ("doi_state", "DOI_MANUAL_REVIEW"),
+        ):
+            with self.subTest(signal=signal):
+                item["attention_causes"] = []
+                item["scenario_selection_state"] = "NOT_REQUIRED"
+                item["human_review_required"] = False
+                item["doi_state"] = "DOI_OPPORTUNITY"
+                item[signal] = value
+                rendered = render_dashboard_page("doi_queue", view, CSRF).decode("utf-8")
+                case_rows = rendered.split('<tbody>', 1)[1].split('</tbody>', 1)[0]
+                self.assertIn('>Needs review<', case_rows)
+
+        item["doi_state"] = None
+        item["current_evaluation_id"] = None
+        item["opportunity_types"] = []
+        item["reason_codes"] = []
+        unevaluated = render_dashboard_page("doi_queue", view, CSRF).decode("utf-8")
+        self.assertIn('>Not evaluated</span>', unevaluated)
+        case_rows = unevaluated.split('<tbody>', 1)[1].split('</tbody>', 1)[0]
+        self.assertNotIn('>Needs review<', case_rows)
 
     def test_queue_query_injection_fails_closed(self) -> None:
         mutations = (
@@ -1390,13 +1460,32 @@ class DashboardRenderingTests(unittest.TestCase):
         overview = render_dashboard_page("overview", views["overview"], CSRF).decode(
             "utf-8"
         )
-        self.assertIn("Current projections versus immutable history", overview)
-        self.assertIn("History receipts; not new evaluations", overview)
+        self.assertIn("Your current cases and items that need a review.", overview)
+        self.assertEqual(overview.count('data-ssa-dashboard-card="'), 4)
+        for metric_id, action in (
+            ("active_sales_credit_cases", 'href="/sales-credit">View Sales Credit cases'),
+            ("active_doi_cases", 'href="/doi">View DOI cases'),
+            ("active_doi_opportunities", 'href="/doi">View DOI opportunities'),
+            ("current_human_review_items", 'href="/review">Review items'),
+        ):
+            self.assertIn(f'data-ssa-dashboard-card="{metric_id}"', overview)
+            self.assertIn(action, overview)
+        for technical_text in (
+            "Business requests received", "Unique new evaluations", "Exact replays",
+            "Material conflicts", "Median processing latency", "P95 processing latency",
+            "Database health", "Extension status", "safety-counters",
+            "immutable history", "Local loopback response received", "ALL_DURABLE_HISTORY",
+        ):
+            self.assertNotIn(technical_text, overview)
         telemetry = render_dashboard_page(
             "telemetry",
             views["telemetry"],
             CSRF,
         ).decode("utf-8")
+        self.assertIn("Business requests received", telemetry)
+        self.assertIn("Exact replays", telemetry)
+        self.assertIn("Material conflicts", telemetry)
+        self.assertIn("nanoseconds", telemetry)
         self.assertIn("12.50 USD", telemetry)
         self.assertIn("unresolved overlap", telemetry)
         self.assertIn("empty denominator displays N/A", telemetry)
@@ -1422,7 +1511,7 @@ class DashboardRenderingTests(unittest.TestCase):
             self.assertNotIn("canonical_bytes", text)
             self.assertNotIn("C:\\Users\\", text)
         self.assertIn("SAFE_VALIDATION_FAILURE", system)
-        self.assertIn("no raw payload, stack trace, or path", system)
+        self.assertIn("Recent error summaries; private details are omitted", system)
         self.assertIn("Database-error requests", telemetry)
         self.assertIn("Closed result and current-projection distributions", telemetry)
         self.assertIn("Terminal request result", telemetry)
@@ -1431,8 +1520,8 @@ class DashboardRenderingTests(unittest.TestCase):
 
     def test_all_five_extension_states_render_truthfully(self) -> None:
         now = datetime.now(timezone.utc)
-        fresh = (now - timedelta(seconds=1)).isoformat(timespec="microseconds")
-        stale = (now - timedelta(seconds=301)).isoformat(timespec="microseconds")
+        fresh = (now - timedelta(seconds=1)).isoformat(timespec="seconds")
+        stale = (now - timedelta(seconds=301)).isoformat(timespec="seconds")
         fresh = fresh.replace("+00:00", "Z")
         stale = stale.replace("+00:00", "Z")
         for state in (
@@ -1523,7 +1612,7 @@ class DashboardRenderingTests(unittest.TestCase):
             presentation=True,
         ).decode("utf-8")
         self.assertIn('data-ssa-dashboard-presentation="true"', text)
-        self.assertIn("LOCAL_FILESYSTEM", text)
+        self.assertIn("<dt>Storage</dt><dd>On this PC</dd>", text)
         self.assertNotIn("C:\\Users\\", text)
 
     def test_system_origin_accepts_only_exact_loopback_http_authority(self) -> None:
@@ -1620,6 +1709,43 @@ class DashboardRenderingTests(unittest.TestCase):
                 ),
             ),
         )
+
+    def test_review_list_links_orders_to_cases_and_preserves_action_limits(self) -> None:
+        view = _views()["review"]
+        for case_id, action, available in (
+            (CASE_ID, "SELECT_OVERLAP_SCENARIO", True),
+            (CASE_ID + "-READONLY", "REVIEW_EXACT_REASON", False),
+        ):
+            view["items"].append({
+                "action_available": available,
+                "audit_subject_kind": "DOI_CASE",
+                "domain": "DOI",
+                "order_id": ORDER_ID,
+                "reason_codes": ["RC-087"],
+                "required_action": action,
+                "source_completeness_state": "COMPLETE_EVALUATION_RECORDED",
+                "subject_id": case_id,
+                "system_state": "DOI_OPPORTUNITY",
+            })
+        view["total_count"] = 3
+        text = render_dashboard_page("review", view, CSRF).decode("utf-8")
+        self.assertEqual(text.count('<th scope="col">'), 3)
+        self.assertIn(f'href="/doi/{CASE_ID}">{ORDER_ID}</a>', text)
+        self.assertIn(f'href="/sales-credit/{ORDER_ID}">{ORDER_ID}</a>', text)
+        self.assertIn('>Sales Credit</p>', text)
+        self.assertIn('>DOI</p>', text)
+        self.assertIn('Record a manager decision', text)
+        self.assertIn('Choose one option', text)
+        self.assertIn('Review the flagged details', text)
+        self.assertEqual(text.count('>View only</p>'), 1)
+        self.assertNotIn('RC-087', text)
+        self.assertNotIn('COMPLETE_EVALUATION_RECORDED', text)
+        self.assertNotIn('RECORD_MANAGER_OUTCOME', text)
+        self.assertNotIn('data-ssa-dashboard-action=', text)
+        view["items"] = []
+        view["total_count"] = 0
+        empty = render_dashboard_page("review", view, CSRF).decode("utf-8")
+        self.assertIn('No cases need your review.', empty)
 
     def test_review_domain_and_authority_mutations_fail_closed(self) -> None:
         def closed_sales_credit_review(view: dict[str, object]) -> None:

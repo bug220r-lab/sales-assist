@@ -32,7 +32,7 @@ volatile local details and never hard-codes an outcome.
 | Step | Route | Visible evidence |
 |---:|---|---|
 | 1 | `/system` | loopback origin, schema/database health, truthful extension state, and nine zero safety counters |
-| 2 | `/overview` | requests, unique evaluations, current queues, latency sample, and latest backup |
+| 2 | `/overview` | current Sales Credit cases, DOI cases and opportunities, and items needing review |
 | 3 | `/sales-credit/SYN-ORDER-M5-SC-018FB80ED91C1EBD` | separate current system classification and empty manager outcome |
 | 4 | `/sales-credit/SYN-ORDER-M5-SC-86229FF7F2E2100A` | record a confirmed synthetic outcome, then demonstrate exact replay and changed-material conflict |
 | 5 | `/doi/SYN-EVIDENCE-M4-DOI-CASE-CDBA2B0FD86833CD6C96515A` | fulfillment-split opportunity, exact scope, and ordered explanation |

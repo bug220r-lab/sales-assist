@@ -134,12 +134,49 @@ _SALES_CREDIT_QUEUE_STATES: Final = (
     "CANCELED_NO_REPLACEMENT",
     "MANUAL_REVIEW_REQUIRED",
 )
+_SALES_CREDIT_STATUS_LABELS: Final = {
+    "AWAITING_SOURCE_REVIEW": "Awaiting first review",
+    "CHECKED_NO_ORDER_WINDOW_ACTIVE": "No order yet · Monitoring",
+    "REVIEW_WINDOW_CLOSED_NO_ORDER": "No order · Window ended",
+    "CREDIT_CONFIRMED_TARGET_REP": "Credit assigned to target rep",
+    "EVIDENCE_NEEDED": "Evidence needed",
+    "VERIFIED_PREORDER_EVIDENCE": "Pre-order evidence verified",
+    "OUTBOUND_EVIDENCE_HUMAN_REVIEW": "Outbound contact only",
+    "INBOUND_EVIDENCE_HUMAN_REVIEW": "Inbound contact only",
+    "TIMING_UNCERTAIN_HUMAN_REVIEW": "Contact timing unclear",
+    "OTHER_REP_HUMAN_REVIEW": "Another rep on the order",
+    "ORDER_CHANGED_HUMAN_REVIEW": "Order changed",
+    "CANCELED_REPLACEMENT_WINDOW_ACTIVE": "Canceled · Watching for replacement",
+    "POSSIBLE_REPLACEMENT_HUMAN_REVIEW": "Possible replacement",
+    "CANCELED_NO_REPLACEMENT": "Canceled · No replacement",
+    "MANUAL_REVIEW_REQUIRED": "Unresolved facts",
+}
 _DOI_QUEUE_STATES: Final = (
     "DOI_OPPORTUNITY",
     "DOI_MANUAL_REVIEW",
     "DOI_EXCLUDED",
     "DOI_MONITOR",
 )
+_DOI_STATUS_LABELS: Final = {
+    "DOI_OPPORTUNITY": "Opportunity found",
+    "DOI_MANUAL_REVIEW": "Needs review",
+    "DOI_EXCLUDED": "Excluded",
+    "DOI_MONITOR": "Monitoring",
+}
+_DOI_FILTER_LABELS: Final = {
+    **_DOI_STATUS_LABELS,
+    "DOI_MANUAL_REVIEW": "Manual review only",
+}
+_DOI_OPPORTUNITY_LABELS: Final = {
+    "DS_SEPARATION": "Separate direct shipment",
+    "EXACT_MFG_ALTERNATE": "Same manufacturer part",
+    "EXACT_SKU_RECHECK": "Recheck same product",
+    "FULFILLMENT_SPLIT": "Split shipment",
+    "FUNCTIONAL_ALTERNATE": "Alternative product",
+    "MFG_CROSS_REFERENCE": "Manufacturer cross-reference",
+    "MFG_SUPERSESSION": "Manufacturer replacement",
+    "PARTIAL_QUANTITY_REVIEW": "Partial quantity review",
+}
 _SC_WORKFLOW_STATES: Final = frozenset((*_SALES_CREDIT_QUEUE_STATES, "CLOSED"))
 _DOI_STATES: Final = frozenset(_DOI_QUEUE_STATES)
 _REQUEST_RESULT_STATES: Final = frozenset(
@@ -299,7 +336,7 @@ _CANONICAL_DECIMAL = re.compile(
 )
 
 _PAGE_TITLES: Final = {
-    "overview": "Control Center overview",
+    "overview": "Overview",
     "campaign-replies": "Campaign Replies",
     "sales_credit_queue": "Sales Credit queue",
     "sales_credit_detail": "Sales Credit case",
@@ -1058,7 +1095,7 @@ def _state(value: object) -> str:
     return "Unavailable" if text is None else text
 
 
-def _state_badge(value: object) -> str:
+def _state_badge(value: object, *, label: str | None = None) -> str:
     displayed = _state(value)
     upper = displayed.upper()
     if any(token in upper for token in ("FAIL", "CONFLICT", "UNHEALTHY", "MISMATCH")):
@@ -1074,7 +1111,8 @@ def _state_badge(value: object) -> str:
         severity = "neutral"
     return (
         f'<span class="dashboard-state" data-severity="{severity}" '
-        f'data-ssa-dashboard-state="{_h(displayed)}">{_h(displayed)}</span>'
+        f'data-ssa-dashboard-state="{_h(displayed)}">'
+        f"{_h(displayed if label is None else label)}</span>"
     )
 
 
@@ -1101,6 +1139,7 @@ def _table(
     rows: Sequence[Sequence[str]],
     selector: str,
     empty_message: str = "No current synthetic records match this view.",
+    compact: bool = False,
 ) -> str:
     header_cells = "".join(f'<th scope="col">{_h(item)}</th>' for item in headers)
     body_rows = "".join(
@@ -1112,7 +1151,8 @@ def _table(
             f'<tr><td colspan="{len(headers)}" class="dashboard-empty">'
             f"{_h(empty_message)}</td></tr>"
         )
-    return f"""<div class="dashboard-table-wrap" data-ssa-dashboard-table="{_h(selector)}">
+    table_class = "dashboard-table-wrap dashboard-case-table" if compact else "dashboard-table-wrap"
+    return f"""<div class="{table_class}" data-ssa-dashboard-table="{_h(selector)}">
 <table><caption>{_h(caption)}</caption><thead><tr>{header_cells}</tr></thead>
 <tbody>{body_rows}</tbody></table></div>"""
 
@@ -1173,12 +1213,23 @@ def _page(
         if companion else
         "Local loopback response received. Dashboard actions remain synthetic and local only."
     )
+    if route_name == "system":
+        service_status = "Connected to the app on this PC."
     footer = (
         "Review only. Editing and sending stay in the separate support application."
         if companion else
         "Fictional local demonstration · no external system access · current projections and "
         "immutable history are labeled separately."
     )
+    service_notice = (
+        f"""<aside class="dashboard-service-status" role="status" aria-label="Local service status"
+         data-ssa-dashboard-status="LOCAL_RESPONSE">{_h(service_status)}</aside>"""
+        if route_name not in {"overview", "sales_credit_queue", "doi_queue", "review"} else ""
+    )
+    if route_name in {"overview", "sales_credit_queue", "doi_queue", "review"}:
+        footer = "Fictional demo data."
+    if route_name == "system":
+        footer = "Fictional demo data · Runs on this PC only."
     doctype = "<!" + "doctype html>"
     html_open = "<" + f'html lang="en" data-ssa-dashboard-contract="{DASHBOARD_DOM_VERSION}">'
     document = f"""{doctype}
@@ -1200,10 +1251,7 @@ def _page(
     <span class="dashboard-brand">ECS Sales Assist</span>
     <nav class="dashboard-nav" aria-label="Primary">{navigation}</nav>
   </header>
-  <aside class="dashboard-service-status" role="status" aria-label="Local service status"
-         data-ssa-dashboard-status="LOCAL_RESPONSE">
-    {_h(service_status)}
-  </aside>
+  {service_notice}
   <main id="ssa-dashboard-main" class="dashboard-main dashboard-stack" tabindex="-1"
         data-ssa-page-kind="control-center-{_h(route_name)}"
         data-ssa-schema-version="{DOM_SCHEMA_VERSION}"
@@ -1252,35 +1300,6 @@ on this PC, then reload this page. Its review timestamps appear inside the panel
         csrf_token=csrf_token,
         presentation=False,
     )
-
-
-def _metric_card(
-    metric_id: str,
-    label: str,
-    value: object,
-    window: object,
-    *,
-    note: str,
-) -> str:
-    return f"""<article class="dashboard-card" data-ssa-dashboard-card="{_h(metric_id)}">
-<h2>{_h(label)}</h2><strong class="dashboard-value">{_h(_display(value))}</strong>
-<p class="dashboard-meta">{_h(note)} · Window: {_h(_display(window))}</p>
-<a href="/system/telemetry#{_h(metric_id)}">View numerator, denominator, and exclusions</a>
-</article>"""
-
-
-def _status_card(
-    card_id: str,
-    label: str,
-    value: object,
-    note: str,
-    href: str,
-) -> str:
-    return f"""<article class="dashboard-card"
- data-ssa-dashboard-card="{_h(card_id)}">
-<h2>{_h(label)}</h2><strong class="dashboard-value">{_h(_display(value))}</strong>
-<p class="dashboard-meta">{_h(note)}</p><a href="{_h(href)}">View current evidence</a>
-</article>"""
 
 
 def _validated_rate(value: object, code: str) -> dict[str, object]:
@@ -1593,197 +1612,53 @@ def render_overview(data: object, csrf_token: str, *, presentation: bool = False
         _fail("DASHBOARD_SERVICE_STATUS_INVALID")
     if service_status == "PASS" and database_status != "HEALTHY":
         _fail("DASHBOARD_OVERVIEW_SYSTEM_COHERENCE_INVALID")
-    window = metrics["window"]
+    latest_backup = system["latest_backup"]
+    if latest_backup is not None and _backup(latest_backup)["status"] != "COMPLETED":
+        _fail("DASHBOARD_BACKUP_VERIFICATION_INVALID")
     cards = (
         (
-            "requests_received",
-            "Business requests received",
-            metrics["requests_received"],
-            "Terminal business requests",
-        ),
-        (
-            "unique_evaluations",
-            "Unique new evaluations",
-            metrics["unique_evaluations"],
-            "Durable evaluation IDs; replays excluded",
-        ),
-        (
-            "exact_replays",
-            "Exact replays",
-            metrics["exact_replays"],
-            "History receipts; not new evaluations",
-        ),
-        (
-            "material_conflicts",
-            "Material conflicts",
-            metrics["material_conflicts"],
-            "Rejected changed-material requests",
-        ),
-        (
-            "successful_requests",
-            "Successful requests",
-            metrics["successful_requests"],
-            "Successful terminal business requests",
-        ),
-        (
-            "failed_closed_requests",
-            "Failed-closed requests",
-            metrics["failed_closed_requests"],
-            "Terminal requests stopped safely",
-        ),
-        (
             "active_sales_credit_cases",
-            "Current Sales Credit cases",
-            metrics["active_sales_credit_cases"],
-            "Current nonclosed projections",
+            "Sales Credit cases",
+            "Current cases",
+            "/sales-credit",
+            "View Sales Credit cases",
         ),
         (
             "active_doi_cases",
-            "Current DOI cases",
-            metrics["active_doi_cases"],
-            "Current active projections",
+            "DOI cases",
+            "Current cases",
+            "/doi",
+            "View DOI cases",
         ),
         (
             "active_doi_opportunities",
-            "Current active DOI opportunities",
-            metrics["active_doi_opportunities"],
-            "Opportunity count can exceed case count",
+            "DOI opportunities",
+            "Active opportunities across your DOI cases",
+            "/doi",
+            "View DOI opportunities",
         ),
         (
             "current_human_review_items",
-            "Current human-review items",
-            metrics["current_human_review_items"],
-            "Unresolved current projections only",
-        ),
-        (
-            "median_latency_ns",
-            "Median processing latency",
-            metrics["median_latency_ns"],
-            "Nanoseconds; N/A for an empty sample",
-        ),
-        (
-            "p95_latency_ns",
-            "P95 processing latency",
-            metrics["p95_latency_ns"],
-            "Nanoseconds; nearest-rank P95",
+            "Needs your review",
+            "Items waiting for a decision",
+            "/review",
+            "Review items",
         ),
     )
     card_html = "".join(
-        _metric_card(metric_id, label, value, window, note=note)
-        for metric_id, label, value, note in cards
+        f"""<article class="dashboard-card dashboard-work-card"
+ data-ssa-dashboard-card="{_h(metric_id)}">
+<h2>{_h(label)}</h2><strong class="dashboard-value">{_h(metrics[metric_id])}</strong>
+<p class="dashboard-meta">{_h(note)}</p><a href="{_h(href)}">{_h(action)}</a>
+</article>"""
+        for metric_id, label, note, href, action in cards
     )
-    latest_backup = system["latest_backup"]
-    if latest_backup is None:
-        latest_backup_value = "N/A"
-        latest_backup_note = "No verified backup receipt is currently available"
-    else:
-        backup = _backup(latest_backup)
-        if backup["status"] != "COMPLETED":
-            _fail("DASHBOARD_BACKUP_VERIFICATION_INVALID")
-        latest_backup_value = backup["status"]
-        latest_backup_note = f"Completed: {_display(backup['completed_at'])}"
-    status_cards = "".join(
-        (
-            _status_card(
-                "service-status",
-                "Service status",
-                system["service_status"],
-                "Owned localhost listener",
-                "/system",
-            ),
-            _status_card(
-                "database-status",
-                "Database health",
-                system["database_status"],
-                "Current schema and projection verification",
-                "/system/database",
-            ),
-            _status_card(
-                "latest-backup",
-                "Latest verified backup",
-                latest_backup_value,
-                latest_backup_note,
-                "/system/backups",
-            ),
-            _status_card(
-                "extension-status",
-                "Extension status",
-                system["extension_status"],
-                "Package presence alone is not installation evidence",
-                "/system/extension",
-            ),
-        )
-    )
-    distributions = _closed_mapping(
-        metrics["doi_state_distribution"],
-        frozenset(
-            metrics["doi_state_distribution"]
-            if type(metrics["doi_state_distribution"]) is dict
-            else ()
-        ),
-        "DASHBOARD_DOI_DISTRIBUTION_INVALID",
-    )
-    distribution_rows = [
-        (_h(state), _h(_integer(count, "DASHBOARD_DOI_COUNT_INVALID")))
-        for state, count in sorted(distributions.items())
-    ]
-    safety = _closed_mapping(
-        metrics["safety_counters"],
-        frozenset(
-            metrics["safety_counters"]
-            if type(metrics["safety_counters"]) is dict
-            else ()
-        ),
-        "DASHBOARD_SAFETY_COUNTERS_INVALID",
-    )
-    safety_rows = [
-        (_h(name), _h(_integer(value, "DASHBOARD_SAFETY_COUNTER_INVALID")))
-        for name, value in sorted(safety.items())
-    ]
-    history_rows = [
-        ("Current Sales Credit projections", reconciliation["active_sales_credit_cases"]),
-        ("Immutable Sales Credit history events", reconciliation["sales_credit_history_events"]),
-        ("Current DOI projections", reconciliation["active_doi_cases"]),
-        ("Immutable DOI history events", reconciliation["doi_history_events"]),
-    ]
-    body = f"""<section class="dashboard-grid" aria-label="Current operational metrics">
-{card_html}{status_cards}</section>
-<section class="dashboard-split">
-  <article class="dashboard-panel">
-    <h2>Current DOI state distribution</h2>
-    {_table(
-        caption="Current DOI cases by state",
-        headers=("State", "Case count"),
-        rows=distribution_rows,
-        selector="doi-state-distribution",
-    )}
-  </article>
-  <article class="dashboard-panel">
-    <h2>Current projections versus immutable history</h2>
-    {_table(
-        caption="Projection and history populations",
-        headers=("Population", "Count"),
-        rows=[(_h(label), _h(value)) for label, value in history_rows],
-        selector="projection-history-reconciliation",
-    )}
-  </article>
-</section>
-<section class="dashboard-panel" data-ssa-dashboard-card="safety-counters">
-  <h2>All nine safety counters</h2>
-  {_table(
-      caption="Current safety counter values",
-      headers=("Counter", "Value"),
-      rows=safety_rows,
-      selector="safety-counters",
-  )}
-</section>"""
+    body = f"""<section class="dashboard-work-grid" aria-label="Current cases and reviews">
+{card_html}</section>"""
     return _page(
         route_name="overview",
-        heading="Local Control Center overview",
-        lede=(
-            "Current queue cards come from current projections. Replay, conflict, and history "
-            "totals remain separate and cannot inflate active work."
-        ),
+        heading="Overview",
+        lede="Your current cases and items that need a review.",
         body=body,
         csrf_token=csrf_token,
         presentation=presentation,
@@ -1846,6 +1721,8 @@ def _filter_form(
     page_size: int,
     *,
     presentation: bool,
+    compact: bool = False,
+    labels: Mapping[str, str] | None = None,
 ) -> str:
     search = "" if query["search"] is None else str(query["search"])
     current_state = query["state"]
@@ -1855,9 +1732,15 @@ def _filter_form(
         f'<option value="{_h(value)}"{_selected(value == current_sort)}>{_h(label)}</option>'
         for value, label in sort_options
     )
+    state_labels = {
+        value: labels[value] if labels is not None else _humanize_token(
+            value, "DASHBOARD_QUEUE_STATE_INVALID"
+        )
+        for value in state_options
+    }
     states = '<option value="">All current states</option>' + "".join(
         f'<option value="{_h(value)}"{_selected(value == current_state)}>'
-        f"{_h(_humanize_token(value, 'DASHBOARD_QUEUE_STATE_INVALID'))}</option>"
+        f"{_h(state_labels[value])}</option>"
         for value in state_options
     )
     sizes = "".join(
@@ -1867,6 +1750,31 @@ def _filter_form(
     presentation_member = (
         '<input type="hidden" name="presentation" value="1">' if presentation else ""
     )
+    if compact:
+        clear_href = f"{route}?presentation=1" if presentation else route
+        expanded = (
+            ' open' if current_state is not None or current_sort != "updated_at"
+            or not descending or page_size != 25 else ''
+        )
+        return f"""<form class="dashboard-panel dashboard-simple-search" method="get"
+ action="{route}" role="search" aria-label="Find cases">
+<input type="hidden" name="page" value="1">
+{presentation_member}
+<label class="dashboard-field"><span>Search orders</span>
+<input name="q" value="{_h(search)}" maxlength="96" pattern="SYN-[A-Z0-9-]+"
+ placeholder="Order ID" autocomplete="off"></label>
+<button type="submit">Search</button>
+<details class="dashboard-more-filters"{expanded}>
+<summary>Filter and sort</summary>
+<div class="dashboard-filter">
+<label class="dashboard-field"><span>Status</span><select name="state">{states}</select></label>
+<label class="dashboard-field"><span>Sort by</span><select name="sort">{options}</select></label>
+<label class="dashboard-field"><span>Direction</span><select name="direction">
+<option value="desc"{_selected(descending)}>Descending</option>
+<option value="asc"{_selected(not descending)}>Ascending</option></select></label>
+<label class="dashboard-field"><span>Rows</span><select name="page_size">{sizes}</select></label>
+<button type="submit">Apply filters</button><a href="{clear_href}">Clear filters</a>
+</div></details></form>"""
     return f"""<form class="dashboard-panel dashboard-filter" method="get" action="{route}"
       role="search" aria-label="Current synthetic queue filters">
   <input type="hidden" name="page" value="1">
@@ -1981,42 +1889,42 @@ def render_sales_credit_queue(
     for raw in _list(root["items"], "DASHBOARD_SC_QUEUE_ITEMS_INVALID"):
         item = _closed_mapping(raw, _SC_SUMMARY_MEMBERS, "DASHBOARD_SC_SUMMARY_INVALID")
         order_id = _synthetic_id(item["order_id"], "DASHBOARD_SC_ORDER_ID_INVALID")
+        state = _governed_enum(
+            item["workflow_state"],
+            "DASHBOARD_SC_WORKFLOW_INVALID",
+        )
+        if state not in _SALES_CREDIT_STATUS_LABELS:
+            _fail("DASHBOARD_SC_WORKFLOW_INVALID")
+        human_review = _boolean(item["human_review_required"], "DASHBOARD_SC_REVIEW_INVALID")
+        review_needed = _boolean(
+            item["unresolved_human_review"], "DASHBOARD_SC_UNRESOLVED_REVIEW_INVALID"
+        )
+        if review_needed and not human_review:
+            _fail("DASHBOARD_SC_REVIEW_INCOHERENT")
+        _integer(item["interaction_count"], "DASHBOARD_SC_INTERACTIONS_INVALID")
+        status = _state_badge(state, label=_SALES_CREDIT_STATUS_LABELS[state])
+        if review_needed:
+            status += '<p class="dashboard-review-needed">Needs review</p>'
         rows.append(
             (
                 (
                     f'<a data-ssa-dashboard-id="{_h(order_id)}" '
                     f'href="/sales-credit/{_h(order_id)}">{_h(order_id)}</a>'
                 ),
-                _state_badge(item["workflow_state"]),
-                _h(_display(item["attribution"])),
-                _h(_display(item["order_value_status"])),
-                _h(
-                    "Required"
-                    if _boolean(
-                        item["human_review_required"],
-                        "DASHBOARD_SC_REVIEW_INVALID",
-                    )
-                    else "Not required"
+                status,
+                (
+                    f'<a class="dashboard-case-link" href="/sales-credit/{_h(order_id)}" '
+                    f'aria-label="View case {_h(order_id)}">View case</a>'
                 ),
-                _h(_integer(item["interaction_count"], "DASHBOARD_SC_INTERACTIONS_INVALID")),
-                _h(_display(item["manager_outcome"])),
-                _h(_display(item["updated_at"])),
             )
         )
     table = _table(
-        caption="Current nonclosed Sales Credit projections",
-        headers=(
-            "Synthetic order",
-            "Workflow",
-            "System classification",
-            "Placed-value status",
-            "Human review",
-            "Interactions",
-            "Manager outcome",
-            "Updated",
-        ),
+        caption="Current cases",
+        headers=("Order", "Status", "Action"),
         rows=rows,
         selector="sales-credit-current-projections",
+        empty_message="No current cases match your search.",
+        compact=True,
     )
     body = (
         _filter_form(
@@ -2024,12 +1932,14 @@ def render_sales_credit_queue(
             (
                 ("updated_at", "Most recent update"),
                 ("order_id", "Order ID"),
-                ("workflow_state", "Workflow state"),
+                ("workflow_state", "Status"),
             ),
             _SALES_CREDIT_QUEUE_STATES,
             query,
             int(root["limit"]),
             presentation=presentation,
+            compact=True,
+            labels=_SALES_CREDIT_STATUS_LABELS,
         )
         + '<section class="dashboard-panel" '
         + f'data-ssa-dashboard-current-projection="sales-credit">{table}'
@@ -2045,11 +1955,8 @@ def render_sales_credit_queue(
     )
     return _page(
         route_name="sales_credit_queue",
-        heading="Current Sales Credit queue",
-        lede=(
-            "Current nonclosed case projections only. Closed cases and prior evaluations "
-            "remain in immutable history."
-        ),
+        heading="Sales Credit",
+        lede="Track your current cases. Open a case to review its evidence and next steps.",
         body=body,
         csrf_token=csrf_token,
         presentation=presentation,
@@ -2083,37 +1990,60 @@ def render_doi_queue(data: object, csrf_token: str, *, presentation: bool = Fals
                 "DASHBOARD_DOI_QUEUE_ATTENTION_INVALID",
             )
         ]
+        doi_state = _text(item["doi_state"], "DASHBOARD_DOI_STATE_INVALID", optional=True)
+        if doi_state is not None and doi_state not in _DOI_STATUS_LABELS:
+            _fail("DASHBOARD_DOI_STATE_INVALID")
+        opportunity_types: list[str] = []
+        for value in _list(item["opportunity_types"], "DASHBOARD_DOI_OPPORTUNITY_TYPES_INVALID"):
+            opportunity_type = _governed_enum(value, "DASHBOARD_DOI_OPPORTUNITY_TYPE_INVALID")
+            if opportunity_type not in _DOI_OPPORTUNITY_LABELS:
+                _fail("DASHBOARD_DOI_OPPORTUNITY_TYPE_INVALID")
+            if opportunity_type not in opportunity_types:
+                opportunity_types.append(opportunity_type)
+        human_review = _boolean(item["human_review_required"], "DASHBOARD_DOI_REVIEW_INVALID")
+        selection_state = _governed_enum(
+            item["scenario_selection_state"], "DASHBOARD_DOI_SELECTION_STATE_INVALID"
+        )
+        if selection_state not in {"NOT_REQUIRED", "REQUIRED", "SELECTED"}:
+            _fail("DASHBOARD_DOI_SELECTION_STATE_INVALID")
+        needs_review = (
+            human_review or bool(attention_causes) or selection_state == "REQUIRED"
+            or doi_state == "DOI_MANUAL_REVIEW"
+        )
+        status = ""
+        if doi_state != "DOI_OPPORTUNITY" or not opportunity_types:
+            label = (
+                "Not evaluated" if doi_state is None else
+                "Opportunity details unavailable" if doi_state == "DOI_OPPORTUNITY" else
+                _DOI_STATUS_LABELS[doi_state]
+            )
+            status = _state_badge(doi_state, label=label)
+        if opportunity_types:
+            status += '<ul class="dashboard-opportunity-list">' + "".join(
+                f"<li>{_h(_DOI_OPPORTUNITY_LABELS[value])}</li>" for value in opportunity_types
+            ) + "</ul>"
+        if needs_review and doi_state != "DOI_MANUAL_REVIEW":
+            status += '<p class="dashboard-review-needed">Needs review</p>'
         rows.append(
             (
                 (
                     f'<a data-ssa-dashboard-id="{_h(case_id)}" '
                     f'href="/doi/{_h(case_id)}">{_h(order_id)}</a>'
                 ),
-                _state_badge(item["doi_state"]),
-                _h(_display(item["opportunity_types"])),
-                _h(_display(item["reason_codes"])),
-                _h(_display(item["aggregate_potential_state"])),
-                _h(_display(attention_causes)),
-                _h(_display(item["scenario_selection_state"])),
-                _h(_display(item["lifecycle_state"])),
-                _h(_display(item["updated_at"])),
+                status,
+                (
+                    f'<a class="dashboard-case-link" href="/doi/{_h(case_id)}" '
+                    f'aria-label="View case for {_h(order_id)}">View case</a>'
+                ),
             )
         )
     table = _table(
-        caption="Current DOI case projections; opportunity count may exceed case count",
-        headers=(
-            "Synthetic order",
-            "DOI state",
-            "Opportunity types",
-            "Reasons",
-            "Potential-value state",
-            "Current attention causes",
-            "Scenario selection",
-            "Lifecycle",
-            "Updated",
-        ),
+        caption="Current cases",
+        headers=("Order", "Opportunity / status", "Action"),
         rows=rows,
         selector="doi-current-projections",
+        empty_message="No current cases match your search.",
+        compact=True,
     )
     body = (
         _filter_form(
@@ -2122,12 +2052,14 @@ def render_doi_queue(data: object, csrf_token: str, *, presentation: bool = Fals
                 ("updated_at", "Most recent update"),
                 ("case_id", "Case ID"),
                 ("order_id", "Order ID"),
-                ("doi_state", "DOI state"),
+                ("doi_state", "Status"),
             ),
             _DOI_QUEUE_STATES,
             query,
             int(root["limit"]),
             presentation=presentation,
+            compact=True,
+            labels=_DOI_FILTER_LABELS,
         )
         + f'<section class="dashboard-panel" data-ssa-dashboard-current-projection="doi">{table}'
         + _pagination(
@@ -2142,11 +2074,8 @@ def render_doi_queue(data: object, csrf_token: str, *, presentation: bool = Fals
     )
     return _page(
         route_name="doi_queue",
-        heading="Current DOI queue",
-        lede=(
-            "Current active cases and their current opportunities. Unknown and unresolved "
-            "values remain visibly unavailable."
-        ),
+        heading="DOI",
+        lede="Review current opportunities. Open a case for the details and next steps.",
         body=body,
         csrf_token=csrf_token,
         presentation=presentation,
@@ -4467,46 +4396,46 @@ def render_review(data: object, csrf_token: str, *, presentation: bool = False) 
                 except RegistryLookupError:
                     _fail("DASHBOARD_REVIEW_REASON_INVALID")
         detail = "/sales-credit/" if domain == "SALES_CREDIT" else "/doi/"
+        domain_label = "Sales Credit" if domain == "SALES_CREDIT" else "DOI"
+        next_step = {
+            "RECORD_MANAGER_OUTCOME": "Record a manager decision",
+            "SELECT_OVERLAP_SCENARIO": "Choose one option",
+            "REVIEW_EXACT_REASON": "Review the flagged details",
+        }[required_action]
+        view_only = (
+            '<p class="dashboard-meta dashboard-case-type">View only</p>'
+            if not action_available else ""
+        )
         rows.append(
             (
-                _h(domain),
                 (
                     f'<a data-ssa-dashboard-id="{_h(subject_id)}" '
-                    f'href="{detail}{_h(subject_id)}">{_h(subject_id)}</a>'
+                    f'href="{detail}{_h(subject_id)}">{_h(order_id)}</a>'
+                    f'<p class="dashboard-meta dashboard-case-type">{_h(domain_label)}</p>'
                 ),
-                _h(_display(accepted_reasons)),
-                _h(system_state),
-                _h(source_state),
-                _h(required_action),
-                _h("Action available on detail" if action_available else "Read-only"),
-                f'<a href="/audit/{_h(audit_kind)}/{_h(subject_id)}">Audit history</a>',
+                _h(next_step),
+                (
+                    f'<a class="dashboard-case-link" href="{detail}{_h(subject_id)}" '
+                    f'aria-label="View {domain_label} case for {_h(order_id)}">View case</a>'
+                    f'{view_only}'
+                ),
             )
         )
     body = f"""<section class="dashboard-panel"
  data-ssa-dashboard-current-projection="human-review">
 {_table(
-    caption="Current unresolved review items with domain authority preserved",
-    headers=(
-        "Domain",
-        "Current subject",
-        "Exact reasons",
-        "System state",
-        "Source completeness",
-        "Required human action",
-        "Permitted local action",
-        "History",
-    ),
+    caption="Needs your review",
+    headers=("Order", "Next step", "Action"),
     rows=rows,
     selector="human-review-current-projections",
+    empty_message="No cases need your review.",
+    compact=True,
 )}
 </section>"""
     return _page(
         route_name="review",
-        heading="Current human-review queue",
-        lede=(
-            "One presentation layer, separate authorities: Sales Credit manager outcomes "
-            "never become DOI human facts, and vice versa."
-        ),
+        heading="Human review",
+        lede="Cases that need a decision or a closer look. Open a case to review the details.",
         body=body,
         csrf_token=csrf_token,
         presentation=presentation,
@@ -4925,21 +4854,32 @@ def _database(value: object) -> dict[str, object]:
     return database
 
 
-def _safety_table(value: object) -> str:
+def _safety_table(value: object, *, plain_language: bool = False) -> str:
     counters = _zero_safety_counters(value, "DASHBOARD_SAFETY_COUNTERS_INVALID")
+    labels = {
+        "EXTERNAL_MUTATION_REQUEST_COUNT": "Requests to change external systems",
+        "EXTERNAL_PRODUCTION_SYSTEM_ACCESS_COUNT": "Access to external live systems",
+        "NON_LOCALHOST_RUNTIME_REQUEST_COUNT": "Requests outside this PC",
+        "NON_SYNTHETIC_FIXTURE_COUNT": "Test records that are not fictional",
+        "PRODUCTION_MUTATION_REQUEST_COUNT": "Requests to change live systems",
+        "PRODUCTION_SYSTEM_ACCESS_COUNT": "Access to live systems",
+        "REAL_CUSTOMER_DATA_COUNT": "Real customer data",
+        "REAL_CUSTOMER_IDENTITY_COUNT": "Real customer identities",
+        "SECRET_MATERIAL_COUNT": "Secrets detected",
+    } if plain_language else {}
     rows = [
-        (_h(name), _h(count))
+        (_h(labels.get(name, name)), _h(count))
         for name, count in sorted(counters.items())
     ]
     return _table(
-        caption="All nine current safety counters",
-        headers=("Counter", "Value"),
+        caption="Current safety checks" if plain_language else "All nine current safety counters",
+        headers=("Check", "Count") if plain_language else ("Counter", "Value"),
         rows=rows,
         selector="system-safety-counters",
     )
 
 
-def _database_summary(database: Mapping[str, object]) -> str:
+def _database_summary(database: Mapping[str, object], *, plain_language: bool = False) -> str:
     latest = database["latest_backup"]
     latest_status = (
         "No verified backup receipt"
@@ -4958,22 +4898,50 @@ def _database_summary(database: Mapping[str, object]) -> str:
             f"{_display(_restore(latest_restore)['status'])}"
         )
     )
-    return _definition_list(
-        (
-            ("Database status", database["database_status"]),
-            ("Schema version", database["schema_version"]),
-            ("Privacy-safe location class", database["database_location_class"]),
-            ("Database size (bytes)", database["database_size_bytes"]),
-            ("Quick check", database["quick_check"]),
-            ("Integrity check", database["integrity_check"]),
-            ("Foreign keys", database["foreign_key_status"]),
-            ("Projection verification", database["projection_status"]),
-            ("Latest verified backup", latest_status),
-            ("Latest restore receipt", latest_restore_status),
-            ("Verification observed at", database["verification_observed_at"]),
-            ("Safety counters observed at", database["safety_observed_at"]),
-        )
+    fields = (
+        ("Database status", database["database_status"]),
+        ("Schema version", database["schema_version"]),
+        ("Privacy-safe location class", database["database_location_class"]),
+        ("Database size (bytes)", database["database_size_bytes"]),
+        ("Quick check", database["quick_check"]),
+        ("Integrity check", database["integrity_check"]),
+        ("Foreign keys", database["foreign_key_status"]),
+        ("Projection verification", database["projection_status"]),
+        ("Latest verified backup", latest_status),
+        ("Latest restore receipt", latest_restore_status),
+        ("Verification observed at", database["verification_observed_at"]),
+        ("Safety counters observed at", database["safety_observed_at"]),
     )
+    if plain_language:
+        labels = {
+            "Database status": "Status",
+            "Schema version": "Database format version",
+            "Privacy-safe location class": "Storage",
+            "Integrity check": "Full integrity check",
+            "Foreign keys": "Record links",
+            "Projection verification": "Current records match history",
+            "Latest restore receipt": "Latest restore",
+            "Verification observed at": "Last database check",
+            "Safety counters observed at": "Last safety check",
+        }
+        values = {
+            "HEALTHY": "Healthy",
+            "UNHEALTHY": "Needs attention",
+            "LOCAL_APPLICATION_DATA": "App data on this PC",
+            "LOCAL_TEMPORARY": "Temporary storage on this PC",
+            "LOCAL_FILESYSTEM": "On this PC",
+            "ok": "Passed",
+            "OK": "Passed",
+            "NOT_REQUESTED": "Not run",
+            "VIOLATIONS": "Needs attention",
+            "DRIFT": "Out of sync — needs review",
+            "No verified backup receipt": "No verified backup recorded",
+            "No restore receipt": "No restore recorded",
+        }
+        fields = tuple(
+            (labels.get(label, label), values.get(value, value)) for label, value in fields
+        )
+    return _definition_list(fields)
 
 
 def render_system(data: object, csrf_token: str, *, presentation: bool = False) -> bytes:
@@ -5037,14 +5005,33 @@ def render_system(data: object, csrf_token: str, *, presentation: bool = False) 
         _fail("DASHBOARD_SYSTEM_STATUS_COHERENCE_INVALID")
     extension = _extension(root["extension"])
     recent_errors = _safe_errors(root["recent_safe_errors"])
+    extension_label, extension_description = {
+        "EXPECTED_PACKAGE_ONLY": (
+            "Package available", "Installation and activity have not been confirmed."
+        ),
+        "LAST_SEEN_HEALTHY": (
+            "Recently seen", "A matching extension version checked in recently."
+        ),
+        "LAST_SEEN_STALE": (
+            "Not seen recently", "The last matching extension check-in is out of date."
+        ),
+        "VERSION_MISMATCH": (
+            "Version mismatch", "The last extension check-in used a different version."
+        ),
+        "UNKNOWN": (
+            "Not confirmed", "No package or usable activity record is available."
+        ),
+    }[extension["state"]]
+    service_label = "Checks passed" if service_status == "PASS" else "Needs attention"
+    database_label = "Healthy" if database["database_status"] == "HEALTHY" else "Needs attention"
     benchmark_rows = [
         (_h(label), _h(benchmark[member]), _h(unit))
         for member, label, unit in (
-            ("unique_evaluations", "Unique evaluations", "evaluations"),
-            ("exact_replays", "Exact replays", "requests"),
-            ("median_latency_ms", "Median latency", "milliseconds"),
-            ("p95_latency_ms", "P95 latency", "milliseconds"),
-            ("throughput_per_second", "Throughput", "calls/second"),
+            ("unique_evaluations", "New evaluations", "evaluations"),
+            ("exact_replays", "Repeated requests", "requests"),
+            ("median_latency_ms", "Typical response time (median)", "milliseconds"),
+            ("p95_latency_ms", "95% of responses within", "milliseconds"),
+            ("throughput_per_second", "Processing rate", "calls/second"),
             ("database_size_bytes", "Database size", "bytes"),
             ("verified_backup_sha256", "Verified backup", "SHA-256"),
         )
@@ -5059,70 +5046,72 @@ def render_system(data: object, csrf_token: str, *, presentation: bool = False) 
         for item in recent_errors
     ]
     body = f"""<section class="dashboard-grid">
-<article class="dashboard-card" data-ssa-dashboard-card="service-status"><h2>Service status</h2>
-<strong class="dashboard-value">{_h(root['service_status'])}</strong>
-<p>Owned service response at {_h(root['service_origin'])}.</p>
-<p class="dashboard-volatile">Owned PID: {_h(root['owned_pid'])}</p></article>
+<article class="dashboard-card" data-ssa-dashboard-card="service-status"><h2>App status</h2>
+<strong class="dashboard-value">{_h(service_label)}</strong>
+<p>Local address: {_h(root['service_origin'])}</p>
+<p class="dashboard-volatile">Process ID: {_h(root['owned_pid'])}</p></article>
 <article class="dashboard-card" data-ssa-dashboard-card="database-status"><h2>Database health</h2>
-<strong class="dashboard-value">{_h(_display(database['database_status']))}</strong>
-<a href="/system/database">Verification details</a></article>
-<article class="dashboard-card" data-ssa-dashboard-card="extension-status"><h2>Extension status</h2>
-{_state_badge(extension['state'])}
-<p>Package presence alone never means installed or running.</p>
-<a href="/system/extension">Status evidence</a></article>
-<article class="dashboard-card" data-ssa-dashboard-card="network-policy"><h2>Network policy</h2>
-<strong class="dashboard-value">{_h(root['network_policy'])}</strong>
-<p>Runtime external network requests: 0.</p></article>
+<strong class="dashboard-value">{_h(database_label)}</strong>
+<a href="/system/database">View checks</a></article>
+<article class="dashboard-card" data-ssa-dashboard-card="extension-status">
+<h2>Browser extension</h2>
+{_state_badge(extension['state'], label=extension_label)}
+<p>{_h(extension_description)}</p>
+<a href="/system/extension">View details</a></article>
+<article class="dashboard-card" data-ssa-dashboard-card="network-policy"><h2>Connections</h2>
+<strong class="dashboard-value">This PC only</strong>
+<p>No external network requests recorded.</p></article>
 </section>
 <section class="dashboard-split">
-<article class="dashboard-panel"><h2>Version identity</h2>
+<article class="dashboard-panel"><h2>App versions</h2>
 {_definition_list(
     (
-        ("Application view", root["application_schema_version"]),
+        ("App data format", root["application_schema_version"]),
         ("Application version", root["application_version"]),
         ("Build", root["build_version"]),
         ("API response", root["api_schema_version"]),
         ("API request", root["api_request_schema_version"]),
-        ("Portal DOM", root["dom_schema_version"]),
-        ("Control Center", root["schema_version"]),
-        ("Database schema", database["schema_version"]),
-        ("Runtime directory", root["runtime_directory_class"]),
+        ("Page format", root["dom_schema_version"]),
+        ("Dashboard", root["schema_version"]),
+        ("Database format", database["schema_version"]),
+        ("App storage", "Managed folder on this PC"),
     )
 )}</article>
-<article class="dashboard-panel"><h2>Database summary</h2>{_database_summary(database)}</article>
+<article class="dashboard-panel"><h2>Database checks</h2>
+{_database_summary(database, plain_language=True)}</article>
 </section>
 <section class="dashboard-panel" data-ssa-dashboard-card="safety-counters">
-<h2>Safety boundary</h2>{_safety_table(database['safety_counters'])}</section>
+<h2>Safety checks</h2>
+{_safety_table(database['safety_counters'], plain_language=True)}</section>
 <section class="dashboard-panel" data-ssa-dashboard-card="benchmark-reference">
-<h2>Committed Milestone 4 benchmark reference</h2>
-<p>Reference version: {_h(benchmark['version'])}. This fixed baseline is not a live result.</p>
+<h2>Performance reference</h2>
+<p>Results saved from an earlier test run, not current performance.</p>
+<p>Reference: {_h(benchmark['version'])}</p>
 {_table(
-    caption="Committed Milestone 4 benchmark baseline and verified backup reference",
+    caption="Saved test results and verified backup",
     headers=("Measure", "Value", "Unit"),
     rows=benchmark_rows,
     selector="system-benchmark-reference",
 )}</section>
 <section class="dashboard-panel" data-ssa-dashboard-card="recent-safe-errors">
-<h2>Recent safe errors</h2>
+<h2>Recent errors</h2>
 {_table(
-    caption="Bounded recent error metadata; no raw payload, stack trace, or path",
-    headers=("Observed", "Code", "Category", "Retryable"),
+    caption="Recent error summaries; private details are omitted",
+    headers=("Time", "Error code", "Type", "Can retry"),
     rows=error_rows,
     selector="system-recent-safe-errors",
+    empty_message="No recent errors recorded.",
 )}</section>
-<section class="dashboard-panel"><h2>Operations</h2>
-<nav class="dashboard-nav" aria-label="System operations">
-<a href="/system">Refresh health</a><a href="/system/database">Database verification</a>
-<a href="/system/backups">Verified backups</a><a href="/system/telemetry">Telemetry</a></nav>
-<p>Restore and reset remain separate strongly confirmed maintenance workflows and are
-not dashboard actions.</p></section>"""
+<section class="dashboard-panel"><h2>Maintenance</h2>
+<nav class="dashboard-nav" aria-label="System maintenance">
+<a href="/system">Refresh status</a><a href="/system/database">Database checks</a>
+<a href="/system/backups">Backups</a>
+<a href="/system/telemetry">Technical counts and diagnostics</a></nav>
+<p>Restoring or resetting data is handled separately and requires confirmation.</p></section>"""
     return _page(
         route_name="system",
-        heading="Local system health",
-        lede=(
-            "Privacy-safe operational evidence for the owned loopback service, schema-4 "
-            "database, expected extension package, and safety boundary."
-        ),
+        heading="System status",
+        lede="Check the app, database, browser extension, and local connections.",
         body=body,
         csrf_token=csrf_token,
         presentation=presentation,

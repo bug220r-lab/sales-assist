@@ -60,7 +60,20 @@
     facts(root,{...data,threads:undefined,proposal:undefined,local_draft:undefined});
   }
   async function loadHistory() {
-    const data=await get({view:'history',offset:String(state.historyOffset)});cards(data.summary.counts);$('history-summary').replaceChildren(el('pre',pretty(data.summary)));
+    const data=await get({view:'history',offset:String(state.historyOffset)});cards(data.summary.counts);
+    const counts=data.summary.counts;
+    const headline=counts.included
+      ? counts.included+' writing '+(counts.included===1?'example':'examples')+' ready to review'
+      : counts.imports?'No writing examples ready yet':'No writing history imported yet';
+    const summary=el('p');summary.append(el('strong',headline));
+    const notes=[];
+    if(counts.held)notes.push(counts.held+' '+(counts.held===1?'example needs':'examples need')+' a closer look before inclusion.');
+    if(counts.excluded)notes.push(counts.excluded+' '+(counts.excluded===1?'example was':'examples were')+' excluded.');
+    if(!counts.imports)notes.push('Load the synthetic demo or import synthetic history to begin.');
+    const details=el('details');details.append(el('summary','Technical details'),el('pre',pretty(data.summary)));
+    $('history-summary').replaceChildren(summary);
+    if(notes.length)$('history-summary').append(el('p',notes.join(' ')));
+    $('history-summary').append(details);
     $('history-candidates').replaceChildren();for(const item of data.candidates.items){const d=el('details');d.append(el('summary',item.thread_id+' · '+item.status+' · '+(item.reasons||[]).join(', ')),el('pre',item.candidate_text||''));facts(d,item);$('history-candidates').append(d);}
     $('history-page-info').textContent=(data.candidates.total?state.historyOffset+1:0)+'–'+Math.min(state.historyOffset+data.candidates.items.length,data.candidates.total)+' of '+data.candidates.total;$('history-previous').disabled=state.historyOffset===0;$('history-next').disabled=state.historyOffset+50>=data.candidates.total; $('style-profile').replaceChildren(el('pre',pretty(data.profile)));$('profile-json').value=pretty(data.profile);
   }
