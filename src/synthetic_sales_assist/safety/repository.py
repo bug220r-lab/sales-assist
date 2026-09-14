@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -120,6 +121,12 @@ AUTHORED_M6_EXTENSION_SUFFIXES = frozenset(
     {".css", ".html", ".js", ".json", ".md", ".ps1", ".txt"}
 )
 MAX_AUTHORED_M6_ASSET_BYTES = 512 * 1024
+COMPANION_TEST_REFERENCE_HASHES = {
+    "tests/fixtures/campaign_replies/companion-reference/replies-core.js":
+        "0c2107f51084c547721d168eac0055a61e53b34e3eacbefd8d239ab8b32cd577",
+    "tests/fixtures/campaign_replies/companion-reference/drafts-core.js":
+        "15fa6e90a0475f95d85c46cfd9c3b50896096af2a0c8f91029eb4ae2c9cda4e1",
+}
 FORBIDDEN_CAPABILITY_PATH_PARTS = frozenset(
     {
         "automation",
@@ -307,6 +314,15 @@ def scan_secret_material(root: Path) -> tuple[RepositoryFinding, ...]:
             continue
         for category, pattern in SECRET_PATTERNS:
             for match in pattern.finditer(text):
+                # A PowerShell conversion from a variable is code, not a literal
+                # credential. Quoted values and literal -String operands still scan.
+                tail = text[match.start():].splitlines()[0]
+                if category == "credential_assignment" and re.fullmatch(
+                    r"Token\s*=\s*ConvertTo-SecureString\s+-String\s+"
+                    r"\$[A-Za-z_][A-Za-z0-9_]*\s+-AsPlainText\s+-Force\s*",
+                    tail,
+                ):
+                    continue
                 findings.add(
                     RepositoryFinding(category, relative, _line_number(text, match.start()))
                 )
@@ -338,6 +354,13 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
         relative = path.relative_to(root).as_posix() if _is_within(root, path) else path.name
         if path.is_symlink() or not _is_within(root, path):
             findings.add(RepositoryFinding("linked_or_external_path", relative, 0))
+            continue
+        # These immutable, test-only contracts contain legacy reference strings.
+        # Any changed bytes or different location receives the normal full scan.
+        expected_reference_hash = COMPANION_TEST_REFERENCE_HASHES.get(relative)
+        if (expected_reference_hash is not None
+                and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES
+                and hashlib.sha256(path.read_bytes()).hexdigest() == expected_reference_hash):
             continue
         text = _read_text(path)
         approved_extension_manifest = path.name.lower() == "manifest.json" and (

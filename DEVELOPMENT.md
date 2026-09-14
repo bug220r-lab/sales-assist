@@ -3,7 +3,7 @@
 The optional [Campaign Replies companion](docs/campaign-replies.md) adds a dedicated
 read-only review page for an independently running local dashboard. It is disabled by
 default and isolated from the synthetic application services and database. Its bounded
-user-requested presentation exception is recorded in [ADR 0031](docs/adr/0031-local-campaign-review-companion.md).
+user-requested presentation exception is recorded in [ADR 0033](docs/adr/0033-local-campaign-review-companion.md).
 
 This repository is a synthetic-only local application. Milestone 7 adds a browser-based local
 Control Center over the existing Shared Domain Engine, Sales Credit and DOI rule packs, schema-4

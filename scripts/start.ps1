@@ -54,7 +54,7 @@ try {
         if ($AllowSchema4Upgrade) { $prepareArguments += '--allow-schema4-upgrade' }
         $preparationLease = Enter-SsaLeaseCleanupLock -LockPath $paths.Lock
         try {
-            & $python -I @prepareArguments
+            & $python -B -I @prepareArguments
             if ($LASTEXITCODE -ne 0) { throw 'DEMO_PREPARATION_FAILED' }
         }
         finally {
@@ -65,7 +65,7 @@ try {
     }
 
     $argumentLine = @(
-        '-s -E -m synthetic_sales_assist.portal',
+        '-B -s -E -m synthetic_sales_assist.portal',
         '--data-dir ' + (ConvertTo-SsaQuotedProcessArgument $root),
         '--host 127.0.0.1',
         '--port ' + $Port,

@@ -5,6 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from html.parser import HTMLParser
 
+from synthetic_sales_assist import __version__ as APPLICATION_VERSION
 from synthetic_sales_assist.application.control_center import (
     CONTROL_CENTER_SCHEMA_VERSION,
     DENOMINATOR_REGISTRY_VERSION,
@@ -461,7 +462,7 @@ def _views() -> dict[str, dict[str, object]]:
             "api_request_schema_version": "synthetic-sales-assist-api-request/v1",
             "api_schema_version": "synthetic-sales-assist-api/v1",
             "application_schema_version": "synthetic-sales-assist-application/v1",
-            "application_version": "0.1.4",
+            "application_version": APPLICATION_VERSION,
             "benchmark_reference": M4_BENCHMARK_REFERENCE.to_dict(),
             "build_version": "synthetic-sales-assist-m8/v1",
             "database": _database(),
@@ -1405,6 +1406,7 @@ class DashboardRenderingTests(unittest.TestCase):
     def test_system_and_telemetry_render_closed_operational_evidence(self) -> None:
         views = _views()
         system = render_dashboard_page("system", views["system"], CSRF).decode("utf-8")
+        self.assertIn(f"<dt>Application version</dt><dd>{APPLICATION_VERSION}</dd>", system)
         telemetry = render_dashboard_page(
             "telemetry",
             views["telemetry"],
@@ -1918,6 +1920,14 @@ class DashboardRenderingTests(unittest.TestCase):
                         view,
                         ("application_version",),
                         "9.9.9",
+                    ),
+                ),
+                (
+                    "prior-release-application-version",
+                    lambda view: _replace_path(
+                        view,
+                        ("application_version",),
+                        "0.1.4",
                     ),
                 ),
                 (

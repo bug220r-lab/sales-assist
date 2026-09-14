@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "synthetic-sales-assist"
-version = "0.1.4"
+version = "0.2.0"
 description = "Synthetic-only Sales Assist rule packs, SQLite persistence, and local CLI"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -26,6 +26,10 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"synthetic_sales_assist.campaign_replies" = ["data/*.json"]
+"synthetic_sales_assist.portal" = ["campaign_workspace.js", "campaign_workspace.css"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"

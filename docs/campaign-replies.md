@@ -42,5 +42,25 @@ Sales Assist does not import customer records, access companion credentials,
 query its data API, or start another polling or publishing process. Review
 timestamps, saved receipts and warnings come from the companion itself.
 The synthetic demo release does not bundle the companion or customer data.
-See [ADR 0031](adr/0031-local-campaign-review-companion.md) for the scope and
+See [ADR 0033](adr/0033-local-campaign-review-companion.md) for the scope and
 browser isolation contract.
+
+## Combined Windows application
+
+The **Campaigns**, **Replies**, and **Writing history** pages use generated
+synthetic records in the application's separate campaign workspace. **Campaign
+Replies** opens the existing workstation companion. Both are available from
+the navigation; customer records from the companion are not imported into the
+synthetic workspace.
+
+The Windows launcher may choose an available alternate port when its default
+port is occupied. The synthetic application remains usable on that port, while
+the companion page stays disconnected. Leave an existing listener running;
+enabling the embedded companion requires a deliberate later launch on the
+canonical origin described above.
+
+`BACKUP.cmd` covers the application's core and synthetic campaign databases.
+It does not back up the external companion, Help Scout scripts, credentials,
+draft artifacts, or publishing ledger. App upgrades, reset, stop, and removal
+do not manage that independent workflow. Preserve those files and their
+existing backup and startup arrangements separately.

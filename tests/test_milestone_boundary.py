@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import re
 import unittest
 from pathlib import Path
@@ -11,6 +12,8 @@ from synthetic_sales_assist.safety.repository import (
     AUTHORED_M5_MARKER,
     AUTHORED_M5_PORTAL_ROOTS,
     AUTHORED_M5_PORTAL_SUFFIXES,
+    COMPANION_TEST_REFERENCE_HASHES,
+    MAX_AUTHORED_M5_ASSET_BYTES,
 )
 
 
@@ -303,7 +306,7 @@ class MilestoneBoundaryTests(unittest.TestCase):
                 self.assertFalse(path.is_symlink())
 
     def test_no_business_migration_or_unapproved_user_interface_artifact_exists(self) -> None:
-        """Admit only marked Milestone 5 portal assets; preserve schema version four."""
+        """Admit marked portal assets and pinned test references; preserve schema four."""
 
         migrations = ROOT / "migrations"
         self.assertEqual(
@@ -328,6 +331,15 @@ class MilestoneBoundaryTests(unittest.TestCase):
                     artifacts.append(relative)
                     continue
                 if suffix not in forbidden_suffixes:
+                    continue
+                expected_reference_hash = COMPANION_TEST_REFERENCE_HASHES.get(relative)
+                if (
+                    expected_reference_hash is not None
+                    and not path.is_symlink()
+                    and path.resolve().is_relative_to(ROOT.resolve())
+                    and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES
+                    and hashlib.sha256(path.read_bytes()).hexdigest() == expected_reference_hash
+                ):
                     continue
                 approved_root = any(
                     relative == root or relative.startswith(root + "/")

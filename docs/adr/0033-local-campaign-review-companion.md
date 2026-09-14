@@ -1,4 +1,4 @@
-# ADR 0031: Opt-in local campaign review companion
+# ADR 0033: Opt-in local campaign review companion
 
 ## Status and authorization
 
@@ -45,9 +45,27 @@ local-service guidance remain available if the frame cannot load.
 
 ## Verification and limits
 
-`tests.test_campaign_replies` covers default-off behavior, exact enablement,
+`tests.test_campaign_companion` covers default-off behavior, exact enablement,
 fixed origin, navigation, sandbox, route and CSP limits, and absence of backend
 calls. Existing portal security and complete regressions remain required.
 The optional companion is not included in the synthetic demo package and its
 service is not started by the portal. Review records must never enter fixtures,
 logs, repository files, or the synthetic database.
+
+## Integration with the Windows application
+
+The synthetic campaign workspace (ADR 0031) and Windows packaging (ADR 0032)
+retain their own persistence and lifecycle contracts. Both navigation
+implementations expose the synthetic workspace and this companion. The
+companion route returns before lazy workspace initialization, so viewing it
+cannot create or open the synthetic campaign database.
+
+Automatic alternate-port selection does not relax the exact origin check.
+The application backup includes its two synthetic databases only; external
+companion data and Help Scout workflow files are outside all application
+backup, reset, upgrade, and removal operations. The original companion ADR
+was renumbered from 0031 to 0033 when combining the independent branches.
+
+`tests.test_campaign_companion_integration` verifies combined navigation,
+lazy-storage isolation, and the unchanged CSP boundary on alternate ports
+using disposable synthetic stores and an ephemeral listener only.

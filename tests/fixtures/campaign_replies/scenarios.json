@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "profile": "synthetic",
+  "synthetic_fixture": true,
+  "scenario_scope": "Independent adapter/service acceptance cases; not implemented test results",
+  "scenarios": [
+    {
+      "id": "SYN-fresh",
+      "given": "No intent/receipt/hold; valid identity, no history, ownership available",
+      "expected": "one_simulated_post",
+      "expected_new_creation_posts": 1
+    },
+    {
+      "id": "SYN-accepted",
+      "given": "Matching immutable intent, 201 receipt and verification",
+      "expected": "skip_already_accepted",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-unknown",
+      "given": "Intent exists without receipt or approved review-hold evidence",
+      "expected": "block_and_reconcile",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-history_hold",
+      "given": "Only a valid history hold exists",
+      "expected": "hold",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-address_hold",
+      "given": "Untouched address/possible-duplicate review record",
+      "expected": "hold_without_address_correction",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-unverified_receipt",
+      "given": "Intent and 201 receipt exist; verification missing",
+      "expected": "read_only_reconciliation",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-receipt_without_intent",
+      "given": "Receipt exists but its immutable intent is missing",
+      "expected": "reject_inconsistent_import",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-changed_binding",
+      "given": "Intent recipient, payload hash, or campaign binding was altered",
+      "expected": "reject_inconsistent_import",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-changed_review_evidence",
+      "given": "Review-hold intent/error hash does not match source bytes",
+      "expected": "reject_inconsistent_import",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-report_only",
+      "given": "A results row says accepted but original ledger is unavailable",
+      "expected": "block_continuation",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-ownership_unavailable",
+      "given": "Copied lock filename or another PC may still write",
+      "expected": "block_live_continuation",
+      "expected_new_creation_posts": 0
+    },
+    {
+      "id": "SYN-lost_response_rerun",
+      "given": "Prior one-time request has intent and uncertain result",
+      "expected": "no_retry",
+      "expected_new_creation_posts": 0
+    }
+  ]
+}

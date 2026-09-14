@@ -18,6 +18,7 @@ from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
+from synthetic_sales_assist import __version__
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
@@ -953,7 +954,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
         status = self._json(result)
         self.assertEqual(set(status), STATUS_MEMBERS)
         self.assertEqual(status["state"], "STOPPED")
-        self.assertEqual(status["app_version"], "0.1.4")
+        self.assertEqual(status["app_version"], __version__)
         self.assertEqual(status["build_version"], "synthetic-sales-assist-m8/v1")
         self.assertIsNone(status["database_schema_version"])
         self.assertEqual(status["database_size_bytes"], 0)

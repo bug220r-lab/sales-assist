@@ -1,0 +1,49 @@
+Sales Assist 0.2.0 - Windows x64 application
+
+Extract the whole ZIP into a normal local folder, then double-click START.cmd.
+Sales Assist opens in your default browser. Keep all extracted files together.
+File verification takes time; keep the startup window open until the browser opens.
+Python 3.12.14 and timezone data 2026.3 are included. No Python installation, Codex,
+administrator account, dependency download or source command is needed at runtime.
+Supported target: Windows 10/11 x64 with Windows PowerShell 5.1 and a local browser.
+
+The first start creates fictional Sales Credit, DOI, campaign and reply records.
+The Overview navigation opens Campaigns, Replies and Writing history. All data and
+actions are synthetic; simulated outreach does not send email or create remote drafts.
+MANAGER_DEMO.md walks through the integrated application in ten minutes.
+
+Campaign Replies is a separate optional workstation companion view. It is
+disconnected by default and is not included in the synthetic package or its backups.
+See docs/campaign-replies.md in the source for the existing-companion setup.
+An automatic alternate-port launch leaves that companion disconnected.
+
+START.cmd opens the application; STATUS.cmd reports its state; STOP.cmd stops its
+owned local service. Close the browser whenever you like; use STOP.cmd to stop the
+service. Reopening the same installation preserves your saved drafts and history.
+Double-clicking START.cmd again reopens the running application. If the default local
+port is occupied by another app, Sales Assist selects an available port automatically.
+If startup fails, the command window remains open with the error. Do not replace
+runtime files or point this installation at an unrelated database.
+
+BACKUP.cmd creates verified backups of both the order database and campaign workspace.
+The output identifies the backup manifest containing both file hashes. Campaign backups
+are separate SQLite snapshots; the manifest does not claim one cross-database transaction.
+RESET.cmd resets only the Sales Credit/DOI sample records, after backup; it preserves
+campaign drafts and writing history. Use a newly extracted copy for a fresh whole-app demo.
+UPGRADE.cmd requires an explicit disposable data root and verified backups first.
+
+Each extracted installation has its own default data selection under:
+%LOCALAPPDATA%\SyntheticSalesAssist\completion\<release-id>\<installation-key>\demo-data
+The exact release identity is in release-build.json. Data is outside the application
+folder. Moving the application creates a fresh default selection; preserve the original
+folder if you want to continue the same data without selecting a directory explicitly.
+
+REMOVE.cmd removes only unchanged application files and preserves data, backups and
+modified/unknown files. Its own launcher and private python folder remain so the running
+operation can exit safely. After exit, you may remove the retained installation folder
+yourself if nothing in it is needed. Do not remove the external data/backups by mistake.
+
+The optional Chrome side-panel extension is unchanged. This application does not require
+installing it to use Campaigns, Replies or Writing history. See KNOWN_LIMITATIONS.md.
+The external release directory's FINAL_STATUS records actual validation; this guide
+does not claim human acceptance or clean-machine testing.

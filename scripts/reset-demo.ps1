@@ -51,6 +51,13 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'OWNED_STOP_FAILED' }
     $serviceMaintenanceLock = Enter-SsaLeaseCleanupLock -LockPath $paths.Lock
     if ([IO.File]::Exists($paths.Receipt)) { throw 'RUNTIME_RECEIPT_STILL_PRESENT' }
+    if ($SeedDemo) {
+        $installation = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+        $demoTool = Join-Path $installation 'tools\release_support.py'
+        & $python -B -I $demoTool backup --install-root $installation `
+            --data-dir $root --backup-prefix pre-reset
+        if ($LASTEXITCODE -ne 0) { throw 'WHOLE_APP_BACKUP_REQUIRED_BEFORE_RESET' }
+    }
 
     $allowedRemovals = @(
         [string]$paths.Database
@@ -84,7 +91,7 @@ try {
     if ($SeedDemo) {
         $installation = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
         $demoTool = Join-Path $installation 'tools\release_support.py'
-        & $python -I $demoTool reseed --install-root $installation --data-dir $root
+        & $python -B -I $demoTool reseed --install-root $installation --data-dir $root
         if ($LASTEXITCODE -ne 0) { throw 'RESET_DEMO_SEED_FAILED' }
     }
     try { $serviceMaintenanceLock.Unlock(64, 1) } catch { }
