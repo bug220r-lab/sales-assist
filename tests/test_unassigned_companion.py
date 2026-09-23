@@ -190,17 +190,17 @@ class CompanionTests(unittest.TestCase):
 
     def test_authentication_failure_stops_remaining_reads_and_sanitizes_error(self):
         fake = FakeReader((101, 102))
-        secret = "synthetic-secret-never-log"
+        canary = "synthetic-secret-never-log"
         fake.fresh[101] = reader.AuthenticationError("Authentication unavailable")
         report = cli.scan(self.cfg, "ecs", max_contexts=None, reader=fake)
         self.assertEqual((report["read_failed"], report["unread"]), (1, 1))
         self.assertNotIn(("precheck", 102), fake.calls)
         fake2 = FakeReader((101,))
-        fake2.contexts[101] = RuntimeError(secret)
+        fake2.contexts[101] = RuntimeError(canary)
         report2 = cli.scan(self.cfg, "ecs", max_contexts=None, reader=fake2)
         for path in self.run_dir(report2).rglob("*"):
             if path.is_file():
-                self.assertNotIn(secret, path.read_text(encoding="utf-8"))
+                self.assertNotIn(canary, path.read_text(encoding="utf-8"))
 
     def test_report_escapes_customer_markup_and_never_loads_remote_content(self):
         fake = FakeReader((101,))

@@ -319,8 +319,8 @@ class ReadOnlyTransport:
                     raise ApiReadError("rate_limit_wait_exceeds_budget")
                 self._sleeper(delay)
                 waited += delay
-            token = self.credentials.token()
-            req = urllib.request.Request(url, headers={"Authorization": "Bearer " + token, "Accept": "application/json"}, method="GET")
+            bearer = self.credentials.token()
+            req = urllib.request.Request(url, headers={"Authorization": "Bearer " + bearer, "Accept": "application/json"}, method="GET")
             try:
                 with self._opener.open(req, timeout=35) as response:
                     if response.status != 200:
