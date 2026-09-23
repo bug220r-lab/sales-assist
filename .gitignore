@@ -73,3 +73,8 @@ protection-manifests/
 suppression-lists/
 send-receipts/
 production-audit/
+
+# Optional Unassigned companion: live setup and records stay outside this checkout.
+*.dpapi
+companions/unassigned_inbox/config.local.json
+companions/unassigned_inbox/runtime/
