@@ -4,6 +4,7 @@ The setup harness substitutes only the external Python command. It never launche
 an application, reads an owner policy, contacts an API or changes execution policy.
 PowerShell's Bypass argument is scoped to the test child process.
 """
+
 from __future__ import annotations
 
 import ctypes
@@ -21,97 +22,119 @@ from synthetic_sales_assist.safety.repository import scan_prohibited_repository_
 ROOT = Path(__file__).resolve().parents[1]
 POWERSHELL = shutil.which("powershell") or shutil.which("pwsh")
 
-STATIC_CHECK = r'''
-$ErrorActionPreference = 'Stop'
-$PackageRoot = $env:SSA_TEST_REPOSITORY
-. (Join-Path $PackageRoot 'scripts\lifecycle-common.ps1')
-$checks = 0
-function Check([bool]$condition, [string]$label) {
-    if (-not $condition) { throw ('LAUNCHER_STATIC_CHECK_FAILED:' + $label) }
-    $script:checks++
-}
-$asts = @{}
-foreach ($file in Get-ChildItem -LiteralPath (Join-Path $PackageRoot 'scripts') -Filter '*.ps1') {
-    $tokens = $null; $errors = $null
-    $ast = [Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors)
-    Check ($errors.Count -eq 0) ('parse ' + $file.Name)
-    $asts[$file.Name] = $ast
-}
-$start = [IO.File]::ReadAllText((Join-Path $PackageRoot 'scripts\start.ps1'))
-$demo = [IO.File]::ReadAllText((Join-Path $PackageRoot 'scripts\demo.ps1'))
-Check ($start.IndexOf('$dailyPolicySupport check') -lt $start.IndexOf('Initialize-SsaDirectories')) 'policy before directories'
-Check ($start.IndexOf('$dailyPolicySupport check') -lt $start.IndexOf('$child = Start-Process')) 'policy before launch'
-Check ($start.Contains('--doi-owner-confirmations ')) 'required policy argument'
-Check ($start.Contains('-WindowStyle Hidden')) 'hidden background service'
-Check ($start.Contains('--host 127.0.0.1')) 'loopback binding'
-Check ($start.IndexOf('$dailyPolicySupport record') -gt $start.IndexOf('PROCESS_OWNERSHIP_MISMATCH')) 'binding after ownership'
-Check ($demo.IndexOf('$dailyPolicySupport check') -lt $demo.IndexOf('$statusLines =')) 'preflight before reopen'
-Check ($demo.IndexOf('$dailyPolicySupport verify-running') -lt $demo.IndexOf('Start-Process -FilePath')) 'binding before browser'
-Check ($demo.Contains('[Net.Sockets.SocketError]::AddressAlreadyInUse')) 'safe occupied-port fallback'
-Check ($demo.Contains('if ($portWasBound -and $Port -ne [int]$currentStatus.port)')) 'explicit port mismatch'
-Check ($demo.Contains('distribution_revision')) 'distribution identity'
-Check ($demo.Contains('/doi-csv-review')) 'daily landing route'
-Check ($demo.Contains('[int]$Port = 8905')) 'daily default candidate'
-foreach ($name in @('START','STATUS','STOP')) {
-    $cmd = [IO.File]::ReadAllText((Join-Path $PackageRoot ($name + '.cmd')))
-    Check ($cmd.Contains('"%~dp0scripts\demo.ps1"')) ($name + ' quoted self-relative script')
-}
-$assignment = $asts['start.ps1'].Find({param($node)
-    $node -is [Management.Automation.Language.AssignmentStatementAst] -and
-    $node.Left.Extent.Text -ceq '$argumentLine'
-}, $true)
-Check ($null -ne $assignment) 'argument construction found'
-$cases = @()
-foreach ($suffix in @('SYN normal','SYN folder with spaces','SYN ampersand & folder','SYN apostrophe''s folder')) {
-    $root = Join-Path $env:TEMP $suffix
-    $Port = 8905
-    $paths = [pscustomobject]@{Receipt = (Join-Path $root 'runtime\service.json')}
-    $doiPolicy = [pscustomobject]@{confirmation_path = (Join-Path $root 'SYN approved policy.json')}
-    $line = & ([scriptblock]::Create($assignment.Right.Extent.Text))
-    $cases += @{command_line = ('python.exe ' + $line); expected = @(
-        'python.exe','-B','-s','-E','-m','synthetic_sales_assist.portal','--data-dir',$root,
-        '--host','127.0.0.1','--port','8905','--runtime-receipt',$paths.Receipt,
-        '--doi-owner-confirmations',$doiPolicy.confirmation_path)}
-}
-$rejected = $false
-try { [void](ConvertTo-SsaQuotedProcessArgument 'SYN"bad') } catch { $rejected = $true }
-Check $rejected 'embedded quote rejected'
-@{checks = $checks; cases = $cases} | ConvertTo-Json -Depth 8 -Compress
-'''
+STATIC_CHECK = (
+    '\n'
+    "$ErrorActionPreference = 'Stop'\n"
+    '$PackageRoot = $env:SSA_TEST_REPOSITORY\n'
+    ". (Join-Path $PackageRoot 'scripts\\lifecycle-common.ps1')\n"
+    '$checks = 0\n'
+    'function Check([bool]$condition, [string]$label) {\n'
+    "    if (-not $condition) { throw ('LAUNCHER_STATIC_CHECK_FAILED:' + $label) }\n"
+    '    $script:checks++\n'
+    '}\n'
+    '$asts = @{}\n'
+    "foreach ($file in Get-ChildItem -LiteralPath (Join-Path $PackageRoot 'scripts') "
+    "-Filter '*.ps1') {\n"
+    '    $tokens = $null; $errors = $null\n'
+    '    $ast = [Management.Automation.Language.Parser]::ParseFile($file.FullName, '
+    '[ref]$tokens, [ref]$errors)\n'
+    "    Check ($errors.Count -eq 0) ('parse ' + $file.Name)\n"
+    '    $asts[$file.Name] = $ast\n'
+    '}\n'
+    "$start = [IO.File]::ReadAllText((Join-Path $PackageRoot 'scripts\\start.ps1'))\n"
+    "$demo = [IO.File]::ReadAllText((Join-Path $PackageRoot 'scripts\\demo.ps1'))\n"
+    "Check ($start.IndexOf('$dailyPolicySupport check') -lt "
+    "$start.IndexOf('Initialize-SsaDirectories')) 'policy before directories'\n"
+    "Check ($start.IndexOf('$dailyPolicySupport check') -lt $start.IndexOf('$child = "
+    "Start-Process')) 'policy before launch'\n"
+    "Check ($start.Contains('--doi-owner-confirmations ')) 'required policy argument'\n"
+    "Check ($start.Contains('-WindowStyle Hidden')) 'hidden background service'\n"
+    "Check ($start.Contains('--host 127.0.0.1')) 'loopback binding'\n"
+    "Check ($start.IndexOf('$dailyPolicySupport record') -gt "
+    "$start.IndexOf('PROCESS_OWNERSHIP_MISMATCH')) 'binding after ownership'\n"
+    "Check ($demo.IndexOf('$dailyPolicySupport check') -lt $demo.IndexOf('$statusLines "
+    "=')) 'preflight before reopen'\n"
+    "Check ($demo.IndexOf('$dailyPolicySupport verify-running') -lt "
+    "$demo.IndexOf('Start-Process -FilePath')) 'binding before browser'\n"
+    "Check ($demo.Contains('[Net.Sockets.SocketError]::AddressAlreadyInUse')) 'safe "
+    "occupied-port fallback'\n"
+    "Check ($demo.Contains('if ($portWasBound -and $Port -ne "
+    "[int]$currentStatus.port)')) 'explicit port mismatch'\n"
+    "Check ($demo.Contains('distribution_revision')) 'distribution identity'\n"
+    "Check ($demo.Contains('/doi-csv-review')) 'daily landing route'\n"
+    "Check ($demo.Contains('[int]$Port = 8905')) 'daily default candidate'\n"
+    "foreach ($name in @('START','STATUS','STOP')) {\n"
+    "    $cmd = [IO.File]::ReadAllText((Join-Path $PackageRoot ($name + '.cmd')))\n"
+    '    Check ($cmd.Contains(\'"%~dp0scripts\\demo.ps1"\')) ($name + \' quoted '
+    "self-relative script')\n"
+    '}\n'
+    "$assignment = $asts['start.ps1'].Find({param($node)\n"
+    '    $node -is [Management.Automation.Language.AssignmentStatementAst] -and\n'
+    "    $node.Left.Extent.Text -ceq '$argumentLine'\n"
+    '}, $true)\n'
+    "Check ($null -ne $assignment) 'argument construction found'\n"
+    '$cases = @()\n'
+    "foreach ($suffix in @('SYN normal','SYN folder with spaces','SYN ampersand & "
+    "folder','SYN apostrophe''s folder')) {\n"
+    '    $root = Join-Path $env:TEMP $suffix\n'
+    '    $Port = 8905\n'
+    '    $paths = [pscustomobject]@{Receipt = (Join-Path $root '
+    "'runtime\\service.json')}\n"
+    "    $doiPolicy = [pscustomobject]@{confirmation_path = (Join-Path $root 'SYN "
+    "approved policy.json')}\n"
+    '    $line = & ([scriptblock]::Create($assignment.Right.Extent.Text))\n'
+    "    $cases += @{command_line = ('python.exe ' + $line); expected = @(\n"
+    "        'python.exe','-B','-s','-E','-m','synthetic_sales_assist.portal','--data-d"
+    "ir',$root,\n"
+    "        '--host','127.0.0.1','--port','8905','--runtime-receipt',$paths.Receipt,\n"
+    "        '--doi-owner-confirmations',$doiPolicy.confirmation_path)}\n"
+    '}\n'
+    '$rejected = $false\n'
+    'try { [void](ConvertTo-SsaQuotedProcessArgument \'SYN"bad\') } catch { $rejected = '
+    '$true }\n'
+    "Check $rejected 'embedded quote rejected'\n"
+    '@{checks = $checks; cases = $cases} | ConvertTo-Json -Depth 8 -Compress\n'
+)
 
-SETUP_HARNESS = r'''
-$ErrorActionPreference = 'Stop'
-function Join-Path {
-    param([string]$Path, [string]$ChildPath)
-    if ($ChildPath -ceq 'python\python.exe') { return $env:SSA_TEST_HELPER }
-    return Microsoft.PowerShell.Management\Join-Path -Path $Path -ChildPath $ChildPath
-}
-function Get-FileHash {
-    param([string]$LiteralPath, [string]$Algorithm)
-    if ($env:SSA_TEST_DENY_PROBES -ceq '1') { throw 'TEST_HASH_MUST_NOT_RUN' }
-    $hash = [Security.Cryptography.SHA256]::Create()
-    $stream = [IO.File]::OpenRead($LiteralPath)
-    try { return @{Hash = [BitConverter]::ToString($hash.ComputeHash($stream)).Replace('-', '')} }
-    finally { $stream.Dispose(); $hash.Dispose() }
-}
-function Test-Path {
-    param([string]$LiteralPath, [string]$PathType)
-    if ($env:SSA_TEST_DENY_PROBES -ceq '1') { throw 'TEST_FILE_PROBE_MUST_NOT_RUN' }
-    if ($PathType) {
-        return Microsoft.PowerShell.Management\Test-Path -LiteralPath $LiteralPath -PathType $PathType
-    }
-    return Microsoft.PowerShell.Management\Test-Path -LiteralPath $LiteralPath
-}
-try {
-    & $env:SSA_TEST_SETUP -PackageRoot $env:SSA_TEST_PACKAGE `
-        -ConfirmationPath $env:SSA_TEST_POLICY -ApprovedSha256 $env:SSA_TEST_HASH `
-        -ExpectedDecisionCount ([int]$env:SSA_TEST_COUNT)
-    exit 0
-} catch {
-    Write-Output $_.Exception.Message
-    exit 1
-}
-'''
+SETUP_HARNESS = (
+    '\n'
+    "$ErrorActionPreference = 'Stop'\n"
+    'function Join-Path {\n'
+    '    param([string]$Path, [string]$ChildPath)\n'
+    "    if ($ChildPath -ceq 'python\\python.exe') { return $env:SSA_TEST_HELPER }\n"
+    '    return Microsoft.PowerShell.Management\\Join-Path -Path $Path -ChildPath '
+    '$ChildPath\n'
+    '}\n'
+    'function Get-FileHash {\n'
+    '    param([string]$LiteralPath, [string]$Algorithm)\n'
+    "    if ($env:SSA_TEST_DENY_PROBES -ceq '1') { throw 'TEST_HASH_MUST_NOT_RUN' }\n"
+    '    $hash = [Security.Cryptography.SHA256]::Create()\n'
+    '    $stream = [IO.File]::OpenRead($LiteralPath)\n'
+    '    try { return @{Hash = [BitConverter]::ToString($hash.ComputeHash($stream)).Rep'
+    "lace('-', '')} }\n"
+    '    finally { $stream.Dispose(); $hash.Dispose() }\n'
+    '}\n'
+    'function Test-Path {\n'
+    '    param([string]$LiteralPath, [string]$PathType)\n'
+    "    if ($env:SSA_TEST_DENY_PROBES -ceq '1') { throw "
+    "'TEST_FILE_PROBE_MUST_NOT_RUN' }\n"
+    '    if ($PathType) {\n'
+    '        return Microsoft.PowerShell.Management\\Test-Path -LiteralPath '
+    '$LiteralPath -PathType $PathType\n'
+    '    }\n'
+    '    return Microsoft.PowerShell.Management\\Test-Path -LiteralPath $LiteralPath\n'
+    '}\n'
+    'try {\n'
+    '    & $env:SSA_TEST_SETUP -PackageRoot $env:SSA_TEST_PACKAGE `\n'
+    '        -ConfirmationPath $env:SSA_TEST_POLICY -ApprovedSha256 $env:SSA_TEST_HASH '
+    '`\n'
+    '        -ExpectedDecisionCount ([int]$env:SSA_TEST_COUNT)\n'
+    '    exit 0\n'
+    '} catch {\n'
+    '    Write-Output $_.Exception.Message\n'
+    '    exit 1\n'
+    '}\n'
+)
 
 PYTHON_STUB = r'''
 $action = $args[3]
@@ -148,24 +171,41 @@ class DailySetupScannerTests(unittest.TestCase):
             content = (ROOT / "scripts/setup-daily-private.ps1").read_text(encoding="utf-8")
             script.write_text(content, encoding="utf-8")
             self.assertEqual(scan_prohibited_repository_content(root), ())
-            script.write_text(content.replace("SYNTHETIC-SALES-ASSIST-AUTHORED-M8", ""),
-                              encoding="utf-8")
-            self.assertIn("unapproved_lifecycle_script", {
-                finding.category for finding in scan_prohibited_repository_content(root)})
+            script.write_text(
+                content.replace("SYNTHETIC-SALES-ASSIST-AUTHORED-M8", ""), encoding="utf-8"
+            )
+            self.assertIn(
+                "unapproved_lifecycle_script",
+                {finding.category for finding in scan_prohibited_repository_content(root)},
+            )
             script.unlink()
             (script.parent / "unreviewed-setup.ps1").write_text(content, encoding="utf-8")
-            self.assertIn("unapproved_lifecycle_script", {
-                finding.category for finding in scan_prohibited_repository_content(root)})
+            self.assertIn(
+                "unapproved_lifecycle_script",
+                {finding.category for finding in scan_prohibited_repository_content(root)},
+            )
 
 
 @unittest.skipUnless(os.name == "nt" and POWERSHELL, "Windows PowerShell offline checks")
 class DailyLauncherTests(unittest.TestCase):
     def run_powershell(self, source, environment):
         return subprocess.run(
-            [str(POWERSHELL), "-NoLogo", "-NoProfile", "-NonInteractive",
-             "-ExecutionPolicy", "Bypass", "-Command", source],
-            env=environment, capture_output=True, text=True, timeout=30,
-            creationflags=subprocess.CREATE_NO_WINDOW, check=False,
+            [
+                str(POWERSHELL),
+                "-NoLogo",
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                source,
+            ],
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            check=False,
         )
 
     def test_launcher_parse_ordering_and_windows_argv(self):
@@ -190,9 +230,20 @@ class DailyLauncherTests(unittest.TestCase):
             finally:
                 free(arguments)
 
-    def setup_case(self, *, existing=False, receipt=False, hash_mismatch=False,
-                   count=1, fail_action="", package_override=None, policy_override=None,
-                   deny_probes=False, data_override=None, junction_component=None):
+    def setup_case(
+        self,
+        *,
+        existing=False,
+        receipt=False,
+        hash_mismatch=False,
+        count=1,
+        fail_action="",
+        package_override=None,
+        policy_override=None,
+        deny_probes=False,
+        data_override=None,
+        junction_component=None,
+    ):
         temporary = tempfile.TemporaryDirectory(prefix="ssa-daily-setup-")
         self.addCleanup(temporary.cleanup)
         folder = Path(temporary.name)
@@ -216,19 +267,29 @@ class DailyLauncherTests(unittest.TestCase):
             target = folder / "SYN junction target"
             target.mkdir()
             junction = (data if junction_component == "runtime" else package) / junction_component
-            junction_environment = {**os.environ, "SSA_TEST_LINK": str(junction),
-                                    "SSA_TEST_TARGET": str(target)}
+            junction_environment = {
+                **os.environ,
+                "SSA_TEST_LINK": str(junction),
+                "SSA_TEST_TARGET": str(target),
+            }
             created = self.run_powershell(
                 "New-Item -ItemType Junction -Path $env:SSA_TEST_LINK "
-                "-Target $env:SSA_TEST_TARGET | Out-Null", junction_environment)
+                "-Target $env:SSA_TEST_TARGET | Out-Null",
+                junction_environment,
+            )
             self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
         environment = {
-            **os.environ, "SSA_TEST_SETUP": str(ROOT / "scripts/setup-daily-private.ps1"),
+            **os.environ,
+            "SSA_TEST_SETUP": str(ROOT / "scripts/setup-daily-private.ps1"),
             "SSA_TEST_PACKAGE": package_override or str(package),
             "SSA_TEST_POLICY": policy_override or str(policy),
-            "SSA_TEST_HASH": "a" * 64 if hash_mismatch else hashlib.sha256(policy_bytes).hexdigest(),
-            "SSA_TEST_COUNT": str(count), "SSA_TEST_HELPER": str(helper),
-            "SSA_TEST_DATA": data_override or str(data), "SSA_TEST_CALLS": str(calls),
+            "SSA_TEST_HASH": (
+                "a" * 64 if hash_mismatch else hashlib.sha256(policy_bytes).hexdigest()
+            ),
+            "SSA_TEST_COUNT": str(count),
+            "SSA_TEST_HELPER": str(helper),
+            "SSA_TEST_DATA": data_override or str(data),
+            "SSA_TEST_CALLS": str(calls),
             "SSA_TEST_FAIL_ACTION": fail_action,
             "SSA_TEST_DENY_PROBES": "1" if deny_probes else "0",
         }
@@ -241,12 +302,15 @@ class DailyLauncherTests(unittest.TestCase):
         result, config, commands, environment = self.setup_case()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(commands, ["verify", "data-root", "check"])
-        self.assertEqual(json.loads(config.read_text(encoding="utf-8")), {
-            "schema": "ssa-doi-private-launch/v1",
-            "confirmation_path": environment["SSA_TEST_POLICY"],
-            "confirmation_sha256": environment["SSA_TEST_HASH"],
-            "expected_decision_count": 1,
-        })
+        self.assertEqual(
+            json.loads(config.read_text(encoding="utf-8")),
+            {
+                "schema": "ssa-doi-private-launch/v1",
+                "confirmation_path": environment["SSA_TEST_POLICY"],
+                "confirmation_sha256": environment["SSA_TEST_HASH"],
+                "expected_decision_count": 1,
+            },
+        )
 
     def test_generic_recipe_never_overwrites_existing_configuration(self):
         result, config, commands, _ = self.setup_case(existing=True)
@@ -290,15 +354,22 @@ class DailyLauncherTests(unittest.TestCase):
 
     def test_unsafe_package_and_policy_paths_fail_before_probes_or_commands(self):
         invalid = [
-            r"\\example.invalid\share\SYN", r"\\?\C:\SYN", "SYN-relative",
-            "https" + "://example.invalid/SYN", r"C:relative", r"C:\SYN\..\escape",
-            r"C:\OneDrive\SYN", r"C:\Dropbox\SYN", 'C:\\SYN"quoted',
+            r"\\example.invalid\share\SYN",
+            r"\\?\C:\SYN",
+            "SYN-relative",
+            "https" + "://example.invalid/SYN",
+            r"C:relative",
+            r"C:\SYN\..\escape",
+            r"C:\OneDrive\SYN",
+            r"C:\Dropbox\SYN",
+            'C:\\SYN"quoted',
         ]
         for value in invalid:
             for parameter in ("package_override", "policy_override"):
                 with self.subTest(value=value, parameter=parameter):
                     result, config, commands, _ = self.setup_case(
-                        **{parameter: value}, deny_probes=True)
+                        **{parameter: value}, deny_probes=True
+                    )
                     self.assertNotEqual(result.returncode, 0)
                     self.assertIn("DAILY_SETUP_", result.stdout)
                     self.assertNotIn("TEST_HASH_MUST_NOT_RUN", result.stdout)
@@ -316,8 +387,7 @@ class DailyLauncherTests(unittest.TestCase):
                 self.assertEqual(commands, ["verify", "data-root"])
 
     def test_reparse_package_support_directory_is_rejected_before_probes(self):
-        result, config, commands, _ = self.setup_case(
-            junction_component="tools", deny_probes=True)
+        result, config, commands, _ = self.setup_case(junction_component="tools", deny_probes=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("DAILY_SETUP_REPARSE_POINT_PROHIBITED", result.stdout)
         self.assertNotIn("TEST_FILE_PROBE_MUST_NOT_RUN", result.stdout)

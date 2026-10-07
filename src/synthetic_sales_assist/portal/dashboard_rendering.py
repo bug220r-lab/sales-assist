@@ -2064,7 +2064,8 @@ def render_doi_queue(data: object, csrf_token: str, *, presentation: bool = Fals
     body = (
         '<section class="dashboard-panel"><h2>Captured order split review</h2>'
         '<p>Review full captured order totals and ready/waiting evidence in this local session.</p>'
-        '<a class="dashboard-case-link" href="/doi-csv-review">Open split-review worklist</a></section>'
+        '<a class="dashboard-case-link" href="/doi-csv-review">Open split-review '
+        'worklist</a></section>'
         + _filter_form(
             "/doi",
             (

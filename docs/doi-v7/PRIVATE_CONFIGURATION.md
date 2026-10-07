@@ -17,6 +17,16 @@ package-contained policy and reparse paths are rejected before policy access or
 package commands. The returned data directory and its config/receipt paths are also
 checked before any configuration write.
 
+The daily checker repeats these location checks on every START, binding write and
+reopen, including after a manual config edit. It rejects the standard OneDrive
+(including organization suffixes), Dropbox, Google Drive and iCloudDrive folder
+names and the roots declared by OneDrive environment variables. On Windows only
+`DRIVE_FIXED` is accepted; unknown, unavailable, removable, network, optical and
+RAM drives fail closed. Reparse ancestors are checked from root to leaf before
+opening configuration or policy. Operators must still choose a nonsynchronized
+location: arbitrary third-party sync roots with custom names are not discoverable
+from these path checks alone.
+
 Synthetic structural example only (the repeated hash is not an approval):
 
 ```json

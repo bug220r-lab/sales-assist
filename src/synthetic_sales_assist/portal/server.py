@@ -19,8 +19,12 @@ from typing import Final, cast
 from urllib.parse import unquote_to_bytes
 
 from doi_csv_staging.review import (
-    DOIReviewError, DOIReviewSession, MAX_BODY_BYTES as DOI_REVIEW_MAX_BODY_BYTES,
-    parse_review_envelope, validate_review_request, review_response_bytes,
+    DOIReviewError,
+    DOIReviewSession,
+    MAX_BODY_BYTES as DOI_REVIEW_MAX_BODY_BYTES,
+    parse_review_envelope,
+    validate_review_request,
+    review_response_bytes,
 )
 from doi_csv_staging.review_policy import OwnerConfirmations, EMPTY_CONFIRMATIONS
 
@@ -100,7 +104,6 @@ from synthetic_sales_assist.portal.dashboard_rendering import (
     validate_dashboard_page_data,
 )
 
-
 DEFAULT_HOST: Final = "127.0.0.1"
 DEFAULT_PORT: Final = 8765
 RUNTIME_RECEIPT_FILENAME: Final = "service.json"
@@ -111,22 +114,14 @@ _MAX_HEADER_VALUE: Final = 2_048
 _MAX_REJECT_DRAIN_BYTES: Final = MAX_REQUEST_BODY_BYTES + 1
 _ALIAS_ROUTE = re.compile(r"\A/api/v1/scenarios/([a-z][a-z0-9-]{1,63})/instantiate\Z")
 _ORDER_ROUTE = re.compile(r"\A(?:/api/v1)?/orders/(SYN-ORDER-[A-Z0-9-]+)\Z")
-_ORDER_EVALUATE_ROUTE = re.compile(
-    r"\A/api/v1/orders/(SYN-ORDER-[A-Z0-9-]+)/evaluate\Z"
-)
-_ORDER_HISTORY_ROUTE = re.compile(
-    r"\A/api/v1/orders/(SYN-ORDER-[A-Z0-9-]+)/history\Z"
-)
-_INTERACTION_ROUTE = re.compile(
-    r"\A(?:/api/v1)?/interactions/(SYN-INTERACTION-[A-Z0-9-]+)\Z"
-)
+_ORDER_EVALUATE_ROUTE = re.compile(r"\A/api/v1/orders/(SYN-ORDER-[A-Z0-9-]+)/evaluate\Z")
+_ORDER_HISTORY_ROUTE = re.compile(r"\A/api/v1/orders/(SYN-ORDER-[A-Z0-9-]+)/history\Z")
+_INTERACTION_ROUTE = re.compile(r"\A(?:/api/v1)?/interactions/(SYN-INTERACTION-[A-Z0-9-]+)\Z")
 _RUN_ROUTE = re.compile(r"\A(?:/api/v1)?/runs/(SYN-RUN-[A-Z0-9-]+)\Z")
 _SALES_CREDIT_DASHBOARD_ROUTE = re.compile(
     r"\A(?:/api/v1/dashboard)?/sales-credit/(SYN-ORDER-[A-Z0-9-]+)\Z"
 )
-_DOI_DASHBOARD_ROUTE = re.compile(
-    r"\A(?:/api/v1/dashboard)?/doi/(SYN-EVIDENCE-[A-Z0-9-]+)\Z"
-)
+_DOI_DASHBOARD_ROUTE = re.compile(r"\A(?:/api/v1/dashboard)?/doi/(SYN-EVIDENCE-[A-Z0-9-]+)\Z")
 _AUDIT_DASHBOARD_ROUTE = re.compile(
     r"\A(?:/api/v1/dashboard)?/audit/"
     r"(sales-credit-case|doi-case|doi-run|evaluation|"
@@ -134,12 +129,10 @@ _AUDIT_DASHBOARD_ROUTE = re.compile(
     r"(SYN-(?:ORDER|EVIDENCE|EVALUATION|RUN)-[A-Z0-9-]+)\Z"
 )
 _SALES_CREDIT_MANAGER_OUTCOME_ROUTE = re.compile(
-    r"\A/api/v1/dashboard/sales-credit/"
-    r"(SYN-ORDER-[A-Z0-9-]+)/manager-outcome\Z"
+    r"\A/api/v1/dashboard/sales-credit/" r"(SYN-ORDER-[A-Z0-9-]+)/manager-outcome\Z"
 )
 _DOI_SCENARIO_SELECTION_ROUTE = re.compile(
-    r"\A/api/v1/dashboard/doi/"
-    r"(SYN-EVIDENCE-[A-Z0-9-]+)/scenario-selection\Z"
+    r"\A/api/v1/dashboard/doi/" r"(SYN-EVIDENCE-[A-Z0-9-]+)/scenario-selection\Z"
 )
 _DASHBOARD_HTML_ROUTES: Final = frozenset(
     {
@@ -223,7 +216,9 @@ _GET_ROUTES: Final = frozenset(
     }
 )
 
-_DOI_REVIEW_GET_ROUTES = frozenset({"/doi-csv-review", "/api/v1/doi-csv-review/state", "/static/doi-csv-review.js"})
+_DOI_REVIEW_GET_ROUTES = frozenset(
+    {"/doi-csv-review", "/api/v1/doi-csv-review/state", "/static/doi-csv-review.js"}
+)
 _DOI_REVIEW_POST_ROUTES = frozenset({"/api/v1/doi-csv-review/load", "/api/v1/doi-csv-review/clear"})
 
 
@@ -456,9 +451,7 @@ def _status_mapping(application: ScenarioApplicationProtocol, *, deep: bool) -> 
 
 def status_is_healthy(status: dict[str, object], *, deep: bool) -> bool:
     counters = status.get("safety_counters")
-    counter_values = (
-        tuple(counters.values()) if type(counters) is dict else ()
-    )
+    counter_values = tuple(counters.values()) if type(counters) is dict else ()
     accepted = frozenset({"HEALTHY", "OK", "PASS"})
     accepted_migrations = accepted | {"CURRENT"}
     database = str(status.get("database_status", "")).upper()
@@ -548,9 +541,7 @@ class PortalHTTPServer(HTTPServer):
             "observed_extension_version": version,
             "stale_after_seconds": EXTENSION_STALE_AFTER_SECONDS,
             "status": (
-                "LAST_SEEN_HEALTHY"
-                if version == EXPECTED_EXTENSION_VERSION
-                else "VERSION_MISMATCH"
+                "LAST_SEEN_HEALTHY" if version == EXPECTED_EXTENSION_VERSION else "VERSION_MISMATCH"
             ),
         }
 
@@ -636,8 +627,13 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             path = self._validated_target()
             self._validate_common_headers()
             if self.portal_server.doi_csv_review_only and path not in (
-                _DOI_REVIEW_GET_ROUTES | _DOI_REVIEW_POST_ROUTES
-                | frozenset(route for route, asset in DASHBOARD_STATIC_ASSETS.items() if asset[0].startswith("text/css"))
+                _DOI_REVIEW_GET_ROUTES
+                | _DOI_REVIEW_POST_ROUTES
+                | frozenset(
+                    route
+                    for route, asset in DASHBOARD_STATIC_ASSETS.items()
+                    if asset[0].startswith("text/css")
+                )
             ):
                 self._safe_error(404, "ROUTE_NOT_FOUND")
                 return
@@ -661,9 +657,7 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             status = (
                 404
                 if exc.code.endswith("_NOT_FOUND")
-                else 503
-                if exc.code in {"SAFETY_COUNTERS_NONZERO", "DATABASE_UNHEALTHY"}
-                else 400
+                else 503 if exc.code in {"SAFETY_COUNTERS_NONZERO", "DATABASE_UNHEALTHY"} else 400
             )
             self._safe_error(status, exc.code)
         except Exception as exc:
@@ -733,11 +727,7 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         if self.headers.get("Transfer-Encoding") is not None:
             return
         lengths = self.headers.get_all("Content-Length", failobj=[])
-        if (
-            len(lengths) != 1
-            or not lengths[0].isascii()
-            or not lengths[0].isdigit()
-        ):
+        if len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdigit():
             return
         length = int(lengths[0])
         if not 0 <= length <= _MAX_REJECT_DRAIN_BYTES:
@@ -759,9 +749,10 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         hosts = self.headers.get_all("Host", failobj=[])
         if hosts != [self.portal_server.expected_host]:
             raise PortalContractError("HOST_HEADER_INVALID", status=400)
-        if self.headers.get("Forwarded") is not None or self.headers.get(
-            "X-Forwarded-Host"
-        ) is not None:
+        if (
+            self.headers.get("Forwarded") is not None
+            or self.headers.get("X-Forwarded-Host") is not None
+        ):
             raise PortalContractError("FORWARDED_HEADER_PROHIBITED", status=400)
 
     def _validate_post_authentication(self) -> None:
@@ -992,17 +983,13 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             return True
         if path in {"/system", "/api/v1/dashboard/system"}:
             presentation = _presentation_query(self._query) if not api else False
-            self._send_dashboard(
-                "system", self._system_view(), api=api, presentation=presentation
-            )
+            self._send_dashboard("system", self._system_view(), api=api, presentation=presentation)
             return True
         if path in {"/system/database", "/api/v1/dashboard/system/database"}:
             presentation = _presentation_query(self._query) if not api else False
             self._send_dashboard(
                 "database",
-                control_center.database_view(
-                    repository_root=Path(__file__).resolve().parents[3]
-                ),
+                control_center.database_view(repository_root=Path(__file__).resolve().parents[3]),
                 api=api,
                 presentation=presentation,
             )
@@ -1051,15 +1038,25 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
     def _get(self, path: str) -> None:
         if path == "/doi-csv-review":
             from synthetic_sales_assist.portal.doi_csv_review_ui import render_doi_csv_review_page
-            self._send_html(render_doi_csv_review_page(
-                self.portal_server.csrf_token, review_only=self.portal_server.doi_csv_review_only))
+
+            self._send_html(
+                render_doi_csv_review_page(
+                    self.portal_server.csrf_token,
+                    review_only=self.portal_server.doi_csv_review_only,
+                )
+            )
             return
         if path == "/static/doi-csv-review.js":
             from synthetic_sales_assist.portal.doi_csv_review_ui import DOI_CSV_REVIEW_JS
+
             self._send(200, DOI_CSV_REVIEW_JS.encode("utf-8"), "text/javascript; charset=utf-8")
             return
         if path == "/api/v1/doi-csv-review/state":
-            self._send(200, review_response_bytes(self.portal_server.doi_review_session.snapshot()), "application/json; charset=utf-8")
+            self._send(
+                200,
+                review_response_bytes(self.portal_server.doi_review_session.snapshot()),
+                "application/json; charset=utf-8",
+            )
             return
         if path == "/campaign-replies":
             enabled = (
@@ -1132,15 +1129,11 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/scenarios":
             self._send_html(
-                render_scenarios(
-                    application.list_scenarios(), self.portal_server.csrf_token
-                )
+                render_scenarios(application.list_scenarios(), self.portal_server.csrf_token)
             )
             return
         if path == "/orders":
-            self._send_html(
-                render_orders(application.list_orders(), self.portal_server.csrf_token)
-            )
+            self._send_html(render_orders(application.list_orders(), self.portal_server.csrf_token))
             return
         match = _ORDER_HISTORY_ROUTE.fullmatch(path)
         if match:
@@ -1201,9 +1194,7 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
                     ),
                 )
             else:
-                self._send_html(
-                    render_interaction(interaction, self.portal_server.csrf_token)
-                )
+                self._send_html(render_interaction(interaction, self.portal_server.csrf_token))
             return
         match = _RUN_ROUTE.fullmatch(path)
         if match:
@@ -1243,7 +1234,11 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
                 if path.endswith("/clear"):
                     state = session.clear(cast(int, request["revision"]))
                 else:
-                    state = session.load(cast(str, request["summary_csv"]), cast(str, request["lines_csv"]), cast(int, request["revision"]))
+                    state = session.load(
+                        cast(str, request["summary_csv"]),
+                        cast(str, request["lines_csv"]),
+                        cast(int, request["revision"]),
+                    )
             except DOIReviewError as exc:
                 if exc.code == "REVISION_MISMATCH":
                     self._safe_error(409, "REVISION_MISMATCH")
@@ -1258,7 +1253,11 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             except (OSError, ValueError, OverflowError):
                 self._safe_error(400, "REVIEW_TRANSPORT_INVALID")
                 return
-            self._send(400 if state["status"] == "error" else 200, review_response_bytes(state), "application/json; charset=utf-8")
+            self._send(
+                400 if state["status"] == "error" else 200,
+                review_response_bytes(state),
+                "application/json; charset=utf-8",
+            )
             return
         if path == WORKSPACE_ACTION_ROUTE:
             body = self._workspace().post(self._read_json_body(8 * 1024 * 1024))
@@ -1307,12 +1306,8 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
                 case_id,
                 evaluation_id=cast(str, request["evaluation_id"]),
                 actor_id=cast(str, request["actor_id"]),
-                selected_opportunity_id=cast(
-                    str, request["selected_opportunity_id"]
-                ),
-                option_opportunity_ids=cast(
-                    tuple[str, ...], request["option_opportunity_ids"]
-                ),
+                selected_opportunity_id=cast(str, request["selected_opportunity_id"]),
+                option_opportunity_ids=cast(tuple[str, ...], request["option_opportunity_ids"]),
                 occurred_at=cast(str, request["occurred_at"]),
                 request_key=cast(str, request["request_key"]),
                 confirmed=True,
@@ -1378,8 +1373,7 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             )
             lines = cast(list[object], order["lines"])
             allowed_line_ids = frozenset(
-                cast(str, cast(dict[str, object], line)["line_id"])
-                for line in lines
+                cast(str, cast(dict[str, object], line)["line_id"]) for line in lines
             )
             self._send_json(
                 200,
@@ -1673,6 +1667,7 @@ def open_runtime(
     paths.ensure_directories()
     application_factory: Callable[[], ScenarioApplicationProtocol] | None = None
     if application is None:
+
         def open_application() -> ScenarioApplicationProtocol:
             from synthetic_sales_assist.application import ScenarioApplication
 

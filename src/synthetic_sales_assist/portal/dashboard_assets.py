@@ -152,7 +152,8 @@ h3 {{ font-size: 1.05rem; }}
 }}
 .dashboard-table-wrap {{ overflow-x: auto; }}
 .doi-worklist table {{ min-width: 64rem; }}
-.doi-worklist td:first-child, .doi-worklist th:first-child {{ white-space: nowrap; overflow-wrap: normal; font-variant-numeric: tabular-nums; }}
+.doi-worklist td:first-child, .doi-worklist th:first-child {{ white-space: nowrap; \
+overflow-wrap: normal; font-variant-numeric: tabular-nums; }}
 .doi-worklist td:nth-child(2) {{ white-space: nowrap; font-variant-numeric: tabular-nums; }}
 .doi-worklist td:nth-child(5) {{ min-width: 22rem; }}
 .doi-worklist details {{ margin-top: var(--ssa-space-2); }}

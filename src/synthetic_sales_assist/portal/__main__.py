@@ -38,13 +38,20 @@ def main(argv: list[str] | None = None) -> int:
     runtime = None
     review_server = None
     try:
-        confirmations = load_owner_confirmations(validate_local_path(args.doi_owner_confirmations) if args.doi_owner_confirmations is not None else None)
+        confirmations = load_owner_confirmations(
+            validate_local_path(args.doi_owner_confirmations)
+            if args.doi_owner_confirmations is not None
+            else None
+        )
         if args.doi_csv_review_only:
             if args.data_dir is not None or args.runtime_receipt is not None:
                 raise PortalServerError("REVIEW_ONLY_DATA_PATH_PROHIBITED")
             review_server = PortalHTTPServer(
-                cast(ScenarioApplicationProtocol, None), PortalServerConfig(args.host, args.port, confirmations),
-                csrf_token=new_local_token(), shutdown_token=new_local_token(), doi_csv_review_only=True,
+                cast(ScenarioApplicationProtocol, None),
+                PortalServerConfig(args.host, args.port, confirmations),
+                csrf_token=new_local_token(),
+                shutdown_token=new_local_token(),
+                doi_csv_review_only=True,
             )
             print(f"DOI CSV review ready at {review_server.origin}/doi-csv-review", flush=True)
             try:
@@ -75,7 +82,12 @@ def main(argv: list[str] | None = None) -> int:
         if runtime is not None:
             runtime.close()
         return 0
-    except (PathPolicyError, PortalLifecycleError, PortalServerError, OwnerConfirmationError) as exc:
+    except (
+        PathPolicyError,
+        PortalLifecycleError,
+        PortalServerError,
+        OwnerConfirmationError,
+    ) as exc:
         print(f"PORTAL_START_FAILED:{getattr(exc, 'code', type(exc).__name__)}", file=sys.stderr)
         if runtime is not None:
             runtime.close()

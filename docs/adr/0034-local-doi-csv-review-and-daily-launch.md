@@ -44,6 +44,17 @@ policy location, synchronized folders and reparse ancestors. The ancestor walk r
 from root to leaf before any policy probe or package command. Synthetic tests cover
 rejected paths, reparse directories, existing state and validation failures.
 
+The daily policy helper repeats the setup location restrictions at runtime rather
+than relying on setup having written the config. Its stricter wrapper checks both
+lexical and resolved paths, standard sync-folder names and declared OneDrive roots,
+requires Windows DRIVE_FIXED, and walks reparse ancestors from root to leaf before
+access. This is scoped to daily configuration and policy; existing persistence APIs
+and business rules are unchanged. Unknown drive results and inspection failures
+refuse startup with the existing bounded policy error. Synthetic tests cover manual
+config edits, known sync roots, non-fixed drives, reparse ancestors and successful
+ordinary local paths, including binding and reopen revalidation. Arbitrary custom
+sync roots still require operator review.
+
 Validation lives in executable DOI, policy, launcher, packaging and core regression
 tests. Automated local tests do not establish manual acceptance of the packaged UI.
 PowerShell process-scope execution-policy handling requires a separate operator

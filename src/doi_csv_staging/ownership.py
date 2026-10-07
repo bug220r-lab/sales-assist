@@ -9,14 +9,31 @@ from dataclasses import dataclass
 from .staging import StagedOrder
 from .split_review import SPLIT_STATUSES, split_sort_key
 
-
-REP_SCOPES = ("OWNER", "UNASSIGNED_WEB", "OTHER_REP", "FIELD_UNVERIFIED",
-              "REP_MISSING", "REP_UNMAPPED", "REP_CONFLICT", "CAPTURE_UNVERIFIED")
+REP_SCOPES = (
+    "OWNER",
+    "UNASSIGNED_WEB",
+    "OTHER_REP",
+    "FIELD_UNVERIFIED",
+    "REP_MISSING",
+    "REP_UNMAPPED",
+    "REP_CONFLICT",
+    "CAPTURE_UNVERIFIED",
+)
 ELIGIBLE_REP_SCOPES = frozenset({"OWNER", "UNASSIGNED_WEB"})
-_UNTRUSTED_CAPTURE = frozenset({"DISPLAYED_ORDER_ID_UNVERIFIED", "SOURCE_JOIN_MISMATCH",
-    "SOURCE_ASSIGNMENT_CONFLICT_OR_UNKNOWN", "REVIEW_ASSIGNMENT_UNVERIFIED",
-    "TIMESTAMP_INVALID_OR_NAIVE", "TIMESTAMP_MISMATCH", "TIMEZONE_MISMATCH",
-    "UTC_OFFSET_MISMATCH", "ORDER_CAPTURE_INCOMPLETE", "GLOBAL_INPUT_HOLD"})
+_UNTRUSTED_CAPTURE = frozenset(
+    {
+        "DISPLAYED_ORDER_ID_UNVERIFIED",
+        "SOURCE_JOIN_MISMATCH",
+        "SOURCE_ASSIGNMENT_CONFLICT_OR_UNKNOWN",
+        "REVIEW_ASSIGNMENT_UNVERIFIED",
+        "TIMESTAMP_INVALID_OR_NAIVE",
+        "TIMESTAMP_MISMATCH",
+        "TIMEZONE_MISMATCH",
+        "UTC_OFFSET_MISMATCH",
+        "ORDER_CAPTURE_INCOMPLETE",
+        "GLOBAL_INPUT_HOLD",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -27,26 +44,39 @@ class RepScopePolicy:
 
     def __post_init__(self) -> None:
         groups = (self.owner_aliases, self.unassigned_web_aliases, self.known_other_aliases)
-        if any(type(group) is not frozenset for group in groups) or any(
-            type(value) is not str or re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", value) is None
-            for group in groups for value in group
-        ) or any(groups[i] & groups[j] for i in range(3) for j in range(i + 1, 3)):
+        if (
+            any(type(group) is not frozenset for group in groups)
+            or any(
+                type(value) is not str or re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", value) is None
+                for group in groups
+                for value in group
+            )
+            or any(groups[i] & groups[j] for i in range(3) for j in range(i + 1, 3))
+        ):
             raise ValueError("REP_SCOPE_POLICY_INVALID")
 
 
 # Established exact-match aliases. No case folding, whitespace trimming,
 # suffix removal or multiline alias inference.
-DEFAULT_REP_POLICY = RepScopePolicy(frozenset({"jlewis", "jlewis_web"}), frozenset({"customer-web"}), frozenset({"akeesy"}))
+DEFAULT_REP_POLICY = RepScopePolicy(
+    frozenset({"jlewis", "jlewis_web"}), frozenset({"customer-web"}), frozenset({"akeesy"})
+)
 
 
-def classify_rep_scope(order: StagedOrder, *, policy: RepScopePolicy = DEFAULT_REP_POLICY,
-                       global_input_held: bool = False) -> str:
+def classify_rep_scope(
+    order: StagedOrder,
+    *,
+    policy: RepScopePolicy = DEFAULT_REP_POLICY,
+    global_input_held: bool = False,
+) -> str:
     """Return only a closed status code; retain no raw rep string in the projection."""
     if type(policy) is not RepScopePolicy:
         raise ValueError("REP_SCOPE_POLICY_INVALID")
     summaries = [dict(row.raw_fields) for row in order.summary_occurrences]
-    pairs = {(row.get("displayed_sales_credit_field", ""), row.get("displayed_sales_credit_value", ""))
-             for row in summaries}
+    pairs = {
+        (row.get("displayed_sales_credit_field", ""), row.get("displayed_sales_credit_value", ""))
+        for row in summaries
+    }
     if len(pairs) > 1:
         return "REP_CONFLICT"
     if not summaries:
@@ -71,9 +101,12 @@ def classify_rep_scope(order: StagedOrder, *, policy: RepScopePolicy = DEFAULT_R
 
 def full_total_order_key(order: dict[str, object]) -> tuple[object, ...]:
     """Valid nominal full totals descend; no currency conversion or split valuation."""
-    return (*split_sort_key(order["split"])[1:],
-            min(order["summary_record_ordinals"], default=5002),
-            len(order["order_id"]), order["order_id"])
+    return (
+        *split_sort_key(order["split"])[1:],
+        min(order["summary_record_ordinals"], default=5002),
+        len(order["order_id"]),
+        order["order_id"],
+    )
 
 
 def ownership_counts(orders: list[dict[str, object]]) -> dict[str, object]:
@@ -81,8 +114,12 @@ def ownership_counts(orders: list[dict[str, object]]) -> dict[str, object]:
     eligible = [order for order in orders if order["rep_scope"] in ELIGIBLE_REP_SCOPES]
     split_counts = Counter(order["split"]["status"] for order in eligible)
     excluded = observed.get("OTHER_REP", 0)
-    return {"schema": "doi-rep-scope/v1", "order_count": len(orders),
-            "eligible_count": len(eligible), "excluded_count": excluded,
-            "held_count": len(orders) - len(eligible) - excluded,
-            "status_counts": {key: observed.get(key, 0) for key in REP_SCOPES},
-            "eligible_split_counts": {key: split_counts.get(key, 0) for key in SPLIT_STATUSES}}
+    return {
+        "schema": "doi-rep-scope/v1",
+        "order_count": len(orders),
+        "eligible_count": len(eligible),
+        "excluded_count": excluded,
+        "held_count": len(orders) - len(eligible) - excluded,
+        "status_counts": {key: observed.get(key, 0) for key in REP_SCOPES},
+        "eligible_split_counts": {key: split_counts.get(key, 0) for key in SPLIT_STATUSES},
+    }
