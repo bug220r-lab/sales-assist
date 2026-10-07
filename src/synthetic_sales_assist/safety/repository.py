@@ -112,7 +112,8 @@ AUTHORED_M5_SCRIPT_PATHS = frozenset(
 MAX_AUTHORED_M5_ASSET_BYTES = 512 * 1024
 AUTHORED_M8_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M8"
 AUTHORED_M8_SCRIPT_PATHS = frozenset({
-    "scripts/demo.ps1", "START.cmd", "STOP.cmd", "STATUS.cmd", "BACKUP.cmd",
+    "scripts/demo.ps1", "scripts/setup-daily-private.ps1",
+    "START.cmd", "STOP.cmd", "STATUS.cmd", "BACKUP.cmd",
     "RESET.cmd", "REMOVE.cmd", "UPGRADE.cmd",
 })
 AUTHORED_M6_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M6"

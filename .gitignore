@@ -73,3 +73,17 @@ protection-manifests/
 suppression-lists/
 send-receipts/
 production-audit/
+
+# Local DOI inputs, setup and generated daily distribution state are never source.
+*.csv
+*.tsv
+*.private.json
+doi-private-launch.json
+doi-policy-binding.json
+service-owner-claim.json
+distribution-provenance.json
+release-build.json
+release-payload.json
+*.zip
+*.whl
+*.tar.gz

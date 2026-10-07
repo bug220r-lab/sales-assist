@@ -55,8 +55,10 @@ def build_application_payloads(
         "windows_timezone_prerequisite": "BUNDLED",
         "bundled_runtime": runtime_metadata,
         "supported_environment": "Windows 10/11 x64, PowerShell 5.1, local browser",
-        "workflow_scope": "SYNTHETIC_ONLY_LOCALHOST",
-        "application_features": ["sales_credit", "doi", "campaigns", "replies", "writing_history"],
+        "workflow_scope": "LOCALHOST_SYNTHETIC_CORE_WITH_LOCAL_DOI_REVIEW",
+        "application_features": [
+            "sales_credit", "doi", "campaigns", "replies", "writing_history", "doi_csv_review",
+        ],
     })
     for name in APP_GUIDES:
         runtime[name] = files[f"docs/windows-app/{name}"]

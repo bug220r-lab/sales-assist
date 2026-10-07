@@ -1,8 +1,10 @@
 Synthetic Sales Assist 0.1.4 - Windows development/demo package
 
-Extract the Windows demo ZIP, then double-click START.cmd in the extracted folder.
-Startup verifies the package, prepares fictional demo records on first use, and opens
-http://127.0.0.1:8765/overview. Use STATUS.cmd, BACKUP.cmd, and STOP.cmd as needed.
+Extract the Windows demo ZIP and read PRIVATE_CONFIGURATION.md for explicit setup.
+START requires an approved external confirmation policy, verifies the package,
+prepares fictional demo records on first use, and opens DOI CSV review on loopback
+with candidate port 8905. Use STATUS.cmd, BACKUP.cmd, and STOP.cmd as needed.
+See DAILY_README.md for in-memory CSV review boundaries and manual acceptance.
 
 Requires local CPython 3.12 with the Windows tzdata 2026.3 package already installed.
 Python and tzdata are not included; no dependency is downloaded by the launcher.

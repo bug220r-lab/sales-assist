@@ -25,8 +25,10 @@ RUNTIME_PREFIXES = ("src/", "specs/", "reference/", "migrations/", "chrome_exten
 RUNTIME_FILES = frozenset({
     *LAUNCHERS, "README.md", "BUNDLE_MANIFEST.json", "SHA256SUMS.txt", "pyproject.toml",
     "tools/prepare_milestone7_demo.py", "tools/release_support.py", "tools/measure_demo_release.py",
+    "tools/daily_policy.py",
     "docs/m8/START_HERE.txt", "docs/m8/MANAGER_DEMO.md", "docs/m8/KNOWN_LIMITATIONS.md",
     "docs/m8/THEME_PROVENANCE.md",
+    "docs/doi-v7/DAILY_README.md", "docs/doi-v7/PRIVATE_CONFIGURATION.md",
 })
 
 
@@ -150,6 +152,19 @@ def build_payloads(
             raise ValueError("RELEASE_LAUNCHER_MISSING")
     for name in ("START_HERE.txt", "MANAGER_DEMO.md", "KNOWN_LIMITATIONS.md"):
         runtime[name] = files[f"docs/m8/{name}"]
+    for name in ("DAILY_README.md", "PRIVATE_CONFIGURATION.md"):
+        runtime[name] = files[f"docs/doi-v7/{name}"]
+    # Bind private-policy receipts to this source snapshot, never a copied live manifest.
+    source_inventory = {
+        name: digest(raw) for name, raw in sorted(files.items())
+        if name.startswith(("src/", "specs/", "migrations/", "scripts/"))
+        or name in {"pyproject.toml", "tools/daily_policy.py"}
+    }
+    metadata.update({
+        "distribution_revision": "doi-v7-daily-local-20261006",
+        "doi_source_payload_sha256": digest(canonical(source_inventory)),
+        "daily_launch_requires_private_policy": True,
+    })
     runtime["release-build.json"] = canonical(metadata)
     runtime["release-payload.json"] = canonical({
         "schema": "synthetic-sales-assist-release-payload/v1",

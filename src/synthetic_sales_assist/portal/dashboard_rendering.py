@@ -342,6 +342,7 @@ _PAGE_TITLES: Final = {
     "sales_credit_detail": "Sales Credit case",
     "doi_queue": "DOI queue",
     "doi_detail": "DOI case",
+    "doi_csv_review": "DOI split review",
     "review": "Human-review queue",
     "audit": "Immutable audit timeline",
     "system": "System health",
@@ -1171,12 +1172,16 @@ def _page(
     body: str,
     csrf_token: str,
     presentation: bool,
+    review_only: bool = False,
 ) -> bytes:
     if _CSRF_TOKEN.fullmatch(csrf_token) is None:
         _fail("DASHBOARD_CSRF_TOKEN_INVALID")
     if route_name not in _PAGE_TITLES:
         _fail("DASHBOARD_ROUTE_INVALID")
     active = (
+        "doi-csv-review" if review_only else "doi"
+        if route_name == "doi_csv_review"
+        else
         "sales-credit"
         if route_name.startswith("sales_credit")
         else "doi"
@@ -1196,6 +1201,9 @@ def _page(
         ("campaign-replies", "/campaign-replies", "Campaign Replies"),
         ("system", "/system", "System"),
     )
+    csv_review = route_name == "doi_csv_review"
+    if csv_review and review_only:
+        nav_items = (("doi-csv-review", "/doi-csv-review", "DOI split review"),)
     navigation = "".join(
         f'<a href="{path}"{(" aria-current=\"page\"" if key == active else "")}>{label}</a>'
         for key, path, label in nav_items
@@ -1203,12 +1211,17 @@ def _page(
     companion = route_name == "campaign-replies"
     banner = (
         '<div class="dashboard-synthetic-banner">'
+        'DOI split review · This PC only · Review only</div>'
+        if csv_review else
+        '<div class="dashboard-synthetic-banner">'
         'Campaign Replies · Local companion · Read-only review</div>'
         if companion else
         '<div class="dashboard-synthetic-banner">'
         'Synthetic demo · Localhost only · Not connected to live systems</div>'
     )
     service_status = (
+        "Files are reviewed in memory in this local session. Nothing is saved to the order system."
+        if csv_review else
         "Campaign review runs in its own local service. Sales Credit and DOI remain synthetic."
         if companion else
         "Local loopback response received. Dashboard actions remain synthetic and local only."
@@ -1216,6 +1229,8 @@ def _page(
     if route_name == "system":
         service_status = "Connected to the app on this PC."
     footer = (
+        "Review only. No fulfillment or sales credit decision has been made."
+        if csv_review else
         "Review only. Editing and sending stay in the separate support application."
         if companion else
         "Fictional local demonstration · no external system access · current projections and "
@@ -1232,6 +1247,7 @@ def _page(
         footer = "Fictional demo data · Runs on this PC only."
     doctype = "<!" + "doctype html>"
     html_open = "<" + f'html lang="en" data-ssa-dashboard-contract="{DASHBOARD_DOM_VERSION}">'
+    script_path = "/static/doi-csv-review.js" if csv_review else "/static/ssa-dashboard.js"
     document = f"""{doctype}
 <!-- {DASHBOARD_ASSET_MARKER} -->
 {html_open}
@@ -1241,7 +1257,7 @@ def _page(
   <meta name="ssa-csrf-token" content="{_h(csrf_token)}">
   <title>{_h(_PAGE_TITLES[route_name])} · ECS Sales Assist</title>
   <link rel="stylesheet" href="/static/ssa-dashboard.css">
-  <script src="/static/ssa-dashboard.js" defer></script>
+  <script src="{script_path}" defer></script>
 </head>
 <body data-ssa-dashboard-page="{_h(route_name)}"
       data-ssa-dashboard-presentation="{str(presentation).lower()}">
@@ -2046,7 +2062,11 @@ def render_doi_queue(data: object, csrf_token: str, *, presentation: bool = Fals
         compact=True,
     )
     body = (
-        _filter_form(
+        '<section class="dashboard-panel"><h2>Captured order split review</h2>'
+        '<p>Review full captured order totals and ready/waiting evidence in this local session.</p>'
+        '<a class="dashboard-case-link" href="/doi-csv-review">Open split-review '
+        'worklist</a></section>'
+        + _filter_form(
             "/doi",
             (
                 ("updated_at", "Most recent update"),
