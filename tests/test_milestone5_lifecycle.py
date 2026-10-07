@@ -19,10 +19,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from synthetic_sales_assist import __version__
+from tests.daily_launch_fixtures import configure_synthetic_daily_policy
+from tests.test_m8_release import COMMIT, STAMP, TREE, candidate_files
+from tools.build_demo_release import build_payloads
+from tools.release_support import extract_archive
 
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ROOT / "scripts"
-SOURCE = ROOT / "src"
 POWERSHELL = shutil.which("pwsh") or shutil.which("powershell")
 WINDOWS_POWERSHELL = shutil.which("powershell")
 RECEIPT_SCHEMA = "synthetic-sales-assist-runtime-receipt/v1"
@@ -187,10 +188,25 @@ function global:Remove-Item {
 
 @unittest.skipUnless(os.name == "nt" and POWERSHELL, "Windows PowerShell lifecycle test")
 class Milestone5LifecycleTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        temporary = tempfile.TemporaryDirectory(prefix="synthetic-m5-package-")
+        cls.addClassCleanup(temporary.cleanup)
+        package_root = Path(temporary.name)
+        artifacts, _ = build_payloads(candidate_files(), COMMIT, TREE, STAMP)
+        archive = package_root / "application.zip"
+        archive.write_bytes(next(raw for name, raw in artifacts.items()
+                                 if "windows-demo" in name))
+        cls.installation = package_root / "application"
+        extract_archive(archive, cls.installation)
+        cls.scripts = cls.installation / "scripts"
+        cls.source = cls.installation / "src"
+
     def setUp(self) -> None:
         temporary = tempfile.TemporaryDirectory(prefix="synthetic-sales-assist-m5-lifecycle-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
+        configure_synthetic_daily_policy(self.root)
         self.host_env = dict(os.environ)
         self.env = dict(os.environ)
         self.env.pop("PYTHONPATH", None)
@@ -222,7 +238,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
         )
         return subprocess.run(
             command,
-            cwd=SOURCE,
+            cwd=self.source,
             env=self.env if env is None else env,
             check=False,
             capture_output=True,
@@ -245,7 +261,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
             "-ExecutionPolicy",
             "Bypass",
             "-File",
-            str(SCRIPTS / script),
+            str(self.scripts / script),
             "-DataDir",
             str(self.root if data_dir is None else data_dir),
         ]
@@ -272,7 +288,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 str(self.root),
                 *arguments,
             ],
-            cwd=SOURCE,
+            cwd=self.source,
             env=self.env,
             check=False,
             capture_output=True,
@@ -324,7 +340,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
         timeout: int = 20,
     ) -> subprocess.CompletedProcess[str]:
         supplied_env = dict(self.env if env is None else env)
-        supplied_env["SSA_LIFECYCLE_COMMON"] = str(SCRIPTS / "lifecycle-common.ps1")
+        supplied_env["SSA_LIFECYCLE_COMMON"] = str(self.scripts / "lifecycle-common.ps1")
         return subprocess.run(
             [
                 str(POWERSHELL),
@@ -335,7 +351,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "-Command",
                 ". $env:SSA_LIFECYCLE_COMMON; " + command,
             ],
-            cwd=SOURCE,
+            cwd=self.source,
             env=supplied_env,
             check=False,
             capture_output=True,
@@ -381,7 +397,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "Add-Type -TypeDefinition $env:SSA_STUB_SOURCE -Language CSharp "
                 "-OutputAssembly $env:SSA_STUB_OUTPUT -OutputType ConsoleApplication",
             ],
-            cwd=SOURCE,
+            cwd=self.source,
             env=environment,
             check=False,
             capture_output=True,
@@ -659,8 +675,25 @@ class Milestone5LifecycleTests(unittest.TestCase):
     def _read_barrier_line(self, process: subprocess.Popen[str]) -> str:
         assert process.stdout is not None
         lines: queue.Queue[str] = queue.Queue(maxsize=1)
+
+        def read_barrier() -> None:
+            assert process.stdout is not None
+            first = process.stdout.readline()
+            try:
+                report = json.loads(first)
+            except json.JSONDecodeError:
+                report = None
+            if (type(report) is dict and set(report) == {"status", "verified_files"}
+                    and report["status"] == "PASS"
+                    and type(report["verified_files"]) is int
+                    and report["verified_files"] > 0):
+                # Daily start verifies its real package before reaching the existing
+                # operation-lock barrier. No other pre-barrier output is admitted.
+                first = process.stdout.readline()
+            lines.put(first)
+
         threading.Thread(
-            target=lambda: lines.put(process.stdout.readline()),
+            target=read_barrier,
             daemon=True,
         ).start()
         try:
@@ -708,10 +741,10 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "SSA_TEST_LIFECYCLE_OPERATION": operation,
                 "SSA_TEST_LIFECYCLE_PORT": str(0 if port is None else port),
                 "SSA_TEST_LIFECYCLE_SCRIPT": str(
-                    SCRIPTS
+                    self.scripts
                     / ("start.ps1" if operation == "START" else "reset-demo.ps1")
                 ),
-                "SSA_TEST_LIFECYCLE_SOURCE": str(SOURCE),
+                "SSA_TEST_LIFECYCLE_SOURCE": str(self.source),
             }
         )
         process = subprocess.Popen(
@@ -724,7 +757,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "-Command",
                 _LIFECYCLE_BARRIER_COMMAND,
             ],
-            cwd=SOURCE,
+            cwd=self.source,
             env=environment,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -776,7 +809,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "SSA_TEST_LIFECYCLE_BARRIER_TOKEN": nonce,
                 "SSA_TEST_LIFECYCLE_DATA_DIR": str(self.root),
                 "SSA_TEST_LIFECYCLE_PORT": str(port),
-                "SSA_TEST_LIFECYCLE_SCRIPT": str(SCRIPTS / "start.ps1"),
+                "SSA_TEST_LIFECYCLE_SCRIPT": str(self.scripts / "start.ps1"),
             }
         )
         process = subprocess.Popen(
@@ -789,7 +822,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "-Command",
                 _START_CLEANUP_BARRIER_COMMAND,
             ],
-            cwd=SOURCE,
+            cwd=self.source,
             env=environment,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -863,7 +896,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                     self.root / "data" / "synthetic_sales_assist.sqlite3"
                 ),
                 "SSA_TEST_LIFECYCLE_DATA_DIR": str(self.root),
-                "SSA_TEST_LIFECYCLE_SCRIPT": str(SCRIPTS / "reset-demo.ps1"),
+                "SSA_TEST_LIFECYCLE_SCRIPT": str(self.scripts / "reset-demo.ps1"),
             }
         )
         process = subprocess.Popen(
@@ -876,7 +909,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                 "-Command",
                 _MAINTENANCE_BARRIER_COMMAND,
             ],
-            cwd=SOURCE,
+            cwd=self.source,
             env=environment,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -1175,7 +1208,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
         self._initialize()
         sleeper = subprocess.Popen(
             [sys.executable, "-c", "import time; time.sleep(30)"],
-            cwd=SOURCE,
+            cwd=self.source,
             env=self.env,
         )
 
@@ -1235,7 +1268,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
         )
         server = subprocess.Popen(
             [sys.executable, "-c", program],
-            cwd=SOURCE,
+            cwd=self.source,
             env=self.env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -1313,7 +1346,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
     def test_live_unowned_python_process_is_never_stopped(self) -> None:
         unrelated = subprocess.Popen(
             [sys.executable, "-c", "import time; time.sleep(30)"],
-            cwd=ROOT,
+            cwd=self.installation,
             env=self.env,
         )
 
@@ -1358,7 +1391,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
     def test_path_policy_rejects_relative_device_ads_repository_and_drive_root(self) -> None:
         candidates = (
             Path("relative-data"),
-            ROOT,
+            self.installation,
             Path(r"\\server\share\synthetic"),
             Path(r"\\?\C:\synthetic"),
             Path(r"C:\synthetic:stream"),
@@ -1710,7 +1743,7 @@ class Milestone5LifecycleTests(unittest.TestCase):
                     "--runtime-receipt",
                     str(receipt),
                 ],
-                cwd=SOURCE,
+                cwd=self.source,
                 env=self.env,
                 check=False,
                 capture_output=True,

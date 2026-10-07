@@ -4,7 +4,7 @@ param(
     [ValidateSet('Start', 'Stop', 'Status', 'Backup', 'Reset', 'Upgrade', 'Remove')]
     [string]$Action = 'Start',
     [string]$DataDir,
-    [ValidateRange(1024, 65535)][int]$Port = 8765,
+    [ValidateRange(1024, 65535)][int]$Port = 8905,
     [switch]$NoBrowser,
     [switch]$DevelopmentRuntime,
     [switch]$Confirmed
@@ -24,7 +24,9 @@ try {
     Assert-SsaRuntimeFileNotReparsePoint -Path $metadataPath
     $metadata = Get-Content -LiteralPath $metadataPath -Raw | ConvertFrom-Json
     if ($metadata.schema -cne 'synthetic-sales-assist-release-build/v1' -or
-        $metadata.release_id -cnotmatch '^demo-[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}$') {
+        $metadata.release_id -cnotmatch '^demo-[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{12}$' -or
+        $null -eq $metadata.PSObject.Properties['distribution_revision'] -or
+        $metadata.distribution_revision -cne 'doi-v7-daily-local-20261006') {
         throw 'RELEASE_METADATA_INVALID'
     }
     $env:PYTHONPATH = Join-Path $installation 'src'
@@ -50,6 +52,9 @@ try {
     $dataRoot = Resolve-SsaDataRoot -DataDir $DataDir
     switch ($Action) {
         'Start' {
+            $dailyPolicySupport = Join-Path $installation 'tools\daily_policy.py'
+            $policyLines = @(& $python -B -I $dailyPolicySupport check --data-dir $dataRoot)
+            if ($LASTEXITCODE -ne 0) { throw 'DOI_PRIVATE_POLICY_REQUIRED_SEE_PRIVATE_CONFIGURATION' }
             $statusLines = @(& (Join-Path $PSScriptRoot 'status.ps1') -DataDir $dataRoot)
             if ($LASTEXITCODE -ne 0) { throw 'DEMO_OWNED_STATUS_UNAVAILABLE' }
             try { $currentStatus = ($statusLines -join "`n") | ConvertFrom-Json }
@@ -74,14 +79,18 @@ try {
                 if ($null -eq $marker -or
                     $null -eq $marker.PSObject.Properties['schema'] -or
                     $null -eq $marker.PSObject.Properties['source_commit'] -or
+                    $null -eq $marker.PSObject.Properties['distribution_revision'] -or
+                    $marker.distribution_revision -cne $metadata.distribution_revision -or
                     $marker.schema -cne 'synthetic-sales-assist-release-build/v1' -or
                     $marker.source_commit -cne $metadata.source_commit) {
                     throw 'DEMO_RUNNING_RELEASE_MISMATCH'
                 }
+                $policyBinding = @(& $python -B -I $dailyPolicySupport verify-running --data-dir $dataRoot)
+                if ($LASTEXITCODE -ne 0) { throw 'DOI_POLICY_CHANGED_STOP_OWNED_SERVICE_BEFORE_RESTART' }
                 & $python -B -I $support configure --install-root $installation --data-dir $dataRoot
                 if ($LASTEXITCODE -ne 0) { throw 'DEMO_DATA_ROOT_CONFIGURATION_FAILED' }
                 if (-not $NoBrowser) {
-                    Start-Process -FilePath ([string]$currentStatus.origin + '/overview')
+                    Start-Process -FilePath ([string]$currentStatus.origin + '/doi-csv-review')
                 }
                 Write-SsaJsonResult -Value @{
                     state = 'REOPENED'
@@ -131,7 +140,7 @@ try {
                 & (Join-Path $PSScriptRoot 'stop.ps1') -DataDir $dataRoot
                 throw 'DEMO_DATA_ROOT_CONFIGURATION_FAILED'
             }
-            if (-not $NoBrowser) { Start-Process "http://127.0.0.1:$Port/overview" }
+            if (-not $NoBrowser) { Start-Process "http://127.0.0.1:$Port/doi-csv-review" }
         }
         'Upgrade' {
             # start.ps1 holds the lifecycle lock through verified backup, preparation,
@@ -192,6 +201,8 @@ catch {
     Write-Host 'Keep the entire extracted package together, including its private python folder.'
     Write-Host 'The Windows application includes its runtime. No runtime is downloaded at startup.'
     Write-Host 'Older development packages require external CPython 3.12 with tzdata 2026.3.'
+    Write-Host 'DOI daily launch requires the external private configuration described in PRIVATE_CONFIGURATION.md.'
+    Write-Host 'If its policy changed while running, use this copy''s STOP.cmd before START.cmd. STATUS and STOP do not require that policy.'
     exit 1
 }
 finally {

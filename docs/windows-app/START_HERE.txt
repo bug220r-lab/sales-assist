@@ -1,15 +1,19 @@
 Sales Assist 0.2.0 - Windows x64 application
 
-Extract the whole ZIP into a normal local folder, then double-click START.cmd.
-Sales Assist opens in your default browser. Keep all extracted files together.
+Extract the whole ZIP into a normal local folder. Complete the explicit private
+setup in PRIVATE_CONFIGURATION.md before START.cmd. Keep all extracted files together.
+START verifies the approved external policy and opens DOI CSV review in your browser.
 File verification takes time; keep the startup window open until the browser opens.
 Python 3.12.14 and timezone data 2026.3 are included. No Python installation, Codex,
 administrator account, dependency download or source command is needed at runtime.
 Supported target: Windows 10/11 x64 with Windows PowerShell 5.1 and a local browser.
 
 The first start creates fictional Sales Credit, DOI, campaign and reply records.
+The separate DOI CSV review accepts manually supplied captures into memory only;
+its 30-minute session is removed by Clear, expiry or service shutdown. See DAILY_README.md.
 The Overview navigation opens Campaigns, Replies and Writing history. All data and
-actions are synthetic; simulated outreach does not send email or create remote drafts.
+actions on those sample screens are synthetic; simulated outreach does not send email
+or create remote drafts. CSV observations do not authorize fulfillment or external action.
 MANAGER_DEMO.md walks through the integrated application in ten minutes.
 
 Campaign Replies is a separate optional workstation companion view. It is
@@ -21,7 +25,8 @@ START.cmd opens the application; STATUS.cmd reports its state; STOP.cmd stops it
 owned local service. Close the browser whenever you like; use STOP.cmd to stop the
 service. Reopening the same installation preserves your saved drafts and history.
 Double-clicking START.cmd again reopens the running application. If the default local
-port is occupied by another app, Sales Assist selects an available port automatically.
+port candidate 8905 is occupied by another app, Sales Assist selects an available
+loopback port automatically. Reopen requires matching policy and owned-process identity.
 If startup fails, the command window remains open with the error. Do not replace
 runtime files or point this installation at an unrelated database.
 

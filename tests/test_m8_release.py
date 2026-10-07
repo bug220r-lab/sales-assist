@@ -15,6 +15,7 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
+from tests.daily_launch_fixtures import configure_synthetic_daily_policy
 from synthetic_sales_assist.application.scenarios import ScenarioApplication
 from synthetic_sales_assist.safety.repository import scan_prohibited_repository_content
 from tools.build_demo_release import (
@@ -217,6 +218,7 @@ class ReleasePackageTests(unittest.TestCase):
 
         installation = self.install("batch launch with spaces")
         data = self.root / "owned isolated data"
+        configure_synthetic_daily_policy(data)
         environment = os.environ.copy()
         environment["SSA_NONINTERACTIVE"] = "1"
         environment["SSA_PYTHON"] = os.path.abspath(sys.executable)

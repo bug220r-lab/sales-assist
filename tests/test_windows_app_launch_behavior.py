@@ -13,6 +13,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tests.daily_launch_fixtures import configure_synthetic_daily_policy
 from tests.test_m8_release import COMMIT, STAMP, TREE, candidate_files
 from tools.build_demo_release import build_payloads
 from tools.release_support import extract_archive
@@ -37,6 +38,7 @@ class WindowsAppLaunchBehaviorTests(unittest.TestCase):
         self.installation = self.root / "application with spaces"
         extract_archive(archive, self.installation)
         self.data = self.root / "owned synthetic data"
+        configure_synthetic_daily_policy(self.data)
         self.environment = os.environ.copy()
         self.environment["SSA_NONINTERACTIVE"] = "1"
         self.environment["SSA_PYTHON"] = os.path.abspath(sys.executable)
@@ -125,7 +127,7 @@ class WindowsAppLaunchBehaviorTests(unittest.TestCase):
         blocker_was_bound = False
         try:
             try:
-                blocker.bind(("127.0.0.1", 8765))
+                blocker.bind(("127.0.0.1", 8905))
                 blocker.listen(1)
                 blocker_was_bound = True
             except OSError as error:
@@ -135,12 +137,12 @@ class WindowsAppLaunchBehaviorTests(unittest.TestCase):
                     raise
             self.command("START", f'-NoBrowser -DataDir "{self.data}"')
             actual = self.receipt()
-            self.assertNotEqual(actual["port"], 8765)
+            self.assertNotEqual(actual["port"], 8905)
             actual_port = actual["port"]
             self.assertEqual(actual["origin"], f"http://127.0.0.1:{actual_port}")
             self.assertIn('"state":"RUNNING"', self.command("STATUS").stdout)
             if blocker_was_bound:
-                self.assertEqual(blocker.getsockname(), ("127.0.0.1", 8765))
+                self.assertEqual(blocker.getsockname(), ("127.0.0.1", 8905))
         finally:
             blocker.close()
 
@@ -153,6 +155,27 @@ class WindowsAppLaunchBehaviorTests(unittest.TestCase):
                          success=False)
             self.assertFalse((self.data / "runtime" / "service.json").exists())
             self.assertEqual(blocker.getsockname(), ("127.0.0.1", port))
+
+    def test_missing_policy_fails_before_start_and_status_stop_remain_available(self) -> None:
+        (self.data / "doi-private-launch.json").unlink()
+        rejected = self.command("START", f'-NoBrowser -DataDir "{self.data}"', success=False)
+        self.assertIn("DOI_PRIVATE_CONFIGURATION_REQUIRED", rejected.stdout + rejected.stderr)
+        self.assertFalse((self.data / "runtime" / "service.json").exists())
+        for action in ("STATUS", "STOP"):
+            self.assertIn('"state":"STOPPED"',
+                          self.command(action, f'-DataDir "{self.data}"').stdout)
+
+    def test_changed_policy_binding_rejects_reopen_without_stopping_owned_service(self) -> None:
+        original = self.start_explicit()
+        binding = self.data / "runtime" / "doi-policy-binding.json"
+        value = json.loads(binding.read_text(encoding="utf-8"))
+        value["source_payload_sha256"] = "d" * 64
+        binding.write_text(json.dumps(value), encoding="utf-8")
+        rejected = self.command("START", "-NoBrowser", success=False)
+        self.assertIn("DOI_POLICY_CHANGED_STOP_OWNED_SERVICE_BEFORE_RESTART",
+                      rejected.stdout + rejected.stderr)
+        self.assertEqual(self.receipt(), original)
+        self.assertIn('"state":"RUNNING"', self.command("STATUS").stdout)
 
 
 if __name__ == "__main__":

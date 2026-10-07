@@ -18,6 +18,12 @@ from socketserver import TCPServer
 from typing import Final, cast
 from urllib.parse import unquote_to_bytes
 
+from doi_csv_staging.review import (
+    DOIReviewError, DOIReviewSession, MAX_BODY_BYTES as DOI_REVIEW_MAX_BODY_BYTES,
+    parse_review_envelope, validate_review_request, review_response_bytes,
+)
+from doi_csv_staging.review_policy import OwnerConfirmations, EMPTY_CONFIRMATIONS
+
 from synthetic_sales_assist.application.control_center import (
     ControlCenterApplication,
     ControlCenterError,
@@ -217,8 +223,15 @@ _GET_ROUTES: Final = frozenset(
     }
 )
 
+_DOI_REVIEW_GET_ROUTES = frozenset({"/doi-csv-review", "/api/v1/doi-csv-review/state", "/static/doi-csv-review.js"})
+_DOI_REVIEW_POST_ROUTES = frozenset({"/api/v1/doi-csv-review/load", "/api/v1/doi-csv-review/clear"})
+
 
 def _allowed_methods(path: str) -> tuple[str, ...] | None:
+    if path in _DOI_REVIEW_GET_ROUTES:
+        return ("GET",)
+    if path in _DOI_REVIEW_POST_ROUTES:
+        return ("POST",)
     if path in WORKSPACE_GET_ROUTES:
         return ("GET",)
     if path == WORKSPACE_ACTION_ROUTE:
@@ -426,8 +439,11 @@ class PortalServerError(RuntimeError):
 class PortalServerConfig:
     host: str = DEFAULT_HOST
     port: int = DEFAULT_PORT
+    owner_confirmations: OwnerConfirmations = EMPTY_CONFIRMATIONS
 
     def __post_init__(self) -> None:
+        if type(self.owner_confirmations) is not OwnerConfirmations:
+            raise PortalServerError("OWNER_CONFIRMATIONS_INVALID")
         if type(self.host) is not str or self.host not in LOOPBACK_HOSTS:
             raise PortalServerError("PORTAL_BIND_HOST_PROHIBITED")
         if type(self.port) is not int or not 0 <= self.port <= 65_535:
@@ -481,6 +497,7 @@ class PortalHTTPServer(HTTPServer):
         *,
         csrf_token: str,
         shutdown_token: str,
+        doi_csv_review_only: bool = False,
     ) -> None:
         if (
             len(csrf_token) != 64
@@ -491,6 +508,8 @@ class PortalHTTPServer(HTTPServer):
         ):
             raise PortalServerError("PORTAL_CONTROL_TOKEN_INVALID")
         self.application = application
+        self.doi_csv_review_only = doi_csv_review_only
+        self.doi_review_session = DOIReviewSession(owner_confirmations=config.owner_confirmations)
         self.campaign_workspace: WorkspaceWeb | None = None
         database = getattr(application, "database", None)
         self.control_center = (
@@ -513,6 +532,10 @@ class PortalHTTPServer(HTTPServer):
         authority = f"[{config.host}]" if config.host == "::1" else config.host
         self.origin = "http" + f"://{authority}:{actual_port}"
         self.expected_host = f"{authority}:{actual_port}"
+
+    def server_close(self) -> None:
+        self.doi_review_session.close()
+        super().server_close()
 
     def observe_extension(self, version: str) -> dict[str, object]:
         now = datetime.now(timezone.utc)
@@ -612,6 +635,12 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         try:
             path = self._validated_target()
             self._validate_common_headers()
+            if self.portal_server.doi_csv_review_only and path not in (
+                _DOI_REVIEW_GET_ROUTES | _DOI_REVIEW_POST_ROUTES
+                | frozenset(route for route, asset in DASHBOARD_STATIC_ASSETS.items() if asset[0].startswith("text/css"))
+            ):
+                self._safe_error(404, "ROUTE_NOT_FOUND")
+                return
             allowed = _allowed_methods(path)
             if allowed is None or method not in allowed:
                 self._route_error(path, method)
@@ -1020,6 +1049,18 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         return False
 
     def _get(self, path: str) -> None:
+        if path == "/doi-csv-review":
+            from synthetic_sales_assist.portal.doi_csv_review_ui import render_doi_csv_review_page
+            self._send_html(render_doi_csv_review_page(
+                self.portal_server.csrf_token, review_only=self.portal_server.doi_csv_review_only))
+            return
+        if path == "/static/doi-csv-review.js":
+            from synthetic_sales_assist.portal.doi_csv_review_ui import DOI_CSV_REVIEW_JS
+            self._send(200, DOI_CSV_REVIEW_JS.encode("utf-8"), "text/javascript; charset=utf-8")
+            return
+        if path == "/api/v1/doi-csv-review/state":
+            self._send(200, review_response_bytes(self.portal_server.doi_review_session.snapshot()), "application/json; charset=utf-8")
+            return
         if path == "/campaign-replies":
             enabled = (
                 os.environ.get("SSA_CAMPAIGN_REPLIES") == "1"
@@ -1191,6 +1232,34 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         self._route_error(path, "GET")
 
     def _post(self, path: str) -> None:
+        if path in _DOI_REVIEW_POST_ROUTES:
+            session = self.portal_server.doi_review_session
+            current_revision_trusted = False
+            try:
+                envelope = parse_review_envelope(self._read_json_body(DOI_REVIEW_MAX_BODY_BYTES))
+                session.assert_revision(cast(int, envelope["revision"]))
+                current_revision_trusted = True
+                request = validate_review_request(envelope, clear=path.endswith("/clear"))
+                if path.endswith("/clear"):
+                    state = session.clear(cast(int, request["revision"]))
+                else:
+                    state = session.load(cast(str, request["summary_csv"]), cast(str, request["lines_csv"]), cast(int, request["revision"]))
+            except DOIReviewError as exc:
+                if exc.code == "REVISION_MISMATCH":
+                    self._safe_error(409, "REVISION_MISMATCH")
+                    return
+                if not current_revision_trusted:
+                    self._safe_error(400, exc.code)
+                    return
+                state = session.invalidate(exc.code)
+            except PortalContractError:
+                self._safe_error(400, "REVIEW_TRANSPORT_INVALID")
+                return
+            except (OSError, ValueError, OverflowError):
+                self._safe_error(400, "REVIEW_TRANSPORT_INVALID")
+                return
+            self._send(400 if state["status"] == "error" else 200, review_response_bytes(state), "application/json; charset=utf-8")
+            return
         if path == WORKSPACE_ACTION_ROUTE:
             body = self._workspace().post(self._read_json_body(8 * 1024 * 1024))
             self._send(200, body, "application/json; charset=utf-8")
@@ -1596,6 +1665,7 @@ def open_runtime(
     host: str = DEFAULT_HOST,
     port: int = DEFAULT_PORT,
     application: ScenarioApplicationProtocol | None = None,
+    owner_confirmations: OwnerConfirmations = EMPTY_CONFIRMATIONS,
 ) -> PortalRuntime:
     paths = resolve_data_paths(data_dir)
     if receipt_path != paths.runtime / RUNTIME_RECEIPT_FILENAME:
@@ -1613,7 +1683,7 @@ def open_runtime(
         application,
         paths=paths,
         receipt_path=receipt_path,
-        config=PortalServerConfig(host, port),
+        config=PortalServerConfig(host, port, owner_confirmations),
         application_factory=application_factory,
     )
 

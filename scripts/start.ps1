@@ -25,6 +25,15 @@ try {
     $python = [string]$pythonRuntime.Path
     $pythonOwnershipPaths = [string[]]$pythonRuntime.OwnershipPaths
     $root = Resolve-SsaDataRoot -DataDir $DataDir
+    $installation = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+    $support = Join-Path $installation 'tools\release_support.py'
+    & $python -B -I $support verify --install-root $installation
+    if ($LASTEXITCODE -ne 0) { throw 'RELEASE_PAYLOAD_VERIFICATION_FAILED' }
+    $dailyPolicySupport = Join-Path $installation 'tools\daily_policy.py'
+    $policyLines = @(& $python -B -I $dailyPolicySupport check --data-dir $root)
+    if ($LASTEXITCODE -ne 0) { throw 'DOI_PRIVATE_POLICY_REQUIRED_SEE_PRIVATE_CONFIGURATION' }
+    try { $doiPolicy = ($policyLines -join "`n") | ConvertFrom-Json }
+    catch { throw 'DOI_PRIVATE_POLICY_RESPONSE_INVALID' }
     $paths = Get-SsaRuntimePaths -DataRoot $root
     Initialize-SsaDirectories -Paths $paths
     $operationLock = Enter-SsaLifecycleOperationLock -LockPath $paths.LifecycleLock
@@ -69,7 +78,8 @@ try {
         '--data-dir ' + (ConvertTo-SsaQuotedProcessArgument $root),
         '--host 127.0.0.1',
         '--port ' + $Port,
-        '--runtime-receipt ' + (ConvertTo-SsaQuotedProcessArgument $paths.Receipt)
+        '--runtime-receipt ' + (ConvertTo-SsaQuotedProcessArgument $paths.Receipt),
+        '--doi-owner-confirmations ' + (ConvertTo-SsaQuotedProcessArgument $doiPolicy.confirmation_path)
     ) -join ' '
     $repository = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\src'))
     $child = Start-Process -FilePath $python -ArgumentList $argumentLine -PassThru `
@@ -101,8 +111,11 @@ try {
         -DataRoot $root `
         -ReceiptPath $paths.Receipt -LockPath $paths.Lock
     if ($null -eq $owned -or $owned.Id -ne $child.Id) { throw 'PROCESS_OWNERSHIP_MISMATCH' }
+    $policyRecord = @(& $python -B -I $dailyPolicySupport record --data-dir $root `
+        --expected-sha256 $doiPolicy.confirmation_sha256 --expected-pid $child.Id)
+    if ($LASTEXITCODE -ne 0) { throw 'DOI_POLICY_RUNTIME_BINDING_FAILED' }
     if (-not $NoBrowser) {
-        Start-Process -FilePath ([string]$receipt.origin + '/scenarios')
+        Start-Process -FilePath ([string]$receipt.origin + '/doi-csv-review')
     }
     Write-SsaJsonResult -Value @{
         state = 'RUNNING'
