@@ -23,35 +23,35 @@ from synthetic_sales_assist.domain.normalization import (
 
 SUMMARY_HEADERS = tuple(
     (
-        'order_id displayed_order_id order_id_matches_queue doi_review_assignment '
-        'doi_source_assignment_conflict queue_position queue_sheet queue_sheet_row '
-        'queue_range original_source_rows source_occurrences order_status '
-        'displayed_sales_credit_field displayed_sales_credit_value '
-        'sales_credit_entitlement order_total_displayed order_total_numeric '
-        'currency_symbol_displayed currency_code customer_info_email '
-        'customer_email_checked_at_america_new_york captured_at_america_new_york timezone '
-        'utc_offset stock_eta_exact revised_ship_date_exact '
-        'current_expected_ship_date_exact expected_arrival_date_exact '
-        'days_in_transit_exact arrival_missing_reason inventory_percent_on_shelf_exact '
-        'active_purchased_rows separate_service_rows_displayed visible_component_rows '
-        'pagination_controls_displayed purchased_line_coverage_complete component_coverage '
-        'capture_complete missing_evidence_reason snapshot_consistency_verified '
-        'snapshot_change_note pure_drop_ship_eligibility order_admin_url queue_source_url '
-        'earlier_observation_state'
+        "order_id displayed_order_id order_id_matches_queue doi_review_assignment "
+        "doi_source_assignment_conflict queue_position queue_sheet queue_sheet_row "
+        "queue_range original_source_rows source_occurrences order_status "
+        "displayed_sales_credit_field displayed_sales_credit_value "
+        "sales_credit_entitlement order_total_displayed order_total_numeric "
+        "currency_symbol_displayed currency_code customer_info_email "
+        "customer_email_checked_at_america_new_york captured_at_america_new_york timezone "
+        "utc_offset stock_eta_exact revised_ship_date_exact "
+        "current_expected_ship_date_exact expected_arrival_date_exact "
+        "days_in_transit_exact arrival_missing_reason inventory_percent_on_shelf_exact "
+        "active_purchased_rows separate_service_rows_displayed visible_component_rows "
+        "pagination_controls_displayed purchased_line_coverage_complete component_coverage "
+        "capture_complete missing_evidence_reason snapshot_consistency_verified "
+        "snapshot_change_note pure_drop_ship_eligibility order_admin_url queue_source_url "
+        "earlier_observation_state"
     ).split()
 )
 LINE_HEADERS = tuple(
     (
-        'order_id row_type counts_as_purchase parent_line_id line_identifier '
-        'line_identifier_basis es_number sku product_name physical_or_service '
-        'ordered_quantity_displayed fulfilled_quantity remaining_quantity '
-        'component_quantity_per_parent component_quantity_required product_eta_exact '
-        'current_stock_icon_exact OH_displayed OS_displayed PO_displayed PC_displayed '
-        'WC_displayed stock_quantity_applicability dated_line_eta eta_qualification '
-        'drop_ship drop_ship_evidence each_price_displayed purchased_line_total_displayed '
-        'line_coverage_complete component_coverage_complete order_capture_complete '
-        'missing_evidence_reason captured_at_america_new_york order_admin_url '
-        'queue_source_url queue_position queue_sheet_row original_source_rows'
+        "order_id row_type counts_as_purchase parent_line_id line_identifier "
+        "line_identifier_basis es_number sku product_name physical_or_service "
+        "ordered_quantity_displayed fulfilled_quantity remaining_quantity "
+        "component_quantity_per_parent component_quantity_required product_eta_exact "
+        "current_stock_icon_exact OH_displayed OS_displayed PO_displayed PC_displayed "
+        "WC_displayed stock_quantity_applicability dated_line_eta eta_qualification "
+        "drop_ship drop_ship_evidence each_price_displayed purchased_line_total_displayed "
+        "line_coverage_complete component_coverage_complete order_capture_complete "
+        "missing_evidence_reason captured_at_america_new_york order_admin_url "
+        "queue_source_url queue_position queue_sheet_row original_source_rows"
     ).split()
 )
 SERVICE_NATURES = frozenset({"service", "service line", "explicit service/charge line"})
@@ -72,9 +72,16 @@ GENERIC_PURCHASE_ROLES = frozenset({"purchased", "purchase", "purchased_line", "
 PURCHASE_ROLES = GENERIC_PURCHASE_ROLES | SERVICE_PURCHASE_ROLES | PHYSICAL_PURCHASE_ROLES
 
 
+def _purchase_nature_label(value: str) -> str:
+    # Exact capture metadata alias; do not infer service from stock or product text.
+    if value == "Service/charge based on explicit Service availability":
+        return "service"
+    return ascii_four_trim(value).lower()
+
+
 def purchase_nature(role: str, nature: str, parent_line_id: str = "") -> str | None:
     """Interpret controlled row metadata only; never product names or stock."""
-    role, nature = ascii_four_trim(role).lower(), ascii_four_trim(nature).lower()
+    role, nature = ascii_four_trim(role).lower(), _purchase_nature_label(nature)
     if role not in PURCHASE_ROLES or ascii_four_trim(parent_line_id):
         return None
     if (role in SERVICE_PURCHASE_ROLES and nature in PHYSICAL_NATURES) or (
@@ -186,8 +193,8 @@ def _time(value: str) -> datetime | None:
     if (
         re.fullmatch(
             (
-                '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?(?:Z|[+-'
-                '][0-9]{2}:[0-9]{2})'
+                "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]{1,9})?(?:Z|[+-"
+                "][0-9]{2}:[0-9]{2})"
             ),
             candidate,
         )
@@ -405,7 +412,7 @@ def stage_capture_csvs(summary_csv: str, lines_csv: str) -> StagingBatch:
                 local.append(_issue("PACKAGED_PRODUCT_STRUCTURE_UNRESOLVED", "lines", row))
             if purchase:
                 all_purchased += 1
-                nature = _trim(d.get("physical_or_service", "")).lower()
+                nature = _purchase_nature_label(d.get("physical_or_service", ""))
                 contradictory = (role in SERVICE_PURCHASE_ROLES and nature in PHYSICAL_NATURES) or (
                     role in PHYSICAL_PURCHASE_ROLES and nature in SERVICE_NATURES
                 )
@@ -626,8 +633,8 @@ def stage_capture_csvs(summary_csv: str, lines_csv: str) -> StagingBatch:
             dict.fromkeys(
                 (
                     *(i.code for i in relevant),
-                    *(('GLOBAL_INPUT_HOLD',) if global_block else ()),
-                    *(('COVERAGE_INCOMPLETE',) if not coverage else ()),
+                    *(("GLOBAL_INPUT_HOLD",) if global_block else ()),
+                    *(("COVERAGE_INCOMPLETE",) if not coverage else ()),
                     "PRODUCTION_EVALUATION_NOT_PERFORMED",
                 )
             )

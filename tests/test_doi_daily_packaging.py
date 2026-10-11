@@ -105,13 +105,18 @@ class DailyDOIPackageTests(unittest.TestCase):
                          self.metadata["doi_source_payload_sha256"])
         self.assertIs(metadata["daily_launch_requires_private_policy"], True)
         self.assertEqual(metadata["workflow_scope"],
-                         "LOCALHOST_SYNTHETIC_CORE_WITH_LOCAL_DOI_REVIEW")
+                         "LOCAL_REVIEW_WITH_OPT_IN_APPROVED_HELP_SCOUT_DRAFTS")
         self.assertIn("doi_csv_review", metadata["application_features"])
+        self.assertIn("doi_draft_transfer", metadata["application_features"])
         name = next(name for name in artifacts if name.endswith("-windows-x64.zip"))
         runtime = self.members(artifacts[name])
         self.assertEqual(json.loads(runtime["release-build.json"]), metadata)
         self.assertIn("tools/daily_policy.py", runtime)
         self.assertIn("scripts/setup-daily-private.ps1", runtime)
+        for asset in ("ui.html", "ui.js", "ui.css", "contract.py", "helpscout.py"):
+            self.assertIn("src/doi_draft_transfer/" + asset, runtime)
+        self.assertIn("docs/doi-draft-transfer.md", runtime)
+        self.assertNotIn("doi-draft-transfer.sqlite3", runtime)
         validate_migration_payload(runtime)
 
 

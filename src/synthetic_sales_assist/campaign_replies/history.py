@@ -39,7 +39,7 @@ LIMITATIONS = [
     "HTML cleaning, template boundaries and near matches are heuristics requiring review.",
     "Attachments are metadata only; their contents were not downloaded or inspected.",
     "Deterministic corpus preparation is not model training or a completed style analysis.",
-    "Saved reply ID 4184246 has no confirmed signature-template mapping.",
+    "Unverified saved reply IDs have no confirmed signature-template mapping.",
 ]
 
 

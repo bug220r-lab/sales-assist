@@ -1,6 +1,6 @@
 # Morning handoff: synthetic Campaigns and Replies
 
-Working tree: `C:\Users\jlewi\OneDrive\Documents\Synthetic_Sales_Assist_Specification_Bundle_v1.0.1`
+Working tree: the original local synthetic development checkout.
 
 Branch: `codex/campaigns-replies-offline`.
 Starting branch: `finish/synthetic-v0.1`.
@@ -56,12 +56,12 @@ scanning still applies. They are not app-served assets or a live transport.
 From this working tree, run in PowerShell:
 
 ```powershell
-$python = 'C:\Users\jlewi\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+$python = 'C:\path\to\approved-development-runtime\python.exe'
 $campaignData = Join-Path $env:LOCALAPPDATA 'SyntheticSalesAssist-Campaigns-Demo-20260911'
 & $python .\tools\campaign_demo.py --data-dir $campaignData --port 8876
 ```
 
-This explicit runtime is available on this PC and is development-only/nonportable.
+Select an approved development-only runtime for the local workstation.
 An installed compatible Python with the repository's existing dependencies may be used
 instead. The launcher does not install or download anything. The explicit data root avoids
 the delivered launcher's selected-data-root pointer and all existing worker data.
@@ -119,10 +119,9 @@ Screenshot: `.runtime/campaign-replies-browser.png` (generated synthetic records
 The earlier `.runtime/campaign-replies-browser-initial.png` preserves evidence of the
 table-width issue before its correction; use the final screenshot for review.
 
-The original browser acceptance used this task-owned data root:
-`C:\Users\jlewi\.codex\visualizations\2026\09\11\01a08ec8-0d3a-7c81-8397-0b975858844a\campaign-demo-data`.
+The original browser acceptance used a task-owned data root recorded locally.
 It held the browser-saved reviewed draft for `synthetic-customer-1@example.test`.
-Use that exact data root to continue the previously populated demo; this document
+Use the locally recorded data root to continue the previously populated demo; this document
 does not assert that a service is currently running. The launch example
 above uses a different, fresh local-app-data root. Pause then Resume safely reacquires
 an idle simulated campaign after a process restart; uncertain in-flight state stays blocked.

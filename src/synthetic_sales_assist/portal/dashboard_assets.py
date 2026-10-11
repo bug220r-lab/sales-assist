@@ -15,7 +15,9 @@ from synthetic_sales_assist.portal.theme import THEME_CSS
 
 DASHBOARD_ASSET_MARKER: Final = "SYNTHETIC-SALES-ASSIST-AUTHORED-M7"
 
-DASHBOARD_CSS: Final = THEME_CSS + f"""/* {DASHBOARD_ASSET_MARKER} */
+DASHBOARD_CSS: Final = (
+    THEME_CSS
+    + f"""/* {DASHBOARD_ASSET_MARKER} */
 :root {{
   color-scheme: light;
   font-family: var(--ssa-font-family);
@@ -154,11 +156,48 @@ h3 {{ font-size: 1.05rem; }}
 .doi-worklist table {{ min-width: 64rem; }}
 .doi-worklist td:first-child, .doi-worklist th:first-child {{ white-space: nowrap; \
 overflow-wrap: normal; font-variant-numeric: tabular-nums; }}
-.doi-worklist td:nth-child(2) {{ white-space: nowrap; font-variant-numeric: tabular-nums; }}
-.doi-worklist td:nth-child(5) {{ min-width: 22rem; }}
+.doi-worklist td:nth-child(2) {{ min-width: 10rem; max-width: 13rem; }}
+.doi-worklist td:nth-child(3) {{ white-space: nowrap; font-variant-numeric: tabular-nums; }}
+.doi-worklist td:nth-child(4) {{ min-width: 10rem; }}
+.doi-worklist td:nth-child(6) {{ min-width: 19rem; }}
 .doi-worklist details {{ margin-top: var(--ssa-space-2); }}
 .doi-worklist summary {{ cursor: pointer; color: var(--ssa-color-primary); }}
 .doi-worklist .doi-next-check {{ margin: 0 0 var(--ssa-space-2); }}
+.doi-review .dashboard-panel h2 {{ margin-top: 0; }}
+.doi-review .doi-scope {{ border-left: 4px solid var(--ssa-color-info); }}
+.doi-review details > summary {{ cursor: pointer; color: var(--ssa-color-primary); }}
+.doi-review .doi-session-help {{ margin-bottom: var(--ssa-space-4); }}
+.doi-review .doi-file-pair {{
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: none;
+  margin-top: var(--ssa-space-4);
+}}
+.doi-file-pair .dashboard-field-hint {{ grid-column: 1 / -1; margin: 0; }}
+.doi-review .doi-filters {{
+  background: var(--ssa-color-background);
+  border: 1px solid var(--ssa-color-border);
+  border-radius: var(--ssa-radius-control);
+  padding: var(--ssa-space-3);
+  margin-top: var(--ssa-space-4);
+}}
+.doi-review-check {{ display: inline-flex; gap: var(--ssa-space-2);
+  align-items: center; cursor: pointer; }}
+.doi-review-check input {{ flex: 0 0 auto; accent-color: var(--ssa-color-primary); margin: 0; }}
+.doi-hide-reviewed {{ min-height: 2.6rem; font-weight: 650; }}
+.doi-review-progress {{
+  padding: var(--ssa-space-3);
+  background: var(--ssa-color-info-surface);
+  border-radius: var(--ssa-radius-control);
+  color: var(--ssa-color-info);
+}}
+.doi-review-changed {{ color: var(--ssa-color-warning); font-size: .88rem; margin-bottom: 0; }}
+.doi-worklist td {{ overflow-wrap: anywhere; }}
+.doi-worklist td:first-child {{ font-weight: 750; }}
+.doi-worklist .dashboard-state {{ font-size: .8rem; line-height: 1.45; overflow-wrap: normal; }}
+@media (max-width: 650px) {{
+  .doi-review .doi-file-pair {{ grid-template-columns: minmax(0, 1fr); }}
+  .doi-filters .dashboard-field {{ width: 100%; }}
+}}
 table {{ border-collapse: collapse; min-width: 46rem; width: 100%; }}
 caption {{ font-weight: 800; padding: .6rem 0; text-align: left; }}
 th, td {{
@@ -355,6 +394,7 @@ body[data-ssa-dashboard-page="campaign-replies"] .dashboard-lede {{ margin: 0; }
   .dashboard-companion-frame {{ height: 1050px; }}
 }}
 """
+)
 
 DASHBOARD_JS: Final = f"""/* {DASHBOARD_ASSET_MARKER} */
 "use strict";

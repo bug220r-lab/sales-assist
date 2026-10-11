@@ -57,15 +57,11 @@ from synthetic_sales_assist.safety.identity import is_reserved_identity
 
 
 DASHBOARD_DOM_VERSION: Final = "synthetic-sales-assist-dashboard-dom/v1"
-MANAGER_OUTCOME_REQUEST_VERSION: Final = (
-    "synthetic-sales-assist-manager-outcome-request/v1"
-)
+MANAGER_OUTCOME_REQUEST_VERSION: Final = "synthetic-sales-assist-manager-outcome-request/v1"
 DOI_SCENARIO_SELECTION_REQUEST_VERSION: Final = (
     "synthetic-sales-assist-doi-scenario-selection-request/v1"
 )
-DATABASE_VERIFY_REQUEST_VERSION: Final = (
-    "synthetic-sales-assist-database-verify-request/v1"
-)
+DATABASE_VERIFY_REQUEST_VERSION: Final = "synthetic-sales-assist-database-verify-request/v1"
 BACKUP_REQUEST_VERSION: Final = "synthetic-sales-assist-backup-request/v1"
 
 _CSRF_TOKEN = re.compile(r"\A[0-9a-f]{64}\Z", re.ASCII)
@@ -114,9 +110,7 @@ _QUANTITY_TEXT = re.compile(
     re.ASCII,
 )
 _SYNTHETIC_SEARCH = re.compile(r"\ASYN-[A-Z0-9-]{1,92}\Z", re.ASCII)
-_QUEUE_QUERY_MEMBERS: Final = frozenset(
-    {"descending", "search", "sort_by", "state"}
-)
+_QUEUE_QUERY_MEMBERS: Final = frozenset({"descending", "search", "sort_by", "state"})
 _SALES_CREDIT_QUEUE_STATES: Final = (
     "AWAITING_SOURCE_REVIEW",
     "CHECKED_NO_ORDER_WINDOW_ACTIVE",
@@ -343,6 +337,7 @@ _PAGE_TITLES: Final = {
     "doi_queue": "DOI queue",
     "doi_detail": "DOI case",
     "doi_csv_review": "DOI split review",
+    "doi_draft_transfer": "Draft review and transfer",
     "review": "Human-review queue",
     "audit": "Immutable audit timeline",
     "system": "System health",
@@ -386,9 +381,7 @@ _METRICS_MEMBERS: Final = frozenset(
         "window",
     }
 )
-_RATE_MEMBERS: Final = frozenset(
-    {"defined", "display", "denominator", "numerator"}
-)
+_RATE_MEMBERS: Final = frozenset({"defined", "display", "denominator", "numerator"})
 _CURRENCY_MEMBERS: Final = frozenset(
     {
         "amount_minor_units",
@@ -561,9 +554,7 @@ _DOI_OPPORTUNITY_MEMBERS: Final = frozenset(
         "scope_components",
     }
 )
-_DOI_SCOPE_MEMBERS: Final = frozenset(
-    {"line_snapshot_id", "ordinal", "quantity_text", "role"}
-)
+_DOI_SCOPE_MEMBERS: Final = frozenset({"line_snapshot_id", "ordinal", "quantity_text", "role"})
 _DOI_SOURCE_MEMBERS: Final = frozenset(
     {
         "completeness_proof_present",
@@ -764,9 +755,7 @@ _RESTORE_MEMBERS: Final = frozenset(
         "status",
     }
 )
-_SAFE_ERROR_MEMBERS: Final = frozenset(
-    {"category", "code", "occurred_at", "retryable"}
-)
+_SAFE_ERROR_MEMBERS: Final = frozenset({"category", "code", "occurred_at", "retryable"})
 _BENCHMARK_REFERENCE_MEMBERS: Final = frozenset(
     {
         "database_size_bytes",
@@ -981,11 +970,7 @@ def _doi_privacy_check(value: object) -> object:
     """Run common privacy checks without rescanning strict governed DOI tokens."""
 
     def project(item: object, member: str | None = None) -> object:
-        if (
-            type(item) is str
-            and member == "event_id"
-            and _LOWER_SHA256.fullmatch(item) is not None
-        ):
+        if type(item) is str and member == "event_id" and _LOWER_SHA256.fullmatch(item) is not None:
             return "SYN-EVIDENCE-DASHBOARD-HASH-EVENT"
         if type(item) is str and member == "line_snapshot_id":
             # The common scanner assigns this suffix to SNAPSHOT, while the binding DOI
@@ -1061,11 +1046,7 @@ def _service_origin(value: object) -> str:
     origin = _text(value, "DASHBOARD_SERVICE_ORIGIN_INVALID")
     assert origin is not None
     matched = _LOOPBACK_ORIGIN.fullmatch(origin)
-    if (
-        matched is None
-        or not origin.endswith("/")
-        or not 1 <= int(matched.group(1)) <= 65_535
-    ):
+    if matched is None or not origin.endswith("/") or not 1 <= int(matched.group(1)) <= 65_535:
         _fail("DASHBOARD_SERVICE_ORIGIN_INVALID")
     return origin
 
@@ -1101,10 +1082,7 @@ def _state_badge(value: object, *, label: str | None = None) -> str:
     upper = displayed.upper()
     if any(token in upper for token in ("FAIL", "CONFLICT", "UNHEALTHY", "MISMATCH")):
         severity = "error"
-    elif any(
-        token in upper
-        for token in ("REVIEW", "REQUIRED", "STALE", "UNKNOWN", "UNAVAILABLE")
-    ):
+    elif any(token in upper for token in ("REVIEW", "REQUIRED", "STALE", "UNKNOWN", "UNAVAILABLE")):
         severity = "attention"
     elif any(token in upper for token in ("PASS", "HEALTHY", "APPROVED", "RECORDED")):
         severity = "success"
@@ -1118,7 +1096,7 @@ def _state_badge(value: object, *, label: str | None = None) -> str:
 
 
 def _format_minor_units(amount: object, scale: object, currency: object) -> str:
-    minor = _integer(amount, "DASHBOARD_MONEY_AMOUNT_INVALID", minimum=-10**30)
+    minor = _integer(amount, "DASHBOARD_MONEY_AMOUNT_INVALID", minimum=-(10**30))
     digits = _integer(scale, "DASHBOARD_MONEY_SCALE_INVALID")
     code = _text(currency, "DASHBOARD_MONEY_CURRENCY_INVALID")
     assert code is not None
@@ -1144,8 +1122,7 @@ def _table(
 ) -> str:
     header_cells = "".join(f'<th scope="col">{_h(item)}</th>' for item in headers)
     body_rows = "".join(
-        "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>"
-        for row in rows
+        "<tr>" + "".join(f"<td>{cell}</td>" for cell in row) + "</tr>" for row in rows
     )
     if not body_rows:
         body_rows = (
@@ -1159,9 +1136,11 @@ def _table(
 
 
 def _definition_list(items: Sequence[tuple[str, object]]) -> str:
-    return "<dl>" + "".join(
-        f"<dt>{_h(label)}</dt><dd>{_h(_display(value))}</dd>" for label, value in items
-    ) + "</dl>"
+    return (
+        "<dl>"
+        + "".join(f"<dt>{_h(label)}</dt><dd>{_h(_display(value))}</dd>" for label, value in items)
+        + "</dl>"
+    )
 
 
 def _page(
@@ -1179,10 +1158,11 @@ def _page(
     if route_name not in _PAGE_TITLES:
         _fail("DASHBOARD_ROUTE_INVALID")
     active = (
-        "doi-csv-review" if review_only else "doi"
+        "doi-csv-review"
+        if review_only
+        else "doi"
         if route_name == "doi_csv_review"
-        else
-        "sales-credit"
+        else "sales-credit"
         if route_name.startswith("sales_credit")
         else "doi"
         if route_name.startswith("doi")
@@ -1202,44 +1182,60 @@ def _page(
         ("system", "/system", "System"),
     )
     csv_review = route_name == "doi_csv_review"
+    draft_transfer = route_name == "doi_draft_transfer"
     if csv_review and review_only:
         nav_items = (("doi-csv-review", "/doi-csv-review", "DOI split review"),)
     navigation = "".join(
-        f'<a href="{path}"{(" aria-current=\"page\"" if key == active else "")}>{label}</a>'
+        f'<a href="{path}"{(' aria-current="page"' if key == active else "")}>{label}</a>'
         for key, path, label in nav_items
     )
     companion = route_name == "campaign-replies"
     banner = (
         '<div class="dashboard-synthetic-banner">'
-        'DOI split review · This PC only · Review only</div>'
-        if csv_review else
-        '<div class="dashboard-synthetic-banner">'
-        'Campaign Replies · Local companion · Read-only review</div>'
-        if companion else
-        '<div class="dashboard-synthetic-banner">'
-        'Synthetic demo · Localhost only · Not connected to live systems</div>'
+        "DOI split review · This PC only · Review only</div>"
+        if csv_review
+        else '<div class="dashboard-synthetic-banner">'
+        "Campaign Replies · Local companion · Read-only review</div>"
+        if companion
+        else '<div class="dashboard-synthetic-banner">'
+        "Synthetic demo · Localhost only · Not connected to live systems</div>"
     )
     service_status = (
         "Files are reviewed in memory in this local session. Nothing is saved to the order system."
-        if csv_review else
-        "Campaign review runs in its own local service. Sales Credit and DOI remain synthetic."
-        if companion else
-        "Local loopback response received. Dashboard actions remain synthetic and local only."
+        if csv_review
+        else "Campaign review runs in its own local service. Sales Credit and DOI remain synthetic."
+        if companion
+        else "Local loopback response received. Dashboard actions remain synthetic and local only."
     )
     if route_name == "system":
         service_status = "Connected to the app on this PC."
     footer = (
         "Review only. No fulfillment or sales credit decision has been made."
-        if csv_review else
-        "Review only. Editing and sending stay in the separate support application."
-        if companion else
-        "Fictional local demonstration · no external system access · current projections and "
+        if csv_review
+        else "Review only. Editing and sending stay in the separate support application."
+        if companion
+        else "Fictional local demonstration · no external system access · current projections and "
         "immutable history are labeled separately."
     )
+    if draft_transfer:
+        nav_items = (
+            ("doi-csv-review", "/doi-csv-review", "DOI split review"),
+            ("doi-draft-transfer", "/doi-draft-transfer", "Draft transfer"),
+        )
+        navigation = "".join(f'<a href="{path}">{label}</a>' for _, path, label in nav_items)
+        banner = (
+            '<div class="dashboard-synthetic-banner">Local draft review · '
+            'Explicit approval required</div>'
+        )
+        service_status = (
+            "Approved transfers create Help Scout drafts only. Customer sending is separate."
+        )
+        footer = "Your review data stays in the private local store. No transfer occurs on import."
     service_notice = (
         f"""<aside class="dashboard-service-status" role="status" aria-label="Local service status"
          data-ssa-dashboard-status="LOCAL_RESPONSE">{_h(service_status)}</aside>"""
-        if route_name not in {"overview", "sales_credit_queue", "doi_queue", "review"} else ""
+        if route_name not in {"overview", "sales_credit_queue", "doi_queue", "review"}
+        else ""
     )
     if route_name in {"overview", "sales_credit_queue", "doi_queue", "review"}:
         footer = "Fictional demo data."
@@ -1247,7 +1243,13 @@ def _page(
         footer = "Fictional demo data · Runs on this PC only."
     doctype = "<!" + "doctype html>"
     html_open = "<" + f'html lang="en" data-ssa-dashboard-contract="{DASHBOARD_DOM_VERSION}">'
-    script_path = "/static/doi-csv-review.js" if csv_review else "/static/ssa-dashboard.js"
+    script_path = (
+        "/static/doi-draft-transfer.js"
+        if draft_transfer
+        else "/static/doi-csv-review.js"
+        if csv_review
+        else "/static/ssa-dashboard.js"
+    )
     document = f"""{doctype}
 <!-- {DASHBOARD_ASSET_MARKER} -->
 {html_open}
@@ -1351,10 +1353,15 @@ def _validated_metric_window(value: object) -> str:
     if end_text != "+infinity":
         _timestamp(end_text, "DASHBOARD_METRIC_WINDOW_INVALID")
         end = CanonicalTimestamp(end_text)
-    if start is not None and end is not None and (
-        start.epoch_seconds,
-        start.nanosecond,
-    ) >= (end.epoch_seconds, end.nanosecond):
+    if (
+        start is not None
+        and end is not None
+        and (
+            start.epoch_seconds,
+            start.nanosecond,
+        )
+        >= (end.epoch_seconds, end.nanosecond)
+    ):
         _fail("DASHBOARD_METRIC_WINDOW_INVALID")
     return window
 
@@ -1408,8 +1415,7 @@ def _validated_metrics(value: object) -> dict[str, object]:
         "unresolved_overlap_count",
     )
     accepted_counts = {
-        member: _integer(metrics[member], "DASHBOARD_METRIC_COUNT_INVALID")
-        for member in counts
+        member: _integer(metrics[member], "DASHBOARD_METRIC_COUNT_INVALID") for member in counts
     }
     requests = accepted_counts["requests_received"]
     window = _validated_metric_window(metrics["window"])
@@ -1422,13 +1428,10 @@ def _validated_metrics(value: object) -> dict[str, object]:
     ):
         if accepted_counts[member] > requests:
             _fail("DASHBOARD_METRIC_RECONCILIATION_INVALID")
-    if accepted_counts["unresolved_overlap_count"] > accepted_counts[
-        "potential_unavailable_count"
-    ]:
+    if accepted_counts["unresolved_overlap_count"] > accepted_counts["potential_unavailable_count"]:
         _fail("DASHBOARD_METRIC_RECONCILIATION_INVALID")
     if accepted_counts["current_human_review_items"] > (
-        accepted_counts["active_sales_credit_cases"]
-        + accepted_counts["active_doi_cases"]
+        accepted_counts["active_sales_credit_cases"] + accepted_counts["active_doi_cases"]
     ):
         _fail("DASHBOARD_METRIC_RECONCILIATION_INVALID")
     # Human selection can append a durable evaluation outside processing telemetry.
@@ -1489,11 +1492,9 @@ def _validated_metrics(value: object) -> dict[str, object]:
         _fail("DASHBOARD_METRIC_DISTRIBUTION_RECONCILIATION_INVALID")
     request_results = distributions["request_result_distribution"]
     if (
-        request_results.get("FAILED_CLOSED", 0)
-        != accepted_counts["failed_closed_requests"]
+        request_results.get("FAILED_CLOSED", 0) != accepted_counts["failed_closed_requests"]
         or request_results.get("CONFLICT", 0) != accepted_counts["material_conflicts"]
-        or accepted_counts["database_error_count"]
-        > request_results.get("ERROR", 0)
+        or accepted_counts["database_error_count"] > request_results.get("ERROR", 0)
         or request_results.get("SUCCESS", 0) + request_results.get("HUMAN_REVIEW", 0)
         != accepted_counts["successful_requests"]
     ):
@@ -1592,8 +1593,7 @@ def render_overview(data: object, csrf_token: str, *, presentation: bool = False
     if (
         reconciliation_counts["active_sales_credit_cases"]
         > reconciliation_counts["sales_credit_history_events"]
-        or reconciliation_counts["active_doi_cases"]
-        > reconciliation_counts["doi_history_events"]
+        or reconciliation_counts["active_doi_cases"] > reconciliation_counts["doi_history_events"]
     ):
         _fail("DASHBOARD_RECONCILIATION_HISTORY_INVALID")
     system = _closed_mapping(
@@ -1690,9 +1690,7 @@ def _queue_root(
 ) -> dict[str, object]:
     root = _closed_mapping(
         data,
-        frozenset(
-            {"items", "limit", "offset", "query", "schema_version", "total_count"}
-        ),
+        frozenset({"items", "limit", "offset", "query", "schema_version", "total_count"}),
         code,
     )
     if root["schema_version"] != CONTROL_CENTER_SCHEMA_VERSION:
@@ -1749,9 +1747,9 @@ def _filter_form(
         for value, label in sort_options
     )
     state_labels = {
-        value: labels[value] if labels is not None else _humanize_token(
-            value, "DASHBOARD_QUEUE_STATE_INVALID"
-        )
+        value: labels[value]
+        if labels is not None
+        else _humanize_token(value, "DASHBOARD_QUEUE_STATE_INVALID")
         for value in state_options
     }
     states = '<option value="">All current states</option>' + "".join(
@@ -1769,8 +1767,12 @@ def _filter_form(
     if compact:
         clear_href = f"{route}?presentation=1" if presentation else route
         expanded = (
-            ' open' if current_state is not None or current_sort != "updated_at"
-            or not descending or page_size != 25 else ''
+            " open"
+            if current_state is not None
+            or current_sort != "updated_at"
+            or not descending
+            or page_size != 25
+            else ""
         )
         return f"""<form class="dashboard-panel dashboard-simple-search" method="get"
  action="{route}" role="search" aria-label="Find cases">
@@ -1859,9 +1861,7 @@ def _pagination(
             query,
             presentation=presentation,
         )
-        links.append(
-            f'<a href="{previous}">Previous page</a>'
-        )
+        links.append(f'<a href="{previous}">Previous page</a>')
     if offset + limit < total:
         following = _queue_href(
             route,
@@ -1870,13 +1870,9 @@ def _pagination(
             query,
             presentation=presentation,
         )
-        links.append(
-            f'<a href="{following}">Next page</a>'
-        )
+        links.append(f'<a href="{following}">Next page</a>')
     if offset > 0 and offset >= total:
-        links.append(
-            f"<span>No results on requested page {current_page}; {total} total.</span>"
-        )
+        links.append(f"<span>No results on requested page {current_page}; {total} total.</span>")
     else:
         start = min(offset + 1, total) if total else 0
         end = min(offset + limit, total)
@@ -2023,21 +2019,29 @@ def render_doi_queue(data: object, csrf_token: str, *, presentation: bool = Fals
         if selection_state not in {"NOT_REQUIRED", "REQUIRED", "SELECTED"}:
             _fail("DASHBOARD_DOI_SELECTION_STATE_INVALID")
         needs_review = (
-            human_review or bool(attention_causes) or selection_state == "REQUIRED"
+            human_review
+            or bool(attention_causes)
+            or selection_state == "REQUIRED"
             or doi_state == "DOI_MANUAL_REVIEW"
         )
         status = ""
         if doi_state != "DOI_OPPORTUNITY" or not opportunity_types:
             label = (
-                "Not evaluated" if doi_state is None else
-                "Opportunity details unavailable" if doi_state == "DOI_OPPORTUNITY" else
-                _DOI_STATUS_LABELS[doi_state]
+                "Not evaluated"
+                if doi_state is None
+                else "Opportunity details unavailable"
+                if doi_state == "DOI_OPPORTUNITY"
+                else _DOI_STATUS_LABELS[doi_state]
             )
             status = _state_badge(doi_state, label=label)
         if opportunity_types:
-            status += '<ul class="dashboard-opportunity-list">' + "".join(
-                f"<li>{_h(_DOI_OPPORTUNITY_LABELS[value])}</li>" for value in opportunity_types
-            ) + "</ul>"
+            status += (
+                '<ul class="dashboard-opportunity-list">'
+                + "".join(
+                    f"<li>{_h(_DOI_OPPORTUNITY_LABELS[value])}</li>" for value in opportunity_types
+                )
+                + "</ul>"
+            )
         if needs_review and doi_state != "DOI_MANUAL_REVIEW":
             status += '<p class="dashboard-review-needed">Needs review</p>'
         rows.append(
@@ -2063,9 +2067,9 @@ def render_doi_queue(data: object, csrf_token: str, *, presentation: bool = Fals
     )
     body = (
         '<section class="dashboard-panel"><h2>Captured order split review</h2>'
-        '<p>Review full captured order totals and ready/waiting evidence in this local session.</p>'
+        "<p>Review full captured order totals and ready/waiting evidence in this local session.</p>"
         '<a class="dashboard-case-link" href="/doi-csv-review">Open split-review '
-        'worklist</a></section>'
+        "worklist</a></section>"
         + _filter_form(
             "/doi",
             (
@@ -2166,26 +2170,24 @@ def _timeline(value: object, *, subject_kind: str, subject_id: str) -> str:
                 _h(occurred_at),
             )
         )
-    if subject_kind == "EVALUATION" and event_facts != [
-        (1, subject_id, "EVALUATION_RECORDED")
-    ]:
+    if subject_kind == "EVALUATION" and event_facts != [(1, subject_id, "EVALUATION_RECORDED")]:
         _fail("DASHBOARD_TIMELINE_EVALUATION_COHERENCE_INVALID")
     if subject_kind == "DOI_RUN" and (
-        not event_facts
-        or event_facts[0][0] != 1
-        or event_facts[0][2] != "RUN_STARTED"
+        not event_facts or event_facts[0][0] != 1 or event_facts[0][2] != "RUN_STARTED"
     ):
         _fail("DASHBOARD_TIMELINE_RUN_COHERENCE_INVALID")
     return f"""<section class="dashboard-panel" id="immutable-timeline"
  data-ssa-dashboard-timeline="{_h(subject_kind)}" data-ssa-dashboard-id="{_h(subject_id)}">
 <h2>Immutable timeline</h2>
 <p>Events and receipts are history. Replays do not create new evaluations or current cases.</p>
-{_table(
-    caption="Immutable events in durable sequence",
-    headers=("Sequence", "Event ID", "Event kind", "State", "Transition", "Occurred"),
-    rows=rows,
-    selector="immutable-timeline",
-)}
+{
+        _table(
+            caption="Immutable events in durable sequence",
+            headers=("Sequence", "Event ID", "Event kind", "State", "Transition", "Occurred"),
+            rows=rows,
+            selector="immutable-timeline",
+        )
+    }
 </section>"""
 
 
@@ -2252,8 +2254,7 @@ def _hidden(name: str, value: str) -> str:
 
 def _hidden_array_member(name: str, value: str) -> str:
     return (
-        f'<input type="hidden" name="{_h(name)}" value="{_h(value)}" '
-        'data-ssa-value-type="array">'
+        f'<input type="hidden" name="{_h(name)}" value="{_h(value)}" data-ssa-value-type="array">'
     )
 
 
@@ -2413,16 +2414,10 @@ def _sc_source_search_section(
             )
         )
     expected_snapshot_id = (
-        None
-        if current_evaluation is None
-        else str(current_evaluation["snapshot_id"])
+        None if current_evaluation is None else str(current_evaluation["snapshot_id"])
     )
-    if (
-        (expected_snapshot_id is None and current_snapshot_ids)
-        or (
-            expected_snapshot_id is not None
-            and current_snapshot_ids != [expected_snapshot_id]
-        )
+    if (expected_snapshot_id is None and current_snapshot_ids) or (
+        expected_snapshot_id is not None and current_snapshot_ids != [expected_snapshot_id]
     ):
         _fail("DASHBOARD_SC_CURRENT_SNAPSHOT_BINDING_INVALID")
 
@@ -2502,37 +2497,41 @@ def _sc_source_search_section(
 <h2>Source and search completeness</h2>
 <p>Only normalized, owned metadata is shown. Source text and unrestricted values are omitted.</p>
 {_definition_list(evaluation_items)}
-{_table(
-    caption="Governed Sales Credit snapshots",
-    headers=(
-        "Current",
-        "Snapshot ID",
-        "Captured",
-        "Extraction",
-        "Lifecycle",
-        "Line count",
-        "Parser version",
-    ),
-    rows=snapshot_rows,
-    selector="sales-credit-snapshots",
-    empty_message="No governed source snapshot is retained for this case.",
-)}
-{_table(
-    caption="Governed search-run completeness",
-    headers=(
-        "Run ID",
-        "Trigger",
-        "Started",
-        "Completed",
-        "Enumeration complete",
-        "Terminal outcome",
-        "Identifier count",
-        "Adapter version",
-    ),
-    rows=run_rows,
-    selector="sales-credit-search-runs",
-    empty_message="No governed search run is retained for this case.",
-)}</section>"""
+{
+        _table(
+            caption="Governed Sales Credit snapshots",
+            headers=(
+                "Current",
+                "Snapshot ID",
+                "Captured",
+                "Extraction",
+                "Lifecycle",
+                "Line count",
+                "Parser version",
+            ),
+            rows=snapshot_rows,
+            selector="sales-credit-snapshots",
+            empty_message="No governed source snapshot is retained for this case.",
+        )
+    }
+{
+        _table(
+            caption="Governed search-run completeness",
+            headers=(
+                "Run ID",
+                "Trigger",
+                "Started",
+                "Completed",
+                "Enumeration complete",
+                "Terminal outcome",
+                "Identifier count",
+                "Adapter version",
+            ),
+            rows=run_rows,
+            selector="sales-credit-search-runs",
+            empty_message="No governed search run is retained for this case.",
+        )
+    }</section>"""
 
 
 def _sc_interactions_evidence_section(
@@ -2639,20 +2638,24 @@ def _sc_interactions_evidence_section(
  data-ssa-dashboard-evidence="sales-credit-interactions">
 <h2>Interactions and evidence</h2>
 <p>Only governed fictional identifiers, classifications, and timestamps are displayed.</p>
-{_table(
-    caption="Current case interactions",
-    headers=("Interaction ID", "Source reference", "Recorded", "Precision", "Workflow"),
-    rows=interaction_rows,
-    selector="sales-credit-interactions",
-    empty_message="No governed fictional interaction is attached to this case.",
-)}
-{_table(
-    caption="Current case evidence",
-    headers=("Evidence ID", "Interaction ID", "Source type", "Classification", "Occurred"),
-    rows=evidence_rows,
-    selector="sales-credit-evidence",
-    empty_message="No governed fictional evidence event is attached to this case.",
-)}</section>"""
+{
+        _table(
+            caption="Current case interactions",
+            headers=("Interaction ID", "Source reference", "Recorded", "Precision", "Workflow"),
+            rows=interaction_rows,
+            selector="sales-credit-interactions",
+            empty_message="No governed fictional interaction is attached to this case.",
+        )
+    }
+{
+        _table(
+            caption="Current case evidence",
+            headers=("Evidence ID", "Interaction ID", "Source type", "Classification", "Occurred"),
+            rows=evidence_rows,
+            selector="sales-credit-evidence",
+            empty_message="No governed fictional evidence event is attached to this case.",
+        )
+    }</section>"""
 
 
 def render_sales_credit_detail(
@@ -2723,10 +2726,7 @@ def render_sales_credit_detail(
     )
     reasons = _list(root["reason_codes"], "DASHBOARD_SC_REASONS_INVALID")
     reason_text = (
-        ", ".join(
-            _h(_reason_code(item, "DASHBOARD_SC_REASON_INVALID"))
-            for item in reasons
-        )
+        ", ".join(_h(_reason_code(item, "DASHBOARD_SC_REASON_INVALID")) for item in reasons)
         or "None"
     )
     source_search = _sc_source_search_section(
@@ -2817,13 +2817,15 @@ history.</p></section>"""
 <section class="dashboard-split">
  <article class="dashboard-panel dashboard-callout" data-ssa-dashboard-card="system-classification">
   <h2>Current system classification</h2>{_state_badge(classification)}
-  {_definition_list(
-      (
-          ("Workflow state", workflow_state),
-          ("Current evaluation", current_evaluation_id),
-          ("Last update", updated_at),
-      )
- )}</article>
+  {
+        _definition_list(
+            (
+                ("Workflow state", workflow_state),
+                ("Current evaluation", current_evaluation_id),
+                ("Last update", updated_at),
+            )
+        )
+    }</article>
  <article class="dashboard-panel" data-ssa-dashboard-card="plain-english-why">
   <h2>Why the system stopped here</h2>
   <p>The system classified this case as <strong>{_h(classification_label)}</strong>
@@ -2840,28 +2842,32 @@ history.</p></section>"""
 <section class="dashboard-panel" data-ssa-dashboard-card="manager-outcome">
  <h2>Manager outcome — separate human authority</h2>
  {_state_badge(summary["manager_outcome"])}
- {_table(
-     caption="Immutable manager outcomes",
-     headers=(
-         "Outcome",
-         "Synthetic actor",
-         "Decision time",
-         "Occurrence",
-         "Exact approved amount / currency",
-     ),
-     rows=outcomes,
-     selector="sales-credit-manager-outcomes",
- )}
+ {
+        _table(
+            caption="Immutable manager outcomes",
+            headers=(
+                "Outcome",
+                "Synthetic actor",
+                "Decision time",
+                "Occurrence",
+                "Exact approved amount / currency",
+            ),
+            rows=outcomes,
+            selector="sales-credit-manager-outcomes",
+        )
+    }
 </section>
 {_timeline(root["timeline"], subject_kind="SALES_CREDIT_CASE", subject_id=order_id)}
 <section class="dashboard-panel"><h2>Developer contract identity</h2>
-{_definition_list(
-    (
-        ("Control Center", CONTROL_CENTER_SCHEMA_VERSION),
-        ("Dashboard DOM", DASHBOARD_DOM_VERSION),
-        ("Portal DOM", DOM_SCHEMA_VERSION),
-    )
-)}</section>"""
+{
+        _definition_list(
+            (
+                ("Control Center", CONTROL_CENTER_SCHEMA_VERSION),
+                ("Dashboard DOM", DASHBOARD_DOM_VERSION),
+                ("Portal DOM", DOM_SCHEMA_VERSION),
+            )
+        )
+    }</section>"""
     return _page(
         route_name="sales_credit_detail",
         heading=f"Sales Credit case {order_id}",
@@ -2882,8 +2888,8 @@ def _doi_selection_form(
 ) -> str:
     controls = "".join(
         f"""<label class="dashboard-confirmation">
-<input type="radio" name="selected_opportunity_id" value="{_h(item['opportunity_id'])}" required>
-<span>{_h(item['opportunity_type'])} · {_h(item['opportunity_id'])}</span></label>
+<input type="radio" name="selected_opportunity_id" value="{_h(item["opportunity_id"])}" required>
+<span>{_h(item["opportunity_type"])} · {_h(item["opportunity_id"])}</span></label>
 {_hidden_array_member("option_opportunity_ids", str(item["opportunity_id"]))}"""
         for item in sorted(
             opportunities,
@@ -3012,24 +3018,26 @@ def _doi_source_section(
  data-ssa-dashboard-evidence="doi-source-completeness">
 <h2>Source completeness</h2>
 <p>Line counts and proof presence come from governed snapshots. Missing proof remains visible.</p>
-{_table(
-    caption="Governed source snapshots and completeness evidence",
-    headers=(
-        "Current",
-        "Snapshot ID",
-        "Run ID",
-        "Observed UTC",
-        "All lines",
-        "Relevant lines",
-        "Proof present",
-        "Completeness SHA-256",
-        "Record domain",
-        "Record SHA-256",
-    ),
-    rows=rows,
-    selector="doi-source-completeness",
-    empty_message="No governed source-completeness snapshot is recorded for this case.",
-)}</section>"""
+{
+        _table(
+            caption="Governed source snapshots and completeness evidence",
+            headers=(
+                "Current",
+                "Snapshot ID",
+                "Run ID",
+                "Observed UTC",
+                "All lines",
+                "Relevant lines",
+                "Proof present",
+                "Completeness SHA-256",
+                "Record domain",
+                "Record SHA-256",
+            ),
+            rows=rows,
+            selector="doi-source-completeness",
+            empty_message="No governed source-completeness snapshot is recorded for this case.",
+        )
+    }</section>"""
 
 
 def _doi_handling_attention_section(
@@ -3128,31 +3136,35 @@ def _doi_handling_attention_section(
  data-ssa-dashboard-evidence="doi-handling-attention">
 <h2>Handling flags and current attention</h2>
 <p>Each current attention cause remains separate. Resolving one cause cannot clear another.</p>
-{_table(
-    caption="Current governed handling flags",
-    headers=("Handling flag",),
-    rows=flag_rows,
-    selector="doi-handling-flags",
-    empty_message="No current handling flag is recorded.",
-)}
-{_table(
-    caption="Current unresolved attention causes only",
-    headers=(
-        "Condition",
-        "Cause key",
-        "Attention stream",
-        "Current state",
-        "Sequence",
-        "Current event",
-        "Occurred UTC",
-        "Head SHA-256",
-        "Record domain",
-        "Record SHA-256",
-    ),
-    rows=attention_rows,
-    selector="doi-current-attention-causes",
-    empty_message="No current unresolved attention cause is recorded.",
-)}</section>"""
+{
+        _table(
+            caption="Current governed handling flags",
+            headers=("Handling flag",),
+            rows=flag_rows,
+            selector="doi-handling-flags",
+            empty_message="No current handling flag is recorded.",
+        )
+    }
+{
+        _table(
+            caption="Current unresolved attention causes only",
+            headers=(
+                "Condition",
+                "Cause key",
+                "Attention stream",
+                "Current state",
+                "Sequence",
+                "Current event",
+                "Occurred UTC",
+                "Head SHA-256",
+                "Record domain",
+                "Record SHA-256",
+            ),
+            rows=attention_rows,
+            selector="doi-current-attention-causes",
+            empty_message="No current unresolved attention cause is recorded.",
+        )
+    }</section>"""
 
 
 def _doi_human_facts_section(value: object) -> str:
@@ -3223,22 +3235,24 @@ def _doi_human_facts_section(value: object) -> str:
     return f"""<section class="dashboard-panel" data-ssa-dashboard-evidence="doi-human-facts">
 <h2>Human facts</h2>
 <p>Recorded facts are human-owned evidence. They do not rewrite the system classification.</p>
-{_table(
-    caption="Immutable governed DOI human-fact events",
-    headers=(
-        "Fact stream",
-        "Sequence",
-        "Projection state",
-        "Transition",
-        "Event ID",
-        "Occurred UTC",
-        "Record domain",
-        "Record SHA-256",
-    ),
-    rows=rows,
-    selector="doi-human-fact-events",
-    empty_message="No DOI human fact has been recorded for this case.",
-)}</section>"""
+{
+        _table(
+            caption="Immutable governed DOI human-fact events",
+            headers=(
+                "Fact stream",
+                "Sequence",
+                "Projection state",
+                "Transition",
+                "Event ID",
+                "Occurred UTC",
+                "Record domain",
+                "Record SHA-256",
+            ),
+            rows=rows,
+            selector="doi-human-fact-events",
+            empty_message="No DOI human fact has been recorded for this case.",
+        )
+    }</section>"""
 
 
 def _doi_interventions_section(value: object) -> tuple[str, set[str]]:
@@ -3362,37 +3376,41 @@ def _doi_interventions_section(value: object) -> tuple[str, set[str]]:
  data-ssa-dashboard-evidence="doi-interventions">
 <h2>Interventions and verification</h2>
 <p>Evaluation does not create an intervention. Verification remains explicit evidence.</p>
-{_table(
-    caption="Governed intervention projections",
-    headers=(
-        "Intervention ID",
-        "Opportunity ID",
-        "Type",
-        "Status",
-        "Action occurred UTC",
-        "Projection version",
-        "Created UTC",
-        "Head SHA-256",
-        "Record domain",
-        "Record SHA-256",
-    ),
-    rows=intervention_rows,
-    selector="doi-interventions",
-    empty_message="No intervention has been recorded for this case.",
-)}
-{_table(
-    caption="Immutable action-verification events",
-    headers=(
-        "Intervention ID",
-        "Verification event",
-        "Occurrence",
-        "Record domain",
-        "Record SHA-256",
-    ),
-    rows=verification_rows,
-    selector="doi-intervention-verifications",
-    empty_message="No intervention verification has been recorded for this case.",
-)}</section>"""
+{
+        _table(
+            caption="Governed intervention projections",
+            headers=(
+                "Intervention ID",
+                "Opportunity ID",
+                "Type",
+                "Status",
+                "Action occurred UTC",
+                "Projection version",
+                "Created UTC",
+                "Head SHA-256",
+                "Record domain",
+                "Record SHA-256",
+            ),
+            rows=intervention_rows,
+            selector="doi-interventions",
+            empty_message="No intervention has been recorded for this case.",
+        )
+    }
+{
+        _table(
+            caption="Immutable action-verification events",
+            headers=(
+                "Intervention ID",
+                "Verification event",
+                "Occurrence",
+                "Record domain",
+                "Record SHA-256",
+            ),
+            rows=verification_rows,
+            selector="doi-intervention-verifications",
+            empty_message="No intervention verification has been recorded for this case.",
+        )
+    }</section>"""
     return html, intervention_ids
 
 
@@ -3562,49 +3580,55 @@ def _doi_links_section(
  data-ssa-dashboard-evidence="doi-resulting-order-links">
 <h2>Resulting-order links</h2>
 <p>Links are shown only when explicitly governed; no resulting order is inferred.</p>
-{_table(
-    caption="Current resulting-order link projections",
-    headers=(
-        "Link ID",
-        "Intervention ID",
-        "Parent order",
-        "Child order",
-        "State",
-        "Current revision",
-        "Head SHA-256",
-    ),
-    rows=link_rows,
-    selector="doi-resulting-order-links",
-    empty_message="No resulting-order link has been recorded for this case.",
-)}
-{_table(
-    caption="Immutable resulting-order link revisions",
-    headers=(
-        "Link ID",
-        "Revision",
-        "Revision ID",
-        "Predecessor SHA-256",
-        "Record domain",
-        "Record SHA-256",
-    ),
-    rows=revision_rows,
-    selector="doi-resulting-order-link-revisions",
-    empty_message="No resulting-order link revision has been recorded for this case.",
-)}
-{_table(
-    caption="Exact line-mapping components by link revision",
-    headers=(
-        "Link ID",
-        "Revision",
-        "Ordinal",
-        "Parent line",
-        "Child line",
-        "Exact quantity",
-    ),
-    rows=mapping_rows,
-    selector="doi-resulting-order-line-mappings",
-    empty_message="No exact line-mapping component has been recorded for this case.",
-)}</section>"""
+{
+        _table(
+            caption="Current resulting-order link projections",
+            headers=(
+                "Link ID",
+                "Intervention ID",
+                "Parent order",
+                "Child order",
+                "State",
+                "Current revision",
+                "Head SHA-256",
+            ),
+            rows=link_rows,
+            selector="doi-resulting-order-links",
+            empty_message="No resulting-order link has been recorded for this case.",
+        )
+    }
+{
+        _table(
+            caption="Immutable resulting-order link revisions",
+            headers=(
+                "Link ID",
+                "Revision",
+                "Revision ID",
+                "Predecessor SHA-256",
+                "Record domain",
+                "Record SHA-256",
+            ),
+            rows=revision_rows,
+            selector="doi-resulting-order-link-revisions",
+            empty_message="No resulting-order link revision has been recorded for this case.",
+        )
+    }
+{
+        _table(
+            caption="Exact line-mapping components by link revision",
+            headers=(
+                "Link ID",
+                "Revision",
+                "Ordinal",
+                "Parent line",
+                "Child line",
+                "Exact quantity",
+            ),
+            rows=mapping_rows,
+            selector="doi-resulting-order-line-mappings",
+            empty_message="No exact line-mapping component has been recorded for this case.",
+        )
+    }</section>"""
 
 
 def _doi_value_section(value: object, intervention_ids: set[str]) -> str:
@@ -3698,22 +3722,24 @@ def _doi_value_section(value: object, intervention_ids: set[str]) -> str:
         )
     return "".join(
         f"""<h3>Verified value events — {_h(currency)}</h3>
-{_table(
-    caption=f"Verified value-event history for {currency}; no mixed-currency total",
-    headers=(
-        "Intervention ID",
-        "Sequence",
-        "Event ID",
-        "Type",
-        "Occurrence",
-        "Exact amount / currency",
-        "Predecessor SHA-256",
-        "Record domain",
-        "Record SHA-256",
-    ),
-    rows=by_currency[currency],
-    selector=f"doi-value-events-{currency.casefold()}",
-)}"""
+{
+            _table(
+                caption=f"Verified value-event history for {currency}; no mixed-currency total",
+                headers=(
+                    "Intervention ID",
+                    "Sequence",
+                    "Event ID",
+                    "Type",
+                    "Occurrence",
+                    "Exact amount / currency",
+                    "Predecessor SHA-256",
+                    "Record domain",
+                    "Record SHA-256",
+                ),
+                rows=by_currency[currency],
+                selector=f"doi-value-events-{currency.casefold()}",
+            )
+        }"""
         for currency in sorted(by_currency)
     )
 
@@ -3785,19 +3811,23 @@ def _doi_kpi_section(value: object, intervention_ids: set[str]) -> str:
         )
     return "".join(
         f"""<h3>Retained KPI contributions — {_h(currency)}</h3>
-{_table(
-    caption=f"Current retained KPI contribution for {currency}; no mixed-currency total",
-    headers=(
-        "Intervention ID",
-        "Type",
-        "Action date",
-        "Exact retained amount / currency",
-        "Revision",
-        "Head SHA-256",
-    ),
-    rows=by_currency[currency],
-    selector=f"doi-retained-kpi-{currency.casefold()}",
-)}"""
+{
+            _table(
+                caption=(
+                    f"Current retained KPI contribution for {currency}; no mixed-currency total"
+                ),
+                headers=(
+                    "Intervention ID",
+                    "Type",
+                    "Action date",
+                    "Exact retained amount / currency",
+                    "Revision",
+                    "Head SHA-256",
+                ),
+                rows=by_currency[currency],
+                selector=f"doi-retained-kpi-{currency.casefold()}",
+            )
+        }"""
         for currency in sorted(by_currency)
     )
 
@@ -3978,13 +4008,15 @@ No exact scenario selection is recorded.</p>"""
     ):
         _fail("DASHBOARD_DOI_SELECTION_OPTIONS_MISMATCH")
     return f"""<div data-ssa-dashboard-evidence="doi-scenario-selection">
-{_definition_list(
-    (
-        ("Selection ID", selection_id),
-        ("Selected opportunity", selected_id),
-        ("Exact option universe", options),
-    )
-)}</div>"""
+{
+        _definition_list(
+            (
+                ("Selection ID", selection_id),
+                ("Selected opportunity", selected_id),
+                ("Exact option universe", options),
+            )
+        )
+    }</div>"""
 
 
 def render_doi_detail(data: object, csrf_token: str, *, presentation: bool = False) -> bytes:
@@ -4161,9 +4193,7 @@ def render_doi_detail(data: object, csrf_token: str, *, presentation: bool = Fal
     if summary_opportunity_types != observed_opportunity_types:
         _fail("DASHBOARD_DOI_OPPORTUNITY_TYPES_MISMATCH")
     reasons = _list(summary["reason_codes"], "DASHBOARD_DOI_REASONS_INVALID")
-    validated_reasons = [
-        _reason_code(raw, "DASHBOARD_DOI_REASON_INVALID") for raw in reasons
-    ]
+    validated_reasons = [_reason_code(raw, "DASHBOARD_DOI_REASON_INVALID") for raw in reasons]
     reason_explanations = _doi_reason_explanation_section(
         root["reason_explanations"],
         validated_reasons,
@@ -4173,9 +4203,7 @@ def render_doi_detail(data: object, csrf_token: str, *, presentation: bool = Fal
         selection_state,
         opportunity_ids,
     )
-    if selection_state == "REQUIRED" and (
-        evaluation_id is None or len(opportunities) < 2
-    ):
+    if selection_state == "REQUIRED" and (evaluation_id is None or len(opportunities) < 2):
         _fail("DASHBOARD_DOI_REQUIRED_SELECTION_INCOHERENT")
     selection = (
         _doi_selection_form(
@@ -4191,9 +4219,7 @@ operations remain read-only because no purpose-specific committed service exists
     expected_snapshot_id = (
         None if current_evaluation is None else str(current_evaluation["snapshot_id"])
     )
-    expected_run_id = (
-        None if current_evaluation is None else str(current_evaluation["run_id"])
-    )
+    expected_run_id = None if current_evaluation is None else str(current_evaluation["run_id"])
     source_section = _doi_source_section(
         root["source_completeness"],
         order_id,
@@ -4206,9 +4232,7 @@ operations remain read-only because no purpose-specific committed service exists
         attention_conditions,
     )
     human_facts_section = _doi_human_facts_section(root["human_fact_events"])
-    interventions_section, intervention_ids = _doi_interventions_section(
-        root["interventions"]
-    )
+    interventions_section, intervention_ids = _doi_interventions_section(root["interventions"])
     links_section = _doi_links_section(
         root["resulting_order_links"],
         intervention_ids,
@@ -4241,13 +4265,15 @@ operations remain read-only because no purpose-specific committed service exists
 <section class="dashboard-split">
  <article class="dashboard-panel dashboard-callout"
   data-ssa-dashboard-card="doi-system-state"><h2>Current DOI state</h2>
- {_state_badge(doi_state)}{_definition_list(
-     (
-         ("Lifecycle", lifecycle_state),
-         ("Current evaluation", evaluation_id),
-         ("Updated", updated_at),
-     )
- )}</article>
+ {_state_badge(doi_state)}{
+        _definition_list(
+            (
+                ("Lifecycle", lifecycle_state),
+                ("Current evaluation", evaluation_id),
+                ("Updated", updated_at),
+            )
+        )
+    }</article>
  <article class="dashboard-panel" data-ssa-dashboard-card="plain-english-why">
   <h2>Why the system stopped here</h2>
   <p>The system state is <strong>{_h(doi_state_label)}</strong>
@@ -4261,25 +4287,29 @@ operations remain read-only because no purpose-specific committed service exists
 <h2>Current evaluation binding</h2>{_definition_list(evaluation_binding)}</section>
 <section class="dashboard-panel" data-ssa-dashboard-current-projection="doi-opportunities">
 <h2>Current opportunities and exact scope</h2>
-{_table(
-    caption="Separate current DOI opportunities; overlap is not combined",
-    headers=(
-        "Opportunity ID",
-        "Type",
-        "Potential state",
-        "Exact amount by currency",
-        "Exclusion group",
-    ),
-    rows=opportunity_rows,
-    selector="doi-opportunities",
-)}
-{_table(
-    caption="Ordered line scope for each separate current opportunity",
-    headers=("Opportunity ID", "Ordinal", "Line snapshot", "Role", "Quantity"),
-    rows=scope_rows,
-    selector="doi-opportunity-scope",
-    empty_message="No governed line-scope component is recorded for these opportunities.",
-)}</section>
+{
+        _table(
+            caption="Separate current DOI opportunities; overlap is not combined",
+            headers=(
+                "Opportunity ID",
+                "Type",
+                "Potential state",
+                "Exact amount by currency",
+                "Exclusion group",
+            ),
+            rows=opportunity_rows,
+            selector="doi-opportunities",
+        )
+    }
+{
+        _table(
+            caption="Ordered line scope for each separate current opportunity",
+            headers=("Opportunity ID", "Ordinal", "Line snapshot", "Role", "Quantity"),
+            rows=scope_rows,
+            selector="doi-opportunity-scope",
+            empty_message="No governed line-scope component is recorded for these opportunities.",
+        )
+    }</section>
 <section class="dashboard-panel" data-ssa-dashboard-card="doi-aggregate-potential">
 <h2>Aggregate-potential state</h2>{_state_badge(aggregate_state)}
 {_definition_list((("Scenario selection", selection_state),))}
@@ -4297,13 +4327,15 @@ current retained contributions are separate and no mixed-currency total is shown
 {value_section}{kpi_section}</section>
 {timeline}
 <section class="dashboard-panel"><h2>Developer contract identity</h2>
-{_definition_list(
-    (
-        ("Control Center", CONTROL_CENTER_SCHEMA_VERSION),
-        ("Dashboard DOM", DASHBOARD_DOM_VERSION),
-        ("Portal DOM", DOM_SCHEMA_VERSION),
-    )
-)}</section>"""
+{
+        _definition_list(
+            (
+                ("Control Center", CONTROL_CENTER_SCHEMA_VERSION),
+                ("Dashboard DOM", DASHBOARD_DOM_VERSION),
+                ("Portal DOM", DOM_SCHEMA_VERSION),
+            )
+        )
+    }</section>"""
     return _page(
         route_name="doi_detail",
         heading=f"DOI case {case_id}",
@@ -4377,8 +4409,7 @@ def render_review(data: object, csrf_token: str, *, presentation: bool = False) 
         if not reason_codes:
             _fail("DASHBOARD_REVIEW_REASONS_INVALID")
         accepted_reasons = [
-            _reason_code(reason, "DASHBOARD_REVIEW_REASON_INVALID")
-            for reason in reason_codes
+            _reason_code(reason, "DASHBOARD_REVIEW_REASON_INVALID") for reason in reason_codes
         ]
         if len(set(accepted_reasons)) != len(accepted_reasons):
             _fail("DASHBOARD_REVIEW_REASON_INVALID")
@@ -4395,17 +4426,12 @@ def render_review(data: object, csrf_token: str, *, presentation: bool = False) 
         else:
             if (
                 audit_kind != "DOI_CASE"
-                or required_action
-                not in {"REVIEW_EXACT_REASON", "SELECT_OVERLAP_SCENARIO"}
-                or action_available
-                != (required_action == "SELECT_OVERLAP_SCENARIO")
+                or required_action not in {"REVIEW_EXACT_REASON", "SELECT_OVERLAP_SCENARIO"}
+                or action_available != (required_action == "SELECT_OVERLAP_SCENARIO")
                 or system_state not in _DOI_STATES
                 or (
                     required_action == "SELECT_OVERLAP_SCENARIO"
-                    and (
-                        system_state != "DOI_OPPORTUNITY"
-                        or "RC-087" not in accepted_reasons
-                    )
+                    and (system_state != "DOI_OPPORTUNITY" or "RC-087" not in accepted_reasons)
                 )
             ):
                 _fail("DASHBOARD_REVIEW_DOMAIN_BINDING_INVALID")
@@ -4424,7 +4450,8 @@ def render_review(data: object, csrf_token: str, *, presentation: bool = False) 
         }[required_action]
         view_only = (
             '<p class="dashboard-meta dashboard-case-type">View only</p>'
-            if not action_available else ""
+            if not action_available
+            else ""
         )
         rows.append(
             (
@@ -4437,20 +4464,22 @@ def render_review(data: object, csrf_token: str, *, presentation: bool = False) 
                 (
                     f'<a class="dashboard-case-link" href="{detail}{_h(subject_id)}" '
                     f'aria-label="View {domain_label} case for {_h(order_id)}">View case</a>'
-                    f'{view_only}'
+                    f"{view_only}"
                 ),
             )
         )
     body = f"""<section class="dashboard-panel"
  data-ssa-dashboard-current-projection="human-review">
-{_table(
-    caption="Needs your review",
-    headers=("Order", "Next step", "Action"),
-    rows=rows,
-    selector="human-review-current-projections",
-    empty_message="No cases need your review.",
-    compact=True,
-)}
+{
+        _table(
+            caption="Needs your review",
+            headers=("Order", "Next step", "Action"),
+            rows=rows,
+            selector="human-review-current-projections",
+            empty_message="No cases need your review.",
+            compact=True,
+        )
+    }
 </section>"""
     return _page(
         route_name="review",
@@ -4514,10 +4543,7 @@ def _extension(value: object) -> dict[str, object]:
         "DASHBOARD_EXTENSION_OBSERVED_VERSION_INVALID",
         optional=True,
     )
-    if (
-        observed_version is not None
-        and _SEMANTIC_VERSION.fullmatch(observed_version) is None
-    ):
+    if observed_version is not None and _SEMANTIC_VERSION.fullmatch(observed_version) is None:
         _fail("DASHBOARD_EXTENSION_OBSERVED_VERSION_INVALID")
     last_seen = _timestamp(
         extension["last_seen_at"],
@@ -4609,8 +4635,7 @@ def _backup(value: object) -> dict[str, object]:
     if status == "FAILED" and (
         backup["completed_at"] is None
         or sha256 is None
-        or "failed"
-        not in {backup["quick_check"], backup["foreign_key_check"]}
+        or "failed" not in {backup["quick_check"], backup["foreign_key_check"]}
     ):
         _fail("DASHBOARD_BACKUP_FAILURE_EVIDENCE_INVALID")
     return backup
@@ -4653,14 +4678,10 @@ def _restore(value: object) -> dict[str, object]:
     ):
         _fail("DASHBOARD_RESTORE_COHERENCE_INVALID")
     if status == "STARTED" and (
-        restore["completed_at"] is not None
-        or schema_version is not None
-        or error_code is not None
+        restore["completed_at"] is not None or schema_version is not None or error_code is not None
     ):
         _fail("DASHBOARD_RESTORE_COHERENCE_INVALID")
-    if status == "FAILED" and (
-        restore["completed_at"] is None or error_code is None
-    ):
+    if status == "FAILED" and (restore["completed_at"] is None or error_code is None):
         _fail("DASHBOARD_RESTORE_COHERENCE_INVALID")
     return restore
 
@@ -4690,13 +4711,14 @@ def _benchmark_reference(value: object) -> dict[str, object]:
         value_text = _text(reference[member], "DASHBOARD_BENCHMARK_VALUE_INVALID")
         if value_text != expected or _CANONICAL_DECIMAL.fullmatch(value_text) is None:
             _fail("DASHBOARD_BENCHMARK_VALUE_INVALID")
-    expected_sha = (
-        "d2b30ebd3dc7daad6ccec65b46f1e6836a6463e5669a89beee02c8fb37ed073d"
-    )
-    if _lower_sha256(
-        reference["verified_backup_sha256"],
-        "DASHBOARD_BENCHMARK_HASH_INVALID",
-    ) != expected_sha:
+    expected_sha = "d2b30ebd3dc7daad6ccec65b46f1e6836a6463e5669a89beee02c8fb37ed073d"
+    if (
+        _lower_sha256(
+            reference["verified_backup_sha256"],
+            "DASHBOARD_BENCHMARK_HASH_INVALID",
+        )
+        != expected_sha
+    ):
         _fail("DASHBOARD_BENCHMARK_HASH_INVALID")
     return reference
 
@@ -4876,21 +4898,22 @@ def _database(value: object) -> dict[str, object]:
 
 def _safety_table(value: object, *, plain_language: bool = False) -> str:
     counters = _zero_safety_counters(value, "DASHBOARD_SAFETY_COUNTERS_INVALID")
-    labels = {
-        "EXTERNAL_MUTATION_REQUEST_COUNT": "Requests to change external systems",
-        "EXTERNAL_PRODUCTION_SYSTEM_ACCESS_COUNT": "Access to external live systems",
-        "NON_LOCALHOST_RUNTIME_REQUEST_COUNT": "Requests outside this PC",
-        "NON_SYNTHETIC_FIXTURE_COUNT": "Test records that are not fictional",
-        "PRODUCTION_MUTATION_REQUEST_COUNT": "Requests to change live systems",
-        "PRODUCTION_SYSTEM_ACCESS_COUNT": "Access to live systems",
-        "REAL_CUSTOMER_DATA_COUNT": "Real customer data",
-        "REAL_CUSTOMER_IDENTITY_COUNT": "Real customer identities",
-        "SECRET_MATERIAL_COUNT": "Secrets detected",
-    } if plain_language else {}
-    rows = [
-        (_h(labels.get(name, name)), _h(count))
-        for name, count in sorted(counters.items())
-    ]
+    labels = (
+        {
+            "EXTERNAL_MUTATION_REQUEST_COUNT": "Requests to change external systems",
+            "EXTERNAL_PRODUCTION_SYSTEM_ACCESS_COUNT": "Access to external live systems",
+            "NON_LOCALHOST_RUNTIME_REQUEST_COUNT": "Requests outside this PC",
+            "NON_SYNTHETIC_FIXTURE_COUNT": "Test records that are not fictional",
+            "PRODUCTION_MUTATION_REQUEST_COUNT": "Requests to change live systems",
+            "PRODUCTION_SYSTEM_ACCESS_COUNT": "Access to live systems",
+            "REAL_CUSTOMER_DATA_COUNT": "Real customer data",
+            "REAL_CUSTOMER_IDENTITY_COUNT": "Real customer identities",
+            "SECRET_MATERIAL_COUNT": "Secrets detected",
+        }
+        if plain_language
+        else {}
+    )
+    rows = [(_h(labels.get(name, name)), _h(count)) for name, count in sorted(counters.items())]
     return _table(
         caption="Current safety checks" if plain_language else "All nine current safety counters",
         headers=("Check", "Count") if plain_language else ("Counter", "Value"),
@@ -4904,10 +4927,7 @@ def _database_summary(database: Mapping[str, object], *, plain_language: bool = 
     latest_status = (
         "No verified backup receipt"
         if latest is None
-        else (
-            f"{_backup(latest)['backup_id']} / "
-            f"{_display(_backup(latest)['status'])}"
-        )
+        else (f"{_backup(latest)['backup_id']} / {_display(_backup(latest)['status'])}")
     )
     latest_restore = database["latest_restore"]
     latest_restore_status = (
@@ -5017,8 +5037,7 @@ def render_system(data: object, csrf_token: str, *, presentation: bool = False) 
     database = _database(root["database"])
     expected_service_status = (
         "PASS"
-        if database["database_status"] == "HEALTHY"
-        and database["projection_status"] == "OK"
+        if database["database_status"] == "HEALTHY" and database["projection_status"] == "OK"
         else "FAIL"
     )
     if service_status != expected_service_status:
@@ -5027,20 +5046,19 @@ def render_system(data: object, csrf_token: str, *, presentation: bool = False) 
     recent_errors = _safe_errors(root["recent_safe_errors"])
     extension_label, extension_description = {
         "EXPECTED_PACKAGE_ONLY": (
-            "Package available", "Installation and activity have not been confirmed."
+            "Package available",
+            "Installation and activity have not been confirmed.",
         ),
-        "LAST_SEEN_HEALTHY": (
-            "Recently seen", "A matching extension version checked in recently."
-        ),
+        "LAST_SEEN_HEALTHY": ("Recently seen", "A matching extension version checked in recently."),
         "LAST_SEEN_STALE": (
-            "Not seen recently", "The last matching extension check-in is out of date."
+            "Not seen recently",
+            "The last matching extension check-in is out of date.",
         ),
         "VERSION_MISMATCH": (
-            "Version mismatch", "The last extension check-in used a different version."
+            "Version mismatch",
+            "The last extension check-in used a different version.",
         ),
-        "UNKNOWN": (
-            "Not confirmed", "No package or usable activity record is available."
-        ),
+        "UNKNOWN": ("Not confirmed", "No package or usable activity record is available."),
     }[extension["state"]]
     service_label = "Checks passed" if service_status == "PASS" else "Needs attention"
     database_label = "Healthy" if database["database_status"] == "HEALTHY" else "Needs attention"
@@ -5068,14 +5086,14 @@ def render_system(data: object, csrf_token: str, *, presentation: bool = False) 
     body = f"""<section class="dashboard-grid">
 <article class="dashboard-card" data-ssa-dashboard-card="service-status"><h2>App status</h2>
 <strong class="dashboard-value">{_h(service_label)}</strong>
-<p>Local address: {_h(root['service_origin'])}</p>
-<p class="dashboard-volatile">Process ID: {_h(root['owned_pid'])}</p></article>
+<p>Local address: {_h(root["service_origin"])}</p>
+<p class="dashboard-volatile">Process ID: {_h(root["owned_pid"])}</p></article>
 <article class="dashboard-card" data-ssa-dashboard-card="database-status"><h2>Database health</h2>
 <strong class="dashboard-value">{_h(database_label)}</strong>
 <a href="/system/database">View checks</a></article>
 <article class="dashboard-card" data-ssa-dashboard-card="extension-status">
 <h2>Browser extension</h2>
-{_state_badge(extension['state'], label=extension_label)}
+{_state_badge(extension["state"], label=extension_label)}
 <p>{_h(extension_description)}</p>
 <a href="/system/extension">View details</a></article>
 <article class="dashboard-card" data-ssa-dashboard-card="network-policy"><h2>Connections</h2>
@@ -5084,44 +5102,50 @@ def render_system(data: object, csrf_token: str, *, presentation: bool = False) 
 </section>
 <section class="dashboard-split">
 <article class="dashboard-panel"><h2>App versions</h2>
-{_definition_list(
-    (
-        ("App data format", root["application_schema_version"]),
-        ("Application version", root["application_version"]),
-        ("Build", root["build_version"]),
-        ("API response", root["api_schema_version"]),
-        ("API request", root["api_request_schema_version"]),
-        ("Page format", root["dom_schema_version"]),
-        ("Dashboard", root["schema_version"]),
-        ("Database format", database["schema_version"]),
-        ("App storage", "Managed folder on this PC"),
-    )
-)}</article>
+{
+        _definition_list(
+            (
+                ("App data format", root["application_schema_version"]),
+                ("Application version", root["application_version"]),
+                ("Build", root["build_version"]),
+                ("API response", root["api_schema_version"]),
+                ("API request", root["api_request_schema_version"]),
+                ("Page format", root["dom_schema_version"]),
+                ("Dashboard", root["schema_version"]),
+                ("Database format", database["schema_version"]),
+                ("App storage", "Managed folder on this PC"),
+            )
+        )
+    }</article>
 <article class="dashboard-panel"><h2>Database checks</h2>
 {_database_summary(database, plain_language=True)}</article>
 </section>
 <section class="dashboard-panel" data-ssa-dashboard-card="safety-counters">
 <h2>Safety checks</h2>
-{_safety_table(database['safety_counters'], plain_language=True)}</section>
+{_safety_table(database["safety_counters"], plain_language=True)}</section>
 <section class="dashboard-panel" data-ssa-dashboard-card="benchmark-reference">
 <h2>Performance reference</h2>
 <p>Results saved from an earlier test run, not current performance.</p>
-<p>Reference: {_h(benchmark['version'])}</p>
-{_table(
-    caption="Saved test results and verified backup",
-    headers=("Measure", "Value", "Unit"),
-    rows=benchmark_rows,
-    selector="system-benchmark-reference",
-)}</section>
+<p>Reference: {_h(benchmark["version"])}</p>
+{
+        _table(
+            caption="Saved test results and verified backup",
+            headers=("Measure", "Value", "Unit"),
+            rows=benchmark_rows,
+            selector="system-benchmark-reference",
+        )
+    }</section>
 <section class="dashboard-panel" data-ssa-dashboard-card="recent-safe-errors">
 <h2>Recent errors</h2>
-{_table(
-    caption="Recent error summaries; private details are omitted",
-    headers=("Time", "Error code", "Type", "Can retry"),
-    rows=error_rows,
-    selector="system-recent-safe-errors",
-    empty_message="No recent errors recorded.",
-)}</section>
+{
+        _table(
+            caption="Recent error summaries; private details are omitted",
+            headers=("Time", "Error code", "Type", "Can retry"),
+            rows=error_rows,
+            selector="system-recent-safe-errors",
+            empty_message="No recent errors recorded.",
+        )
+    }</section>
 <section class="dashboard-panel"><h2>Maintenance</h2>
 <nav class="dashboard-nav" aria-label="System maintenance">
 <a href="/system">Refresh status</a><a href="/system/database">Database checks</a>
@@ -5156,8 +5180,7 @@ def render_database(data: object, csrf_token: str, *, presentation: bool = False
         )
         migration_rows.append(
             tuple(
-                _h(_display(item[key]))
-                for key in ("version", "name", "sha256", "applied_at_utc")
+                _h(_display(item[key])) for key in ("version", "name", "sha256", "applied_at_utc")
             )
         )
     verify_form = f"""<form class="dashboard-form" data-ssa-dashboard-action="database-verify"
@@ -5174,14 +5197,16 @@ def render_database(data: object, csrf_token: str, *, presentation: bool = False
 <h2>Current database verification</h2>
 {_database_summary(database)}{verify_form}</section>
 <section class="dashboard-panel"><h2>Applied migrations</h2>
-{_table(
-    caption="Applied schema migrations and committed checksums",
-    headers=("Version", "Name", "SHA-256", "Applied UTC"),
-    rows=migration_rows,
-    selector="database-migrations",
-)}</section>
+{
+        _table(
+            caption="Applied schema migrations and committed checksums",
+            headers=("Version", "Name", "SHA-256", "Applied UTC"),
+            rows=migration_rows,
+            selector="database-migrations",
+        )
+    }</section>
 <section class="dashboard-panel"><h2>Projection and safety integrity</h2>
-{_safety_table(database['safety_counters'])}</section>"""
+{_safety_table(database["safety_counters"])}</section>"""
     return _page(
         route_name="database",
         heading="Database health and verification",
@@ -5252,20 +5277,22 @@ backup.</span></label>
     body = f"""{create_form}<section class="dashboard-panel"
  data-ssa-dashboard-current-projection="backup-receipts">
 <h2>Verified backup receipts</h2>
-{_table(
-    caption="Privacy-safe verified backup receipt inventory",
-    headers=(
-        "Backup ID",
-        "Status",
-        "Completed",
-        "Schema",
-        "Quick check",
-        "Foreign keys",
-        "SHA-256",
-    ),
-    rows=rows,
-    selector="verified-backup-receipts",
-)}</section>
+{
+        _table(
+            caption="Privacy-safe verified backup receipt inventory",
+            headers=(
+                "Backup ID",
+                "Status",
+                "Completed",
+                "Schema",
+                "Quick check",
+                "Foreign keys",
+                "SHA-256",
+            ),
+            rows=rows,
+            selector="verified-backup-receipts",
+        )
+    }</section>
 <section class="dashboard-panel"><h2>Recovery boundary</h2>
 <p>Restore and reset are deliberately absent from this overview workflow. Use their
 separate, strongly confirmed maintenance interfaces.</p></section>"""
@@ -5474,85 +5501,103 @@ def render_telemetry(data: object, csrf_token: str, *, presentation: bool = Fals
         )
     ]
     body = f"""<section class="dashboard-panel"><h2>Declared metric window</h2>
-<p>{_h(metrics['window'])}</p></section>
-<section class="dashboard-panel">{_table(
-    caption="Current counts with replays and conflicts separated",
-    headers=("Metric", "Count"),
-    rows=count_rows,
-    selector="telemetry-counts",
-)}</section>
-<section class="dashboard-panel">{_table(
-    caption="Closed result and current-projection distributions",
-    headers=("Series", "Result or state", "Count"),
-    rows=distribution_rows,
-    selector="telemetry-result-distributions",
-)}</section>
-<section class="dashboard-panel">{_table(
-    caption="Rates with explicit numerator and denominator; empty denominator displays N/A",
-    headers=("Rate", "Display", "Numerator", "Denominator"),
-    rows=rate_rows,
-    selector="telemetry-rates",
-)}</section>
-<section class="dashboard-panel">{_table(
-    caption="Latency and throughput sample for terminal business requests",
-    headers=("Series", "Value", "Unit"),
-    rows=latency_rows,
-    selector="telemetry-latency",
-)}</section>
+<p>{_h(metrics["window"])}</p></section>
+<section class="dashboard-panel">{
+        _table(
+            caption="Current counts with replays and conflicts separated",
+            headers=("Metric", "Count"),
+            rows=count_rows,
+            selector="telemetry-counts",
+        )
+    }</section>
+<section class="dashboard-panel">{
+        _table(
+            caption="Closed result and current-projection distributions",
+            headers=("Series", "Result or state", "Count"),
+            rows=distribution_rows,
+            selector="telemetry-result-distributions",
+        )
+    }</section>
+<section class="dashboard-panel">{
+        _table(
+            caption="Rates with explicit numerator and denominator; empty denominator displays N/A",
+            headers=("Rate", "Display", "Numerator", "Denominator"),
+            rows=rate_rows,
+            selector="telemetry-rates",
+        )
+    }</section>
+<section class="dashboard-panel">{
+        _table(
+            caption="Latency and throughput sample for terminal business requests",
+            headers=("Series", "Value", "Unit"),
+            rows=latency_rows,
+            selector="telemetry-latency",
+        )
+    }</section>
 <section class="dashboard-split">
 <article class="dashboard-panel"><h2>Current exact potential by currency</h2>
-{_table(
-    caption="Potential value; unavailable and unresolved overlap are excluded",
-    headers=("Currency", "Exact total", "Items", "Registry"),
-    rows=potential_rows,
-    selector="potential-by-currency",
-)}
-<p>Unavailable values: {_h(metrics['potential_unavailable_count'])} · unresolved overlap:
-{_h(metrics['unresolved_overlap_count'])}.</p></article>
+{
+        _table(
+            caption="Potential value; unavailable and unresolved overlap are excluded",
+            headers=("Currency", "Exact total", "Items", "Registry"),
+            rows=potential_rows,
+            selector="potential-by-currency",
+        )
+    }
+<p>Unavailable values: {_h(metrics["potential_unavailable_count"])} · unresolved overlap:
+{_h(metrics["unresolved_overlap_count"])}.</p></article>
 <article class="dashboard-panel"><h2>Current verified realized value by currency</h2>
-{_table(
-    caption="Verified realized value after corrections and reversals",
-    headers=("Currency", "Exact total", "Items", "Registry"),
-    rows=realized_rows,
-    selector="realized-by-currency",
-)}</article>
+{
+        _table(
+            caption="Verified realized value after corrections and reversals",
+            headers=("Currency", "Exact total", "Items", "Registry"),
+            rows=realized_rows,
+            selector="realized-by-currency",
+        )
+    }</article>
 </section>
 <section class="dashboard-panel"><h2>Versioned denominator registry</h2>
-{_table(
-    caption=(
-        "Every metric numerator, denominator, inclusion, exclusion, time basis, and "
-        "empty display"
-    ),
-    headers=(
-        "Metric",
-        "Numerator",
-        "Denominator",
-        "Included",
-        "Excluded",
-        "Time basis",
-        "Empty display",
-    ),
-    rows=definition_rows,
-    selector="metric-denominator-registry",
-)}</section>
+{
+        _table(
+            caption=(
+                "Every metric numerator, denominator, inclusion, exclusion, time basis, and "
+                "empty display"
+            ),
+            headers=(
+                "Metric",
+                "Numerator",
+                "Denominator",
+                "Included",
+                "Excluded",
+                "Time basis",
+                "Empty display",
+            ),
+            rows=definition_rows,
+            selector="metric-denominator-registry",
+        )
+    }</section>
 <section class="dashboard-split">
 <article class="dashboard-panel"><h2>Current operational metadata</h2>
-{_table(
-    caption="Current database, backup, restore, verification, and safety observations",
-    headers=("Measure", "Value", "Unit"),
-    rows=operational_rows,
-    selector="telemetry-operational-status",
-)}</article>
+{
+        _table(
+            caption="Current database, backup, restore, verification, and safety observations",
+            headers=("Measure", "Value", "Unit"),
+            rows=operational_rows,
+            selector="telemetry-operational-status",
+        )
+    }</article>
 <article class="dashboard-panel"><h2>Milestone 4 benchmark reference</h2>
-<p>Reference version: {_h(benchmark['version'])}. This is a committed comparison baseline.</p>
-{_table(
-    caption="Committed Milestone 4 benchmark baseline and verified backup reference",
-    headers=("Measure", "Value", "Unit"),
-    rows=benchmark_rows,
-    selector="telemetry-benchmark-reference",
-)}</article></section>
+<p>Reference version: {_h(benchmark["version"])}. This is a committed comparison baseline.</p>
+{
+        _table(
+            caption="Committed Milestone 4 benchmark baseline and verified backup reference",
+            headers=("Measure", "Value", "Unit"),
+            rows=benchmark_rows,
+            selector="telemetry-benchmark-reference",
+        )
+    }</article></section>
 <section class="dashboard-panel"><h2>Safety status</h2>
-{_safety_table(metrics['safety_counters'])}</section>"""
+{_safety_table(metrics["safety_counters"])}</section>"""
     return _page(
         route_name="telemetry",
         heading="Telemetry and metric denominators",
@@ -5581,15 +5626,13 @@ def render_extension(data: object, csrf_token: str, *, presentation: bool = Fals
             "been observed."
         ),
         "LAST_SEEN_HEALTHY": (
-            "A matching local extension version was observed within the documented "
-            "stale threshold."
+            "A matching local extension version was observed within the documented stale threshold."
         ),
         "LAST_SEEN_STALE": (
             "A matching version was observed locally, but its last-seen time is now stale."
         ),
         "VERSION_MISMATCH": (
-            "The most recently observed local extension version differs from the "
-            "expected package."
+            "The most recently observed local extension version differs from the expected package."
         ),
         "UNKNOWN": "Neither expected package evidence nor a usable local observation is available.",
     }
@@ -5600,23 +5643,27 @@ def render_extension(data: object, csrf_token: str, *, presentation: bool = Fals
     body = f"""<section class="dashboard-panel dashboard-callout"
  data-ssa-dashboard-card="extension-status"><h2>Truthful extension state</h2>
 {_state_badge(state)}<p>{_h(semantics[state])}</p>
-{_definition_list(
-    (
-        ("Expected version", extension["expected_version"]),
-        ("Expected package SHA-256", extension["expected_package_sha256"]),
-        ("Observed version", extension["observed_version"]),
-        ("Last seen", extension["last_seen_at"]),
-        ("Stale threshold (seconds)", extension["stale_after_seconds"]),
-    )
-)}</section>
+{
+        _definition_list(
+            (
+                ("Expected version", extension["expected_version"]),
+                ("Expected package SHA-256", extension["expected_package_sha256"]),
+                ("Observed version", extension["observed_version"]),
+                ("Last seen", extension["last_seen_at"]),
+                ("Stale threshold (seconds)", extension["stale_after_seconds"]),
+            )
+        )
+    }</section>
 <section class="dashboard-panel"><h2>Exact Chrome permission boundary</h2>
-{_definition_list(
-    (
-        ("Permission", "sidePanel"),
-        ("Host permission", "http://127.0.0.1/*"),
-        ("Host permission ", "http://localhost/*"),
-    )
-)}</section>
+{
+        _definition_list(
+            (
+                ("Permission", "sidePanel"),
+                ("Host permission", "http://127.0.0.1/*"),
+                ("Host permission ", "http://localhost/*"),
+            )
+        )
+    }</section>
 <section class="dashboard-panel"><h2>Operational meaning</h2>
 <p>The dashboard works without the extension. A process-local heartbeat uses no new
 permission, stores no source payload, and is lost on service restart.</p></section>"""

@@ -23,12 +23,12 @@ The source and regression suite do not require the original local handoff folder
 ## Prepare and launch the generated demo
 
 From the repository root in PowerShell, use an explicit new synthetic data directory.
-This example uses the task's writable local visualization area. Keep the same
+This example uses an explicitly selected local data directory. Keep the same
 `$campaignData` value to recover previously saved drafts on the next launch.
 
 ```powershell
-$campaignPython = 'C:\Users\jlewi\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
-$campaignData = 'C:\Users\jlewi\.codex\visualizations\2026\09\11\01a08ec8-0d3a-7c81-8397-0b975858844a\campaign-demo-data'
+$campaignPython = 'C:\path\to\approved-development-runtime\python.exe'
+$campaignData = 'C:\path\to\synthetic-campaign-demo-data'
 & $campaignPython tools/campaign_demo.py --data-dir $campaignData --prepare-only
 & $campaignPython tools/campaign_demo.py --data-dir $campaignData --port 8876
 ```
@@ -220,7 +220,7 @@ coverage remains unverified and successful import never means exhaustive all-sen
 Reference wording from `Jude-Saved-Reply-References.json` informs the deterministic
 template detector. Exact/normalized repeated substantive passages and variable links
 are separated from candidate prose; custom additions survive. Near matches are held
-for review. Greeting/closing-only matches are insufficient. Saved-reply ID 4184246
+for review. Greeting/closing-only matches are insufficient. An unverified saved-reply ID
 alone does not identify a signature or exclude a message. HTML cleaning, quote removal,
 and near-match detection remain inspectable heuristics. Candidate attribution is not
 proof of personally typed text. This is neither model training nor completed large-corpus

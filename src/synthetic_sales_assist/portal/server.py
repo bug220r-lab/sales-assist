@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hmac
+import json
 import os
 import re
 import socket
@@ -22,11 +23,29 @@ from doi_csv_staging.review import (
     DOIReviewError,
     DOIReviewSession,
     MAX_BODY_BYTES as DOI_REVIEW_MAX_BODY_BYTES,
+    MAX_RESPONSE_BYTES as DOI_REVIEW_MAX_RESPONSE_BYTES,
     parse_review_envelope,
     validate_review_request,
     review_response_bytes,
 )
+from doi_csv_staging.review_marks import ReviewMarkError, ReviewMarkStore
+from doi_csv_staging.alternate_drafts import (
+    AlternateDraftService,
+    DraftStore,
+    DraftError,
+    parse_request as parse_draft_request,
+    MAX_REQUEST as DRAFT_MAX_REQUEST,
+)
 from doi_csv_staging.review_policy import OwnerConfirmations, EMPTY_CONFIRMATIONS
+from doi_draft_transfer.contract import (
+    TransferError,
+    encoded as transfer_bytes,
+    unique_json as transfer_json,
+    template_csv as transfer_template,
+)
+from doi_draft_transfer.service import DraftTransferService
+from doi_draft_transfer.store import DraftTransferStore, FILENAME as TRANSFER_STORE_FILENAME
+from doi_draft_transfer.helpscout import HelpScoutDraftClient
 
 from synthetic_sales_assist.application.control_center import (
     ControlCenterApplication,
@@ -217,12 +236,41 @@ _GET_ROUTES: Final = frozenset(
 )
 
 _DOI_REVIEW_GET_ROUTES = frozenset(
-    {"/doi-csv-review", "/api/v1/doi-csv-review/state", "/static/doi-csv-review.js"}
+    {
+        "/doi-csv-review",
+        "/api/v1/doi-csv-review/state",
+        "/static/doi-csv-review.js",
+        "/api/v1/doi-csv-review/reviewed-state",
+        "/static/doi-alternate-draft.js",
+    }
 )
-_DOI_REVIEW_POST_ROUTES = frozenset({"/api/v1/doi-csv-review/load", "/api/v1/doi-csv-review/clear"})
+_DOI_REVIEW_POST_ROUTES = frozenset(
+    {
+        "/api/v1/doi-csv-review/load",
+        "/api/v1/doi-csv-review/clear",
+        "/api/v1/doi-csv-review/reviewed",
+        "/api/v1/doi-csv-review/alternate-draft",
+    }
+)
+
+
+_DRAFT_TRANSFER_GET_ROUTES = frozenset(
+    {
+        "/doi-draft-transfer",
+        "/api/v1/doi-draft-transfer/state",
+        "/api/v1/doi-draft-transfer/template",
+        "/static/doi-draft-transfer.js",
+        "/static/doi-draft-transfer.css",
+    }
+)
+_DRAFT_TRANSFER_ACTION = "/api/v1/doi-draft-transfer/action"
 
 
 def _allowed_methods(path: str) -> tuple[str, ...] | None:
+    if path in _DRAFT_TRANSFER_GET_ROUTES:
+        return ("GET",)
+    if path == _DRAFT_TRANSFER_ACTION:
+        return ("POST",)
     if path in _DOI_REVIEW_GET_ROUTES:
         return ("GET",)
     if path in _DOI_REVIEW_POST_ROUTES:
@@ -491,6 +539,10 @@ class PortalHTTPServer(HTTPServer):
         csrf_token: str,
         shutdown_token: str,
         doi_csv_review_only: bool = False,
+        review_mark_store: ReviewMarkStore | None = None,
+        alternate_draft_store: DraftStore | None = None,
+        draft_transfer_store: DraftTransferStore | None = None,
+        draft_transfer_client=None,
     ) -> None:
         if (
             len(csrf_token) != 64
@@ -502,7 +554,15 @@ class PortalHTTPServer(HTTPServer):
             raise PortalServerError("PORTAL_CONTROL_TOKEN_INVALID")
         self.application = application
         self.doi_csv_review_only = doi_csv_review_only
-        self.doi_review_session = DOIReviewSession(owner_confirmations=config.owner_confirmations)
+        self.doi_review_session = DOIReviewSession(
+            ttl_seconds=36000,
+            owner_confirmations=config.owner_confirmations,
+            review_mark_store=review_mark_store,
+        )
+        self.alternate_drafts = AlternateDraftService(
+            self.doi_review_session, alternate_draft_store
+        )
+        self.draft_transfer = DraftTransferService(draft_transfer_store, draft_transfer_client)
         self.campaign_workspace: WorkspaceWeb | None = None
         database = getattr(application, "database", None)
         self.control_center = (
@@ -629,6 +689,8 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             if self.portal_server.doi_csv_review_only and path not in (
                 _DOI_REVIEW_GET_ROUTES
                 | _DOI_REVIEW_POST_ROUTES
+                | _DRAFT_TRANSFER_GET_ROUTES
+                | {_DRAFT_TRANSFER_ACTION}
                 | frozenset(
                     route
                     for route, asset in DASHBOARD_STATIC_ASSETS.items()
@@ -657,7 +719,9 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             status = (
                 404
                 if exc.code.endswith("_NOT_FOUND")
-                else 503 if exc.code in {"SAFETY_COUNTERS_NONZERO", "DATABASE_UNHEALTHY"} else 400
+                else 503
+                if exc.code in {"SAFETY_COUNTERS_NONZERO", "DATABASE_UNHEALTHY"}
+                else 400
             )
             self._safe_error(status, exc.code)
         except Exception as exc:
@@ -1036,6 +1100,42 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         return False
 
     def _get(self, path: str) -> None:
+        if path == "/doi-draft-transfer":
+            from doi_draft_transfer.ui import render_page
+
+            self._send_html(render_page(self.portal_server.csrf_token))
+            return
+        if path in {"/static/doi-draft-transfer.js", "/static/doi-draft-transfer.css"}:
+            from doi_draft_transfer.ui import asset
+
+            is_js = path.endswith(".js")
+            self._send(
+                200,
+                asset("ui.js" if is_js else "ui.css"),
+                "text/javascript; charset=utf-8" if is_js else "text/css; charset=utf-8",
+            )
+            return
+        if path == "/api/v1/doi-draft-transfer/template":
+            self._send(
+                200,
+                transfer_template().encode("utf-8"),
+                "text/csv; charset=utf-8",
+                {"Content-Disposition": 'attachment; filename="doi-review-csv-v1-template.csv"'},
+            )
+            return
+        if path == "/api/v1/doi-draft-transfer/state":
+            try:
+                result = self.portal_server.draft_transfer.index()
+            except TransferError as exc:
+                self._safe_error(exc.status, exc.code)
+                return
+            self._send(
+                200,
+                transfer_bytes(result),
+                "application/json; charset=utf-8",
+                draft_transfer_response=True,
+            )
+            return
         if path == "/doi-csv-review":
             from synthetic_sales_assist.portal.doi_csv_review_ui import render_doi_csv_review_page
 
@@ -1046,6 +1146,11 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
                 )
             )
             return
+        if path == "/static/doi-alternate-draft.js":
+            from synthetic_sales_assist.portal.alternate_draft_ui import ALTERNATE_DRAFT_JS
+
+            self._send(200, ALTERNATE_DRAFT_JS.encode("utf-8"), "text/javascript; charset=utf-8")
+            return
         if path == "/static/doi-csv-review.js":
             from synthetic_sales_assist.portal.doi_csv_review_ui import DOI_CSV_REVIEW_JS
 
@@ -1055,6 +1160,14 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
             self._send(
                 200,
                 review_response_bytes(self.portal_server.doi_review_session.snapshot()),
+                "application/json; charset=utf-8",
+                doi_review_response=True,
+            )
+            return
+        if path == "/api/v1/doi-csv-review/reviewed-state":
+            self._send(
+                200,
+                json.dumps(self.portal_server.doi_review_session.reviewed_snapshot()).encode(),
                 "application/json; charset=utf-8",
             )
             return
@@ -1223,6 +1336,68 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         self._route_error(path, "GET")
 
     def _post(self, path: str) -> None:
+        if path == _DRAFT_TRANSFER_ACTION:
+            try:
+                raw = self._read_json_body(64 * 1024 * 1024)
+                try:
+                    value = transfer_json(raw.decode("utf-8", errors="strict"))
+                except (ValueError, UnicodeError, RecursionError):
+                    raise TransferError("TRANSFER_JSON_INVALID") from None
+                result = self.portal_server.draft_transfer.act(value)
+                body = transfer_bytes(result)
+                if len(body) > 8 * 1024 * 1024:
+                    raise TransferError("TRANSFER_RESPONSE_LIMIT", 413)
+            except TransferError as exc:
+                self._safe_error(exc.status, exc.code)
+                return
+            self._send(200, body, "application/json; charset=utf-8", draft_transfer_response=True)
+            return
+        if path == "/api/v1/doi-csv-review/alternate-draft":
+            try:
+                value = parse_draft_request(self._read_json_body(DRAFT_MAX_REQUEST))
+                result = self.portal_server.alternate_drafts.act(value)
+                body = json.dumps(result, ensure_ascii=True, allow_nan=False).encode()
+                if len(body) > 262144:
+                    raise DraftError("DRAFT_RESPONSE_TOO_LARGE")
+            except (DOIReviewError, DraftError) as exc:
+                status = (
+                    409
+                    if "MISMATCH" in exc.code or exc.code == "DRAFT_ORDER_NOT_LOADED"
+                    else 503
+                    if "STORAGE" in exc.code
+                    else 400
+                )
+                self._safe_error(status, exc.code)
+                return
+            except (PortalContractError, OSError, ValueError):
+                self._safe_error(400, "DRAFT_INPUT_INVALID")
+                return
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+        if path == "/api/v1/doi-csv-review/reviewed":
+            try:
+                value = parse_review_envelope(self._read_json_body(4096))
+                state = self.portal_server.doi_review_session.set_reviewed(value)
+            except (DOIReviewError, ReviewMarkError) as exc:
+                status = (
+                    409
+                    if exc.code
+                    in {
+                        "REVISION_MISMATCH",
+                        "REVIEW_MARK_REVISION_MISMATCH",
+                        "REVIEW_MARK_EVIDENCE_MISMATCH",
+                    }
+                    else 400
+                )
+                if exc.code in {"REVIEW_MARKS_UNAVAILABLE", "REVIEW_MARKS_FULL"}:
+                    status = 503
+                self._safe_error(status, exc.code)
+                return
+            except (PortalContractError, OSError, ValueError):
+                self._safe_error(400, "REVIEW_MARK_REQUEST_INVALID")
+                return
+            self._send(200, json.dumps(state).encode(), "application/json; charset=utf-8")
+            return
         if path in _DOI_REVIEW_POST_ROUTES:
             session = self.portal_server.doi_review_session
             current_revision_trusted = False
@@ -1257,6 +1432,7 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
                 400 if state["status"] == "error" else 200,
                 review_response_bytes(state),
                 "application/json; charset=utf-8",
+                doi_review_response=True,
             )
             return
         if path == WORKSPACE_ACTION_ROUTE:
@@ -1497,9 +1673,30 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         extra_headers: dict[str, str] | None = None,
         *,
         allow_campaign_frame: bool = False,
+        doi_review_response: bool = False,
+        draft_transfer_response: bool = False,
     ) -> None:
+        # Only already-validated DOI state/load/clear projections get the larger bound.
+        response_limit = (
+            8 * 1024 * 1024
+            if draft_transfer_response
+            and self.path
+            in {
+                "/api/v1/doi-draft-transfer/state",
+                _DRAFT_TRANSFER_ACTION,
+            }
+            else DOI_REVIEW_MAX_RESPONSE_BYTES
+            if doi_review_response
+            and self.path
+            in {
+                "/api/v1/doi-csv-review/state",
+                "/api/v1/doi-csv-review/load",
+                "/api/v1/doi-csv-review/clear",
+            }
+            else MAX_RESPONSE_BODY_BYTES
+        )
         try:
-            if len(body) > MAX_RESPONSE_BODY_BYTES:
+            if len(body) > response_limit:
                 status = 500
                 extra_headers = None
                 if content_type.startswith("application/json"):
@@ -1599,6 +1796,10 @@ class PortalRuntime:
                 self.config,
                 csrf_token=self.csrf_token,
                 shutdown_token=self.shutdown_token,
+                review_mark_store=ReviewMarkStore(self.paths.data / "doi-reviewed-split.json"),
+                alternate_draft_store=DraftStore(self.paths.data / "doi-alternate-drafts.json"),
+                draft_transfer_store=DraftTransferStore(self.paths.data / TRANSFER_STORE_FILENAME),
+                draft_transfer_client=HelpScoutDraftClient.from_environment(),
             )
             self.server = server
             port = int(server.server_address[1])

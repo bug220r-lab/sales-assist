@@ -12,8 +12,15 @@ in the committed domain and application services. The Control Center is a local 
 closed-command boundary. M8 adds deterministic offline demo/source packaging and local
 Windows launchers; it adds no production connector.
 
-All listeners and runtime requests remain loopback-only. There is no production-system access,
-external action, remote asset, remote analytics, automatic updater, or non-loopback bind.
+All listeners remain loopback-only. The owner-authorized
+[CSV draft review and Help Scout draft transfer](docs/doi-draft-transfer.md) adds one
+off-by-default server adapter, bounded in [ADR 0038](docs/adr/0038-approved-csv-draft-transfer.md).
+Each external draft requires review and approval of its exact version. Customer sending is absent.
+Private CSVs, databases, credentials and customer records stay outside this repository.
+The original specification bundle remains unchanged; this authorized application extension does
+not expand the core rules engine or Chrome extension's synthetic/localhost boundaries.
+Tests use synthetic fixtures and mocked APIs. Do not restart an active review or change
+credentials/grants without action-time approval.
 
 ## Requirements
 
@@ -43,7 +50,7 @@ Codex workspace, the verified development fallback is explicit and process-scope
 ```powershell
 # DEVELOPMENT / NONPORTABLE -- this workspace only
 $env:SSA_PYTHON = `
-  'C:\Users\jlewi\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+  'C:\path\to\approved-development-runtime\python.exe'
 .\scripts\start.ps1 -NoBrowser
 .\scripts\status.ps1
 Start-Process 'http://127.0.0.1:8765/overview'

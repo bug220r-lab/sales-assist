@@ -10,7 +10,11 @@ Supported target: Windows 10/11 x64 with Windows PowerShell 5.1 and a local brow
 
 The first start creates fictional Sales Credit, DOI, campaign and reply records.
 The separate DOI CSV review accepts manually supplied captures into memory only;
-its 30-minute session is removed by Clear, expiry or service shutdown. See DAILY_README.md.
+its 10-hour session is removed by Clear, expiry or service shutdown. Saved review checks
+and local alternate drafts use separate persistent stores. See DAILY_README.md.
+The new CSV draft-transfer page has its own store, review gates and exact-version approval.
+Help Scout transfer is off by default. Read docs/doi-draft-transfer.md before configuring it.
+Use a new data directory for validation; never restart an active review to try a new build.
 The Overview navigation opens Campaigns, Replies and Writing history. All data and
 actions on those sample screens are synthetic; simulated outreach does not send email
 or create remote drafts. CSV observations do not authorize fulfillment or external action.
