@@ -138,12 +138,39 @@ the explicit reviewed action. No real create was used for development verificati
 
 ## Secure setup and operation
 
-API transfer is off by default. An operator may enable `SSA_HELPSCOUT_DRAFT_TRANSFER=1`
-and supply `SSA_HELPSCOUT_ACCESS_TOKEN` through an already-approved server-side secret
-manager/injector. These are process environment inputs only; the app neither persists
-them nor accepts them from CSV or browser requests. Do not put a token in a command
-argument, source file, CSV, log, Git, or frontend. Any new persistent credential/grant
-requires action-time approval and separate secure setup. No credentials are shipped.
+API transfer is off by default. After separate activation approval, an operator can
+enable `SSA_HELPSCOUT_DRAFT_TRANSFER=1` in the isolated app process and choose one mode:
+
+- `SSA_HELPSCOUT_AUTH_MODE=access-token` (the default): supply
+  `SSA_HELPSCOUT_ACCESS_TOKEN` through an already approved server-side injector.
+- `SSA_HELPSCOUT_AUTH_MODE=dpapi-cached-token`: set `SSA_HELPSCOUT_DPAPI_AUTH_PATH`
+  to the exact approved existing local `.dpapi` connection file, with no access-token
+  environment input. The file must be on a fixed local disk, without reparse paths.
+  It is opened lazily by an explicit access check or approved transfer, not at startup.
+  The JSON connection must contain `access_token` and numeric Unix `expires_at`.
+  Only the token/expiry are retained; other application secrets are not used.
+
+These are process-only settings, never CSV/browser fields or persistent configuration
+writes. The DPAPI mode requires the matching Windows user and a currently valid cached
+token with more than 120 seconds remaining. It has no renewal, token exchange, browser
+login, new grant, automatic reload, or fallback. Expiry, access denial, malformed data,
+unsupported platform or decryption failure stops access until separately approved setup
+and process restart. It does not import, alter or invoke an existing cleanup client.
+Never coordinate a token refresh by starting another worker while cleanup is active.
+
+Approval to build this source is not permission to open/decrypt a real connection.
+Activation needs approval for the exact connection path, isolated process/private data
+directory, cached-token-only access and the GET-only mailbox/user check. That check
+does not create a draft. Creating the exact reviewed draft is a separate explicit action.
+The normal package's private launch-policy requirements still apply. If the existing
+connection has no usable cached token, this mode cannot proceed: an authorized existing
+credential owner must provide a valid token through an approved handoff, or a separately
+approved future integration is needed. Do not bypass denial or silently create a grant.
+
+Do not put tokens in command arguments, source, CSV, logs, Git, UI, or disk exports.
+No credentials, real connection path, approved customer copy or customer recipient are
+shipped. Native/mutable plaintext buffers are cleared; Python cannot guarantee erasure
+of all transient string copies. See [ADR 0040](adr/0040-opt-in-cached-dpapi-authentication.md).
 
 The **Check configured API access** control makes only GET requests for the fixed
 mailbox and user, without customer discovery. It is optional setup verification,

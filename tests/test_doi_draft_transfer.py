@@ -800,6 +800,30 @@ class StoreTests(unittest.TestCase):
             self.assertEqual(result["state"], "UNKNOWN")
         self.assertEqual(len(self.client.calls), 1)
 
+    def test_local_auth_failure_is_durable_no_write_and_explicit_retry(self):
+        item = self.approved()
+
+        def expired():
+            raise TransferError("HELP_SCOUT_CACHED_TOKEN_EXPIRED", 503)
+
+        self.service.client = HelpScoutDraftClient(token_provider=expired)
+        with patch("doi_draft_transfer.helpscout.http.client.HTTPSConnection") as connection:
+            first = self.service.transfer(
+                item["order_id"], item["version"], item["approval_binding"]
+            )
+            self.assertEqual(first["state"], "AUTH_REQUIRED")
+            self.assertEqual(first["code"], "HELP_SCOUT_CACHED_TOKEN_EXPIRED")
+            self.assertEqual(self.service.detail(item["order_id"])["transfer"], first)
+            with self.assertRaisesRegex(TransferError, "EXPLICIT_RETRY"):
+                self.service.transfer(item["order_id"], item["version"], item["approval_binding"])
+            connection.assert_not_called()
+        self.service.client = self.client
+        second = self.service.transfer(
+            item["order_id"], item["version"], item["approval_binding"], True
+        )
+        self.assertEqual(second["operation_id"], first["operation_id"])
+        self.assertEqual(second["state"], "CREATED")
+
     def test_auth_rejection_requires_explicit_retry_same_operation(self):
         item = self.approved()
         self.client.result = {"state": "AUTH_REQUIRED", "code": "AUTH", "retry_allowed": True}

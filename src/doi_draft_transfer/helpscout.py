@@ -15,6 +15,7 @@ from html.parser import HTMLParser
 from urllib.parse import urlsplit
 
 from .contract import MAILBOX_ID, USER_ID, TransferError, encoded, rendered_body
+from .local_auth import CachedDPAPIToken, valid_token
 
 HOST = "api.helpscout.net"
 MAX_RESPONSE = 512 * 1024
@@ -61,22 +62,27 @@ def safe_web_link(value, conversation_id):
 
 
 class HelpScoutDraftClient:
-    def __init__(self, token):
-        if (
-            type(token) is not str
-            or not token
-            or any(c.isspace() for c in token)
-            or any(ord(c) < 33 or ord(c) > 126 for c in token)
-        ):
+    def __init__(self, token=None, *, token_provider=None):
+        if token_provider is not None:
+            if token is not None or not callable(token_provider):
+                raise TransferError("HELP_SCOUT_CONFIGURATION_REQUIRED", 503)
+        elif not valid_token(token):
             raise TransferError("HELP_SCOUT_CONFIGURATION_REQUIRED", 503)
         self._token = token
+        self._token_provider = token_provider
 
     @classmethod
     def from_environment(cls):
-        # Existing operator-managed secret injection only. No persisted grant or token files.
+        # Process-only opt-in; constructing the lazy provider never opens its file.
         if os.environ.get("SSA_HELPSCOUT_DRAFT_TRANSFER") != "1":
             return None
         token = os.environ.get("SSA_HELPSCOUT_ACCESS_TOKEN")
+        mode = os.environ.get("SSA_HELPSCOUT_AUTH_MODE", "access-token")
+        path = os.environ.get("SSA_HELPSCOUT_DPAPI_AUTH_PATH")
+        if mode == "dpapi-cached-token" and token is None:
+            return cls(token_provider=CachedDPAPIToken(path))
+        if mode != "access-token" or path:
+            raise TransferError("HELP_SCOUT_CONFIGURATION_REQUIRED", 503)
         return cls(token) if token else None
 
     def _request(self, method, path, payload=None):
@@ -88,6 +94,9 @@ class HelpScoutDraftClient:
             method == "POST" and path == "/v2/conversations" or method == "GET" and allowed_get
         ):
             raise TransferError("HELP_SCOUT_OPERATION_PROHIBITED", 403)
+        bearer = self._token_provider() if self._token_provider else self._token
+        if not valid_token(bearer):
+            raise TransferError("HELP_SCOUT_LOCAL_AUTH_REQUIRED", 503)
         connection = http.client.HTTPSConnection(
             HOST, timeout=15, context=ssl.create_default_context()
         )
@@ -97,7 +106,7 @@ class HelpScoutDraftClient:
                 path,
                 body=encoded(payload) if payload is not None else None,
                 headers={
-                    "Authorization": "Bearer " + self._token,
+                    "Authorization": "Bearer " + bearer,
                     "Content-Type": "application/json; charset=utf-8",
                     "Accept": "application/hal+json",
                 },
@@ -132,6 +141,9 @@ class HelpScoutDraftClient:
         assert payload["autoReply"] is False and payload["mailboxId"] == MAILBOX_ID
         try:
             status, headers, _ = self._request("POST", "/v2/conversations", payload)
+        except TransferError as exc:
+            # Local authentication failed before opening the HTTP connection.
+            return {"state": "AUTH_REQUIRED", "code": exc.code, "retry_allowed": True}
         except (OSError, http.client.HTTPException, TimeoutError):
             return {"state": "UNKNOWN", "code": "WRITE_OUTCOME_UNKNOWN", "retry_allowed": False}
         if status in {401, 403}:
