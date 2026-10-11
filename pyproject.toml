@@ -29,7 +29,10 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "synthetic_sales_assist.campaign_replies" = ["data/*.json"]
-"synthetic_sales_assist.portal" = ["campaign_workspace.js", "campaign_workspace.css"]
+"synthetic_sales_assist.portal" = [
+  "campaign_workspace.js", "campaign_workspace.css", "doi-review.js", "alternate-draft.js",
+]
+"doi_draft_transfer" = ["ui.js", "ui.css", "ui.html"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers"

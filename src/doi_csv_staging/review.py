@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from .staging import LINE_HEADERS, SUMMARY_HEADERS, purchase_nature, stage_capture_csvs, _time
+from .review_marks import ReviewMarkError, ReviewMarkStore, evidence_key, order_key
 from .triage import (
     classify_order,
     REASON_CODES,
@@ -44,7 +45,8 @@ from synthetic_sales_assist.domain.timestamps import canonicalize_timestamp, par
 SCHEMA = "doi-csv-review/v5"
 MAX_CSV_BYTES = 1024 * 1024
 MAX_BODY_BYTES = 8 * 1024 * 1024
-MAX_RESPONSE_BYTES = 512 * 1024
+# DOI-specific projection bound; CSV/order/record bounds remain independent.
+MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 MAX_RECORDS = 5000
 MAX_ORDERS = 500
 GLOBAL_HOLDS = frozenset(
@@ -62,29 +64,29 @@ GLOBAL_HOLDS = frozenset(
 )
 HOLD_CODES = GLOBAL_HOLDS | frozenset(
     (
-        'COMPONENT_COVERAGE_INCOMPLETE CONFLICTING_LINE CONFLICTING_SUMMARY '
-        'CURRENCY_UNKNOWN DISPLAYED_ORDER_ID_UNVERIFIED DS_EVIDENCE_UNKNOWN '
-        'DUPLICATE_LINE_ID DUPLICATE_SUMMARY INVALID_COMPONENT_PARENT INVALID_QUANTITY '
-        'LINE_EVIDENCE_GAP LINE_NATURE_UNKNOWN LINE_STRUCTURE_CONFLICT '
-        'LINE_STRUCTURE_UNRESOLVED MISSING_COMPONENT_PARENT MISSING_LINE_ID MISSING_LINES '
-        'MISSING_SUMMARY ORDER_CAPTURE_INCOMPLETE ORPHAN_LINE '
-        'PACKAGED_PRODUCT_STRUCTURE_UNRESOLVED PAGINATION_COVERAGE_UNVERIFIED '
-        'PRODUCTION_EVALUATION_NOT_PERFORMED READINESS_UNVERIFIED '
-        'REQUIRED_QUANTITY_UNKNOWN REVIEW_ASSIGNMENT_UNVERIFIED '
-        'SNAPSHOT_EVIDENCE_INCOMPLETE SOURCE_ASSIGNMENT_CONFLICT_OR_UNKNOWN '
-        'SOURCE_JOIN_MISMATCH STRUCTURAL_COVERAGE_INCOMPLETE SUMMARY_LINE_COUNT_MISMATCH '
-        'TIMESTAMP_INVALID_OR_NAIVE TIMESTAMP_MISMATCH TIMESTAMP_RANGE_UNSUPPORTED '
-        'TIMEZONE_MISMATCH UTC_OFFSET_MISMATCH VISIBLE_COVERAGE_GAP COVERAGE_INCOMPLETE '
-        'GLOBAL_INPUT_HOLD'
+        "COMPONENT_COVERAGE_INCOMPLETE CONFLICTING_LINE CONFLICTING_SUMMARY "
+        "CURRENCY_UNKNOWN DISPLAYED_ORDER_ID_UNVERIFIED DS_EVIDENCE_UNKNOWN "
+        "DUPLICATE_LINE_ID DUPLICATE_SUMMARY INVALID_COMPONENT_PARENT INVALID_QUANTITY "
+        "LINE_EVIDENCE_GAP LINE_NATURE_UNKNOWN LINE_STRUCTURE_CONFLICT "
+        "LINE_STRUCTURE_UNRESOLVED MISSING_COMPONENT_PARENT MISSING_LINE_ID MISSING_LINES "
+        "MISSING_SUMMARY ORDER_CAPTURE_INCOMPLETE ORPHAN_LINE "
+        "PACKAGED_PRODUCT_STRUCTURE_UNRESOLVED PAGINATION_COVERAGE_UNVERIFIED "
+        "PRODUCTION_EVALUATION_NOT_PERFORMED READINESS_UNVERIFIED "
+        "REQUIRED_QUANTITY_UNKNOWN REVIEW_ASSIGNMENT_UNVERIFIED "
+        "SNAPSHOT_EVIDENCE_INCOMPLETE SOURCE_ASSIGNMENT_CONFLICT_OR_UNKNOWN "
+        "SOURCE_JOIN_MISMATCH STRUCTURAL_COVERAGE_INCOMPLETE SUMMARY_LINE_COUNT_MISMATCH "
+        "TIMESTAMP_INVALID_OR_NAIVE TIMESTAMP_MISMATCH TIMESTAMP_RANGE_UNSUPPORTED "
+        "TIMEZONE_MISMATCH UTC_OFFSET_MISMATCH VISIBLE_COVERAGE_GAP COVERAGE_INCOMPLETE "
+        "GLOBAL_INPUT_HOLD"
     ).split()
 )
 ERROR_CODES = frozenset(
     (
-        'REVIEW_BODY_TOO_LARGE REVIEW_DUPLICATE_JSON_KEY REVIEW_JSON_INVALID '
-        'REVIEW_REQUEST_MEMBERS_INVALID REVIEW_REVISION_INVALID REVIEW_CSV_TYPE_INVALID '
-        'REVIEW_CSV_TOO_LARGE REVIEW_RECORD_LIMIT REVIEW_ORDER_LIMIT REVIEW_INTERNAL_ERROR '
-        'REVIEW_TRANSPORT_INVALID REVIEW_RESPONSE_LIMIT REVIEW_RESPONSE_INVALID '
-        'REVIEW_TTL_INVALID REVISION_MISMATCH'
+        "REVIEW_BODY_TOO_LARGE REVIEW_DUPLICATE_JSON_KEY REVIEW_JSON_INVALID "
+        "REVIEW_REQUEST_MEMBERS_INVALID REVIEW_REVISION_INVALID REVIEW_CSV_TYPE_INVALID "
+        "REVIEW_CSV_TOO_LARGE REVIEW_RECORD_LIMIT REVIEW_ORDER_LIMIT REVIEW_INTERNAL_ERROR "
+        "REVIEW_TRANSPORT_INVALID REVIEW_RESPONSE_LIMIT REVIEW_RESPONSE_INVALID "
+        "REVIEW_TTL_INVALID REVISION_MISMATCH"
     ).split()
 )
 HOLD_CODES = HOLD_CODES | {"CURRENCY_CONFLICT"}
@@ -212,6 +214,7 @@ class DOIReviewSession:
         as_of: Callable[[], str] | None = None,
         rep_policy: RepScopePolicy = DEFAULT_REP_POLICY,
         owner_confirmations: OwnerConfirmations = EMPTY_CONFIRMATIONS,
+        review_mark_store: ReviewMarkStore | None = None,
     ) -> None:
         if type(rep_policy) is not RepScopePolicy:
             raise DOIReviewError("REVIEW_RESPONSE_INVALID")
@@ -230,11 +233,14 @@ class DOIReviewSession:
         self._ttl = ttl_seconds
         self._deadline: float | None = None
         self._state = _empty(0)
+        self._mark_store = review_mark_store
+        self._mark_bindings: dict[str, str | None] = {}
 
     def _expire(self) -> None:
         if self._deadline is not None and self._clock() >= self._deadline:
             self._state = _empty(int(self._state["revision"]) + 1, "expired")
             self._deadline = None
+            self._mark_bindings = {}
 
     def _revision(self, expected: int) -> None:
         self._expire()
@@ -252,6 +258,94 @@ class DOIReviewSession:
             max(0, int(self._deadline - self._clock())) if self._deadline is not None else 0
         )
         return state
+
+    def alternate_draft_context(self, order_id: str, expected_revision: int) -> dict[str, object]:
+        """Return minimized draft context without changing the review, marks or deadline."""
+        self._revision(expected_revision)
+        order = next((item for item in self._state["orders"] if item["order_id"] == order_id), None)
+        if order is None:
+            raise DOIReviewError("DRAFT_ORDER_NOT_LOADED")
+        source_holds = sorted(
+            set(
+                order["holds"]
+                + order["split"]["missing_fact_codes"]
+                + order["evidence"]["missing_fact_codes"]
+                + order["evidence"]["reason_codes"]
+            )
+        )
+        return {
+            "order_id": order_id,
+            "evidence_key": self._mark_bindings.get(order_id),
+            "rep_scope": order["rep_scope"],
+            "source_holds": source_holds,
+            "split_eligibility": "UNKNOWN",
+            "hard_conflicts": sorted(
+                set(order["holds"])
+                & {
+                    "CONFLICTING_LINE",
+                    "CONFLICTING_SUMMARY",
+                    "CURRENCY_CONFLICT",
+                    "LINE_STRUCTURE_CONFLICT",
+                    "SOURCE_JOIN_MISMATCH",
+                }
+            ),
+        }
+
+    def reviewed_snapshot(self) -> dict[str, object]:
+        """Separate attention metadata; never modify the review or its deadline."""
+        self._expire()
+        available, storage_revision, records = False, None, {}
+        if self._mark_store is not None:
+            try:
+                storage_revision, records = self._mark_store.read()
+                available = True
+            except ReviewMarkError:
+                pass
+        orders = []
+        for item in self._state["orders"]:
+            order_id = item["order_id"]
+            evidence = self._mark_bindings.get(order_id)
+            previous = records.get(order_key(order_id))
+            status = (
+                "UNAVAILABLE"
+                if not available
+                else "AMBIGUOUS"
+                if evidence is None
+                else "REVIEWED"
+                if previous == evidence
+                else "CHANGED"
+                if previous
+                else "UNREVIEWED"
+            )
+            orders.append({"order_id": order_id, "evidence_key": evidence, "status": status})
+        return {
+            "schema": "doi-reviewed-split/v1",
+            "revision": self._state["revision"],
+            "storage_revision": storage_revision,
+            "storage_available": available,
+            "orders": orders,
+        }
+
+    def set_reviewed(self, value: dict[str, object]) -> dict[str, object]:
+        self._revision(value.get("revision"))
+        if (
+            set(value) != {"revision", "storage_revision", "order_id", "evidence_key", "reviewed"}
+            or type(value["order_id"]) is not str
+            or type(value["reviewed"]) is not bool
+            or type(value["storage_revision"]) is not int
+            or not 0 <= value["storage_revision"] < 2**53 - 1
+        ):
+            raise ReviewMarkError("REVIEW_MARK_REQUEST_INVALID")
+        order_id = value["order_id"]
+        evidence = self._mark_bindings.get(order_id)
+        if evidence is None or value["evidence_key"] != evidence:
+            raise ReviewMarkError("REVIEW_MARK_EVIDENCE_MISMATCH")
+        if self._mark_store is None:
+            raise ReviewMarkError("REVIEW_MARKS_UNAVAILABLE")
+        self._mark_store.set(
+            order_key(order_id), evidence, value["reviewed"], value["storage_revision"]
+        )
+        return self.reviewed_snapshot()
 
     def invalidate(self, code: str) -> dict[str, object]:
         allowed = {
@@ -274,23 +368,27 @@ class DOIReviewSession:
             code if code in allowed else "REVIEW_INTERNAL_ERROR",
         )
         self._deadline = None
+        self._mark_bindings = {}
         return self.snapshot()
 
     def clear(self, expected_revision: int) -> dict[str, object]:
         self._revision(expected_revision)
         self._state = _empty(int(self._state["revision"]) + 1)
         self._deadline = None
+        self._mark_bindings = {}
         return self.snapshot()
 
     def close(self) -> None:
         self._state = _empty(int(self._state["revision"]) + 1)
         self._deadline = None
+        self._mark_bindings = {}
 
     def load(self, summary_csv: str, lines_csv: str, expected_revision: int) -> dict[str, object]:
         self._revision(expected_revision)
         revision = int(self._state["revision"]) + 1
         self._state = _empty(revision)
         self._deadline = None
+        self._mark_bindings = {}
         try:
             if type(summary_csv) is not str or type(lines_csv) is not str:
                 raise DOIReviewError("REVIEW_CSV_TYPE_INVALID")
@@ -454,6 +552,10 @@ class DOIReviewSession:
             if len(review_response_bytes(state)) > MAX_RESPONSE_BYTES:
                 raise DOIReviewError("REVIEW_RESPONSE_LIMIT")
             self._state = state
+            self._mark_bindings = {
+                order.canonical_order_id: evidence_key(order, global_held=bool(holds))
+                for order in batch.orders
+            }
             self._deadline = self._clock() + self._ttl
             # batch/raw CSV are local variables only, discarded on return.
             return self.snapshot()
@@ -656,7 +758,7 @@ def review_response_bytes(state: dict[str, object]) -> bytes:
                     or canonicalize_timestamp(proof["confirmed_at"]) != proof["confirmed_at"]
                     or type(proof["evidence_reference"]) is not str
                     or re.fullmatch(
-                        r'(?:Sentinel_[a-f0-9]{32}|SYN-[A-Z0-9_-]{1,64})',
+                        r"(?:Sentinel_[a-f0-9]{32}|SYN-[A-Z0-9_-]{1,64})",
                         proof["evidence_reference"],
                     )
                     is None

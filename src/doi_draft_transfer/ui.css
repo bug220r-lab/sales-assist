@@ -1,0 +1,9 @@
+/* SYNTHETIC-SALES-ASSIST-AUTHORED-M5 */
+.draft-copy { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 34rem; overflow: auto; }
+#draft-transfer textarea { width: 100%; box-sizing: border-box; font: inherit; }
+#draft-transfer input[type=email] { width: min(100%, 35rem); }
+#draft-transfer fieldset { margin: 1rem 0; padding: 1rem; }
+.draft-check, .draft-cart { border-bottom: 1px solid #c8cdd3; padding: .8rem 0; }
+.draft-check label, .draft-cart label { display: block; margin: .4rem 0; }
+#transfer-holds { white-space: pre-wrap; }
+#transfer-version { overflow-wrap: anywhere; }

@@ -5,7 +5,7 @@ use the same verified Codex Python 3.12 runtime as the M5/M6 development workflo
 
 ```powershell
 $env:PYTHONPATH = (Resolve-Path .\src).Path
-& 'C:\Users\jlewi\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' `
+& 'C:\path\to\approved-development-runtime\python.exe' `
     .\tools\prepare_milestone7_demo.py
 ```
 

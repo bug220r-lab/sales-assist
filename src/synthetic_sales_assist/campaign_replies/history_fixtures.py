@@ -49,7 +49,7 @@ def demo_history_export() -> dict[str, Any]:
             "conversation_state": "published", "subject": "Synthetic writing example",
             "source_url": "", "thread_type": "forwardparent" if number == 7 else "message",
             "thread_state": "bounced" if number == 8 else "published",
-            "saved_reply_id": 4184246 if number in (1, 2) else None,
+            "saved_reply_id": 99000101 if number in (1, 2) else None,
             "source_type": "api" if number == 10 else "web", "source_via": "user",
             "body_text": body, "body_html": body_html,
             "attachments": [{"id": "SYN-EVIDENCE-HISTORY-ATTACHMENT",

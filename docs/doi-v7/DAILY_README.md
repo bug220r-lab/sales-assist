@@ -8,8 +8,16 @@ The DOI page groups eligible, excluded and held records with explicit ownership 
 USD provenance. Currency conflicts remain visible for review and excluded from the
 default eligible list. Apparent split candidates are observations for human review,
 not confirmed fulfillment decisions. Import the summary and component CSV pair
-manually. Imported review state stays in memory and expires after 30 minutes;
+manually. Imported review state stays in memory and expires 10 hours after loading;
 refresh does not extend expiry. Clear or service shutdown removes the session.
+
+Reviewed for split records attention only; it never approves a split or fulfillment.
+Checks are saved privately in the app's existing local data directory. Clear, expiry
+and restart keep them. Reloading the same evidence restores them; changed evidence
+requires review again. Uncheck to remove a saved check. Hide reviewed hides only
+confirmed matching checks; ambiguous records or storage errors stay visible.
+The saved file contains hashes only, with no email, source text or raw order IDs.
+Use the same owned data directory when reopening to retain these checks.
 
 The normal package builders now include the daily policy helper, setup recipe,
 required migrations and generic instructions. They generate fresh source identities
@@ -35,3 +43,35 @@ Manual acceptance on a separately approved disposable installation should confir
 
 These steps are an acceptance checklist, not a claim they have been completed on
 the sanitized package or permission to access private captures.
+
+## Bounded larger DOI imports
+
+The DOI review response limit is 4 MiB. The serializer, DOI state/load/clear HTTP
+responses and browser's streaming reader enforce the same bound. Other portal
+response limits remain unchanged. Input files are still at most 1 MiB and 5,000
+records each, with at most 500 joined orders. Very dense captures may still need
+smaller matching pairs. A rejected load clears only the transient displayed
+review; saved evidence-bound checkboxes remain in their separate store.
+# Alternate email drafts
+
+Use **Alternate email** beside a captured order to open the structured editor.
+Enter the exact purchased-line and quantity observations, reviewed alternate ID,
+quantity, observed stock wording/date, differences, and exact product link. Record
+fitment, ownership, quantity, kit, allocation, stock, finish and price checks separately.
+Use recorded supported-tool or human verification with its source and observation time;
+already verified product/cart links do not need another manual check. An optional cart
+must be pasted with recorded content verification; the app never creates it.
+
+Generate a short draft, preview edits, and explicitly save locally. Regeneration
+keeps edited wording. Held candidates and technical conflicts retain visible internal
+checks outside the customer body. Held and ready drafts can both be copied for Jude's
+review; review-packet copy/export includes the internal checks separately. Copy/export
+never approves sending. There is no recipient lookup or send function.
+
+Saved drafts survive review Clear, expiry and service restart in the separate local
+`doi-alternate-drafts.json` store. They do not modify Reviewed for split. New capture
+evidence clears order-specific confirmations; product/cart-content verification and
+exact edited wording remain available with their recorded sources/times. Save or
+explicitly close unsaved edits before selecting another order.
+Do not enter customer names, addresses, emails, payment information or other personal
+data in the editor. See ADR 0037 for limits and persistence behavior.

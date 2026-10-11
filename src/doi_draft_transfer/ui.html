@@ -1,0 +1,83 @@
+<!-- SYNTHETIC-SALES-ASSIST-AUTHORED-M5 -->
+
+<link rel="stylesheet" href="/static/doi-draft-transfer.css">
+<div id="draft-transfer" class="dashboard-stack">
+<p><a href="/doi-csv-review">Back to DOI split review</a></p>
+<p id="transfer-message" role="status" aria-live="polite">Loading saved draft reviews…</p>
+<section class="dashboard-panel">
+<h2>Import draft CSV</h2>
+<p>UTF-8, up to 32 MiB and 500 orders. Import preserves local edits and reports conflicts.
+Blank selected copy stays blank. Imported approval and recipient claims require review here.</p>
+<a href="/api/v1/doi-draft-transfer/template">Download CSV header template</a>
+<label class="dashboard-field">Draft CSV <input id="transfer-file" type="file" accept=".csv,text/csv"></label>
+<div class="dashboard-actions">
+<button type="button" id="transfer-preview">Preview import</button>
+<button type="button" id="transfer-commit" disabled>Import new rows; keep local conflicts</button>
+<button type="button" id="transfer-cancel" disabled>Cancel import</button>
+</div><pre id="transfer-import-results" class="draft-copy"></pre>
+</section>
+<section class="dashboard-panel">
+<h2>Draft worklist</h2>
+<p id="transfer-destination">ECS Sales · mailbox 166170 · Jude 897275</p>
+<button type="button" id="transfer-check-connection">Check configured API access (read only)</button>
+<button type="button" id="transfer-refresh">Refresh results</button>
+<div class="dashboard-table-wrap"><table><thead><tr><th>Order</th><th>Copy</th>
+<th>Review</th><th>Help Scout</th><th>Open</th></tr></thead><tbody id="transfer-rows"></tbody></table></div>
+</section>
+<section class="dashboard-panel" id="transfer-editor" hidden>
+<h2 id="transfer-order-heading"></h2>
+<p id="transfer-version"></p><p id="transfer-holds" class="dashboard-warning"></p>
+<label class="dashboard-field">Recipient email <input id="transfer-recipient" type="email" autocomplete="off"></label>
+<label><input type="checkbox" id="transfer-recipient-verified"> I verified this exact recipient</label>
+<label class="dashboard-field">Recipient source / verification evidence
+<textarea id="transfer-recipient-provenance" rows="2" maxlength="2000"></textarea></label>
+<h3>Exact subject</h3><pre id="transfer-subject" class="draft-copy"></pre>
+<label class="dashboard-field">Selected copy <textarea id="transfer-body" rows="18"></textarea></label>
+<h3>Exact copy preview</h3><p id="transfer-preview-status"></p>
+<div id="transfer-body-preview" class="draft-copy"></div>
+<h3>Cart choices and full scope</h3><div id="transfer-carts"></div>
+<h3>Prior Help Scout draft reconciliation</h3>
+<p id="transfer-existing-reference"></p>
+<label class="dashboard-field">Duplicate check
+<select id="transfer-duplicate-status">
+<option value="unresolved">Unresolved</option>
+<option value="no_existing_draft">Checked: no existing draft for this order</option>
+<option value="existing_draft_found">Existing draft found: block new creation</option>
+</select></label>
+<label class="dashboard-field">Duplicate check source and result
+<textarea id="transfer-duplicate-evidence" rows="2" maxlength="2000"></textarea></label>
+<details><summary>Original copy and imported review history</summary>
+<pre id="transfer-original" class="draft-copy"></pre><pre id="transfer-source" class="draft-copy"></pre></details>
+<fieldset><legend>Review each required check</legend><div id="transfer-checks"></div></fieldset>
+<fieldset><legend>Customer decision about an order change</legend>
+<p>You can prepare an email asking for approval while the customer's decision is pending.
+Your approval below covers this exact draft only. This app cannot change an order or send email.</p>
+<label class="dashboard-field">Customer decision
+<select id="transfer-customer-decision">
+<option value="unreviewed">Not reviewed</option>
+<option value="pending_conditional_outreach">Pending: this draft asks for the customer's decision</option>
+<option value="approval_recorded">Customer approval is recorded in the evidence</option>
+</select></label>
+<label><input type="checkbox" id="transfer-customer-conditional">
+I checked that the exact copy asks for the customer's decision and does not claim approval or an order change.</label>
+<label class="dashboard-field">Pending decision and conditional wording, or recorded approval evidence
+<textarea id="transfer-customer-evidence" rows="3" maxlength="2000"></textarea></label>
+</fieldset>
+<label><input type="checkbox" id="transfer-holds-reviewed"> I reviewed and resolved or acknowledged the imported holds</label>
+<label class="dashboard-field">Resolution / acknowledgment evidence
+<textarea id="transfer-holds-note" rows="3" maxlength="4000"></textarea></label>
+<label class="dashboard-field">Reviewer notes <textarea id="transfer-notes" rows="3"></textarea></label>
+<p>Changing copy or recipient clears affected verification. Any saved edit invalidates approval.</p>
+<button type="button" id="transfer-save">Save review and invalidate prior approval</button>
+<button type="button" id="transfer-discard">Discard unsaved edits</button>
+<hr><label><input type="checkbox" id="transfer-exact-approval">
+I approve this exact recipient, subject, copy, cart choices and version for a draft in ECS Sales.</label>
+<div class="dashboard-actions">
+<button type="button" id="transfer-approve" disabled>Approve this exact draft</button>
+<button type="button" id="transfer-create" disabled>Create approved Help Scout draft</button>
+<button type="button" id="transfer-retry" hidden disabled>Retry rejected attempt</button>
+<button type="button" id="transfer-verify" hidden>Verify existing draft (read only)</button>
+</div><pre id="transfer-result" class="draft-copy"></pre><p id="transfer-link"></p>
+<p>Draft creation is never customer-send approval. An uncertain result is locked against another
+create; investigate its journal and Help Scout before any separate recovery action.</p>
+</section></div>

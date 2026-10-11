@@ -14,6 +14,7 @@ from synthetic_sales_assist.safety.chrome import (
     ChromePermissionViolation,
     validate_chrome_permissions,
 )
+from synthetic_sales_assist.safety.doi_source_literals import REVIEWED_SOURCE_LITERALS
 
 
 IGNORED_DIRECTORIES = frozenset(
@@ -98,6 +99,8 @@ AUTHORED_M5_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M5"
 AUTHORED_M5_PORTAL_ROOTS = (
     "src/synthetic_sales_assist/portal",
     "src/synthetic_sales_assist/static",
+    "src/doi_draft_transfer",
+    "src/doi_csv_staging/alternate_drafts.py",
 )
 AUTHORED_M5_PORTAL_SUFFIXES = frozenset({".css", ".htm", ".html", ".js"})
 AUTHORED_M5_SCRIPT_PATHS = frozenset(
@@ -105,28 +108,37 @@ AUTHORED_M5_SCRIPT_PATHS = frozenset(
         "scripts/lifecycle-common.ps1",
         "scripts/reset-demo.ps1",
         "scripts/start.ps1",
+        "scripts/start-drafts.ps1",
         "scripts/status.ps1",
         "scripts/stop.ps1",
     }
 )
 MAX_AUTHORED_M5_ASSET_BYTES = 512 * 1024
 AUTHORED_M8_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M8"
-AUTHORED_M8_SCRIPT_PATHS = frozenset({
-    "scripts/demo.ps1", "scripts/setup-daily-private.ps1",
-    "START.cmd", "STOP.cmd", "STATUS.cmd", "BACKUP.cmd",
-    "RESET.cmd", "REMOVE.cmd", "UPGRADE.cmd",
-})
+AUTHORED_M8_SCRIPT_PATHS = frozenset(
+    {
+        "scripts/demo.ps1",
+        "scripts/setup-daily-private.ps1",
+        "START.cmd",
+        "STOP.cmd",
+        "STATUS.cmd",
+        "BACKUP.cmd",
+        "RESET.cmd",
+        "REMOVE.cmd",
+        "UPGRADE.cmd",
+    }
+)
 AUTHORED_M6_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M6"
 AUTHORED_M6_EXTENSION_ROOT = "chrome_extension"
-AUTHORED_M6_EXTENSION_SUFFIXES = frozenset(
-    {".css", ".html", ".js", ".json", ".md", ".ps1", ".txt"}
-)
+AUTHORED_M6_EXTENSION_SUFFIXES = frozenset({".css", ".html", ".js", ".json", ".md", ".ps1", ".txt"})
 MAX_AUTHORED_M6_ASSET_BYTES = 512 * 1024
 COMPANION_TEST_REFERENCE_HASHES = {
-    "tests/fixtures/campaign_replies/companion-reference/replies-core.js":
-        "0c2107f51084c547721d168eac0055a61e53b34e3eacbefd8d239ab8b32cd577",
-    "tests/fixtures/campaign_replies/companion-reference/drafts-core.js":
-        "15fa6e90a0475f95d85c46cfd9c3b50896096af2a0c8f91029eb4ae2c9cda4e1",
+    "tests/fixtures/campaign_replies/companion-reference/replies-core.js": (
+        "0c2107f51084c547721d168eac0055a61e53b34e3eacbefd8d239ab8b32cd577"
+    ),
+    "tests/fixtures/campaign_replies/companion-reference/drafts-core.js": (
+        "15fa6e90a0475f95d85c46cfd9c3b50896096af2a0c8f91029eb4ae2c9cda4e1"
+    ),
 }
 FORBIDDEN_CAPABILITY_PATH_PARTS = frozenset(
     {
@@ -157,9 +169,7 @@ def _compile_secret_patterns() -> tuple[tuple[str, re.Pattern[str]], ...]:
         ),
         (
             "credential_assignment",
-            re.compile(
-                rf"(?i)\b(?:{assignment_names})\b\s*[:=]\s*[\"']?[A-Za-z0-9+/_.-]{{16,}}"
-            ),
+            re.compile(rf"(?i)\b(?:{assignment_names})\b\s*[:=]\s*[\"']?[A-Za-z0-9+/_.-]{{16,}}"),
         ),
         (
             "url_embedded_credential",
@@ -317,7 +327,7 @@ def scan_secret_material(root: Path) -> tuple[RepositoryFinding, ...]:
             for match in pattern.finditer(text):
                 # A PowerShell conversion from a variable is code, not a literal
                 # credential. Quoted values and literal -String operands still scan.
-                tail = text[match.start():].splitlines()[0]
+                tail = text[match.start() :].splitlines()[0]
                 if category == "credential_assignment" and re.fullmatch(
                     r"Token\s*=\s*ConvertTo-SecureString\s+-String\s+"
                     r"\$[A-Za-z_][A-Za-z0-9_]*\s+-AsPlainText\s+-Force\s*",
@@ -343,14 +353,23 @@ def _url_is_permitted_literal(value: str) -> bool:
     )
 
 
+def _reviewed_source_literal(relative: str, category: str, value: str) -> bool:
+    # Exact location + category + bytes, not a hostname or directory bypass.
+    # These authored URLs and synthetic negative fixtures grant no network permission.
+    fingerprint = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return fingerprint in REVIEWED_SOURCE_LITERALS.get(relative, {}).get(category, ())
+
+
 def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, ...]:
     """Scan implementation artifacts while leaving immutable supplied prose untouched."""
 
     root = root.resolve()
     findings: set[RepositoryFinding] = set()
-    extra_launchers = tuple(path.name for path in root.iterdir()
-                            if path.suffix.lower() in {".cmd", ".bat"}
-                            and path.name not in IMPLEMENTATION_ROOTS)
+    extra_launchers = tuple(
+        path.name
+        for path in root.iterdir()
+        if path.suffix.lower() in {".cmd", ".bat"} and path.name not in IMPLEMENTATION_ROOTS
+    )
     for path in _walk_files(root, (*IMPLEMENTATION_ROOTS, *extra_launchers)):
         relative = path.relative_to(root).as_posix() if _is_within(root, path) else path.name
         if path.is_symlink() or not _is_within(root, path):
@@ -359,9 +378,11 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
         # These immutable, test-only contracts contain legacy reference strings.
         # Any changed bytes or different location receives the normal full scan.
         expected_reference_hash = COMPANION_TEST_REFERENCE_HASHES.get(relative)
-        if (expected_reference_hash is not None
-                and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES
-                and hashlib.sha256(path.read_bytes()).hexdigest() == expected_reference_hash):
+        if (
+            expected_reference_hash is not None
+            and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES
+            and hashlib.sha256(path.read_bytes()).hexdigest() == expected_reference_hash
+        ):
             continue
         text = _read_text(path)
         approved_extension_manifest = path.name.lower() == "manifest.json" and (
@@ -370,18 +391,15 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
         if path.name.lower() == "manifest.json" and not approved_extension_manifest:
             findings.add(RepositoryFinding("extension_manifest", relative, 0))
             continue
-        approved_extension = (
-            text is not None
-            and _is_approved_m6_extension_source(relative, path, text)
+        approved_extension = text is not None and _is_approved_m6_extension_source(
+            relative, path, text
         )
         if (
             _is_beneath_m6_extension(relative)
             and not approved_extension
             and not approved_extension_manifest
         ):
-            findings.add(
-                RepositoryFinding("unapproved_extension_artifact", relative, 0)
-            )
+            findings.add(RepositoryFinding("unapproved_extension_artifact", relative, 0))
             continue
         if (
             _has_forbidden_capability_path(relative)
@@ -391,14 +409,15 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
             findings.add(RepositoryFinding("prohibited_capability_path", relative, 0))
             continue
         suffix = path.suffix.lower()
-        approved_portal = (
-            text is not None and _is_approved_m5_portal_source(relative, path, text)
-        )
+        approved_portal = text is not None and _is_approved_m5_portal_source(relative, path, text)
         approved_portal_asset = approved_portal and suffix in AUTHORED_M5_PORTAL_SUFFIXES
         approved_script = text is not None and (
             _is_approved_m5_script(relative, path, text)
-            or (relative in AUTHORED_M8_SCRIPT_PATHS and AUTHORED_M8_MARKER in text[:4096]
-                and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES)
+            or (
+                relative in AUTHORED_M8_SCRIPT_PATHS
+                and AUTHORED_M8_MARKER in text[:4096]
+                and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES
+            )
         )
         if suffix in {".cmd", ".bat"} and not approved_script:
             findings.add(RepositoryFinding("unapproved_demo_launcher", relative, 0))
@@ -423,7 +442,9 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
         if text is None:
             continue
         for match in URL_PATTERN.finditer(text):
-            if not _url_is_permitted_literal(match.group(0)):
+            if not _url_is_permitted_literal(match.group(0)) and not _reviewed_source_literal(
+                relative, "non_localhost_url", match.group(0)
+            ):
                 findings.add(
                     RepositoryFinding(
                         "non_localhost_url", relative, _line_number(text, match.start())
@@ -431,17 +452,15 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
                 )
         for match in EMAIL_PATTERN.finditer(text):
             domain = match.group(0).rsplit("@", 1)[1].lower()
-            if domain != "example.test":
+            if domain != "example.test" and not _reviewed_source_literal(
+                relative, "non_synthetic_email", match.group(0)
+            ):
                 findings.add(
                     RepositoryFinding(
                         "non_synthetic_email", relative, _line_number(text, match.start())
                     )
                 )
-        if (
-            not approved_portal
-            and not approved_extension
-            and not approved_extension_manifest
-        ):
+        if not approved_portal and not approved_extension and not approved_extension_manifest:
             for match in CAPTURED_HTML_PATTERN.finditer(text):
                 findings.add(
                     RepositoryFinding(
