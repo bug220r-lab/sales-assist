@@ -217,3 +217,11 @@ python -B tools/run_tests.py tests.test_doi_draft_transfer tests.test_doi_draft_
 python -B tools/run_draft_transfer_frontend.py --node node --output-dir C:\Temp\ssa-draft-qa
 python -B tools/run_tests.py
 ```
+
+## Optional session-only renewal
+
+The existing cached-only mode is unchanged. A separate disabled renewal provider
+supports the credential owner's source-confirmed client-credentials schema, keeps
+replacement tokens in memory, and never automatically repeats a draft POST. See
+[session authentication and its exact activation boundary](doi-draft-transfer-auth-proposal.md).
+No new grant, connection-file write, cleanup change or live activation is included.

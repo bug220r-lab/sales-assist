@@ -1,92 +1,116 @@
-# Proposed managed authentication lifecycle — not implemented or activated
+# Session-only client-credentials authentication
 
-The shipped `dpapi-cached-token` adapter is deliberately read-only and never renews.
-This proposal does not change it, retry a stopped attempt, open credentials or call
-an API. It describes a possible separately approved successor using an existing
-approved connection, without a new OAuth application or grant.
+The compatible renewal provider is implemented but disabled. No live credential
+access, token request or private activation was performed while developing it.
+The existing `dpapi-cached-token` mode is unchanged and never renews.
 
-## Protocol distinction
+## Flow established from the credential owner's source
 
-Help Scout documents two flows. Internal client-credentials integrations obtain an
-access token using the existing application's ID/secret at `POST /v2/oauth2/token`.
-That flow's documented token lifetime is two days, and replacement is requested
-after expiry/401. Authorization-code integrations instead receive an access/refresh
-pair and use the refresh-token flow for a replacement pair. Do not assume those
-flows or stored credential fields are interchangeable. Establish the approved flow
-from the credential owner's configuration, not by guessing or exporting secrets.
+Read-only inspection of the owner's `connect_server.connect` and
+`helpscout_client.Client._renew` established the existing client-credentials flow.
+The connection writer stores `client_id`, `client_secret`, `access_token`, numeric
+Unix `expires_at`, and `user_id`. It does not store a refresh token or grant-type
+field. The owner source calls the client-credentials token endpoint and persists
+its updated cache. Source hashes and inspection evidence are retained privately;
+no owner implementation, credential values or machine paths are published here.
+
+The new provider independently supports that exact legacy shape, with optional
+`grant_type: client_credentials` and `token_type: bearer`. It verifies the fixed
+user identity. Unknown fields, refresh-token fields, a different grant, duplicate
+JSON keys or malformed values stop before token HTTP. It does not guess another
+flow or fall back to login, another connection, a new application or grant.
+
+The request and response match the documented client-credentials flow.
 [Official authentication documentation](https://developer.helpscout.com/mailbox-api/overview/authentication/).
+There is no remaining request for the user to identify the OAuth flow.
 
-The following is a proposed local design, not a claim about existing coordination
-or undocumented provider behavior.
+## Scope and ownership
 
-## One issuer with explicit ownership
+Use only the dedicated draft-only launcher, a new private root and the exact
+previously approved connection. Before activation, the credential owner must
+confirm cleanup is complete or a controlled handoff is complete, including any
+scheduled consumers. Do not stop cleanup, change its code or permissions, inspect
+its memory, borrow its runtime token, or assume a Sales Assist lock coordinates it.
 
-1. Leave authentication disabled until the existing credential owner confirms the
-   renewal authority and all active consumers. An active cleanup process must be
-   included in that assessment. A new lock used only by Sales Assist cannot protect
-   a cleanup process that does not participate in it.
-2. For the first implementation, wait for owner-confirmed cleanup completion or a
-   separately authorized, controlled handoff. Do not stop, inspect process memory,
-   borrow its token, or change its code/locks during this source-only work. No second
-   issuer should be activated while ownership remains ambiguous.
-3. In the approved session, one provider owns renewal. It loads the exact approved
-   encrypted connection once under the existing Windows identity, performs only the
-   declared flow, validates the bounded response, and holds tokens in memory. It
-   never logs payloads/headers, exports credentials or writes the connection file.
-4. Serialize concurrent callers within that provider. A longer-term shared issuer
-   would need a reviewed authenticated local IPC boundary and participation by every
-   consumer; a mutex declaration alone is insufficient. That is additional work and
-   approval, not an invitation to use another process's current runtime token.
+The provider requires an explicit process-only ownership attestation. Before any
+credential read it atomically acquires a Windows named-object lease for the
+fixed integration user. This covers alternate path spellings, hard-link aliases
+and different private roots without opening any file to compute the lease key. An existing object or access denial stops
+startup of authentication. The sole accepted handle remains open for the session;
+closing the provider or process death releases it. This excludes cooperating Sales
+Assist providers across processes and private roots. It does not prove external
+cleanup inactivity; the owner-confirmed handoff is a separate required gate.
 
-## Expiry, errors and writes
+The provider reads/decrypts the connection once under the existing Windows user.
+It retains credentials and tokens only in process memory, clears mutable plaintext
+buffers, and discards application credentials after the single issuance attempt.
+Python strings are not a secure-memory guarantee. It never calls a credential
+protection/write API, writes a token/cache/configuration file, or reloads the cache.
+The new token is lost when the session ends. A later session requires its own
+approved setup and may encounter the unchanged old cache.
 
-Use validated expiry for request admission. The existing 120-second safety margin
-is a reason to hold a request, not proof that actual expiry has occurred. A successor
-must distinguish margin hold from expiry and must not renew early solely because
-the cached adapter reported its combined expiry/margin error.
+## Renewal and failure behavior
 
-After actual expiry or a qualifying 401, permit at most one coordinated token
-request for that failure episode. Recheck token generation under the lock first so
-concurrent callers cannot each issue a replacement. No unbounded retry, alternate
-grant, new application, browser login or permission change is an implicit fallback.
-A second 401, malformed response, denial, timeout or uncertain renewal stops the
-episode for reconciliation. Do not assume whether issuing a replacement invalidates
-another consumer's token; the cited documentation does not establish that behavior.
+A cached token outside the 120-second margin is used unchanged. Entering the margin
+returns `HELP_SCOUT_SESSION_TOKEN_MARGIN_HOLD` without renewing. A later explicit
+action can renew after actual expiry. A qualifying API 401 may also trigger renewal.
 
-A known read-only destination GET can be retried once after an authorized successful
-renewal. Never replay a draft POST automatically. Before-write auth failures remain
-known no-write states requiring explicit application retry. An uncertain create or
-known draft ID retains the existing journal lock regardless of token changes.
+At most one token POST is allowed in the entire session. The attempt is reserved
+under a thread lock before network activity. Concurrent callers share the resulting
+token; a delayed 401 for an old token cannot invalidate a newer generation. The
+only token endpoint is the fixed HTTPS `POST /v2/oauth2/token`, with the existing
+client ID/secret and `grant_type=client_credentials`. Redirects are not followed.
+Responses and lifetimes are bounded and validated; unexpected grant material stops.
 
-All consumers in a Help Scout account share its API budget. A 429 is a rate-limit
-condition, not an instruction to renew; coordinate use and respect the returned
-retry interval. [Official rate-limit documentation](https://developer.helpscout.com/mailbox-api/overview/rate-limiting/).
+A permitted GET may retry once after that renewal. A draft POST is never retried
+automatically: its 401 is returned as the existing known-no-write auth result, and
+only a later explicit action may obtain a token. Known draft IDs and uncertain
+writes retain their existing durable no-repeat locks, including readback failure.
+A second 401, later token expiry, denial, redirect, malformed response, timeout or
+uncertain issuance ends renewal for that session. No token or response is logged.
 
-Process-memory operation does not persist a new cached token for another launch.
-A persistent DPAPI cache or rotated refresh-token store would be a different design
-requiring explicit approval for exact file writes, atomic replacement, recovery and
-all-consumer coordination. It is excluded from this proposed first session.
+A 429 does not cause renewal or an automatic retry. Token-endpoint 429 stops the
+session attempt; draft endpoint rate-limit handling remains unchanged. Coordinate
+account use with the owner because consumers share its API budget.
+[Official rate-limit documentation](https://developer.helpscout.com/mailbox-api/overview/rate-limiting/).
 
-## New approval needed before implementation is activated
+## Exact activation handoff after source validation
 
-The concrete request must name the existing approved connection and session scope:
+Default review mode does not construct authentication. To request renewal in a
+separately approved dedicated session, its private launch configuration must have
+`enabled: true` and `allow_draft_create: true`. In that process only, configure:
 
-> May I activate a separately reviewed, single-owner authentication provider for one
-> isolated Sales Assist session, after the credential owner confirms cleanup has
-> completed or an explicitly approved handoff is complete? It may read/decrypt only
-> the named existing connection and, using its confirmed existing flow, request a
-> replacement token from Help Scout after actual expiry or a qualifying 401. Tokens
-> stay in process memory. It will not create a grant/application, persist credential
-> settings or token files, borrow another process's token, modify cleanup, or retry
-> a draft write automatically. It may then perform the two fixed destination GETs.
-> Any draft creation remains subject to its existing exact-copy approval and all
-> legitimate readiness/customer/duplicate gates; no send or order change is included.
+- `SSA_HELPSCOUT_DRAFT_TRANSFER=1`
+- `SSA_HELPSCOUT_AUTH_MODE=dpapi-session-client-credentials`
+- `SSA_HELPSCOUT_DPAPI_AUTH_PATH` = the exact approved existing connection path
+- `SSA_HELPSCOUT_SESSION_RENEWAL=1`
+- `SSA_HELPSCOUT_RENEWAL_OWNERSHIP=cleanup-complete`, or
+  `controlled-handoff-complete` after that handoff is actually confirmed
 
-Approval of the earlier cached-token read does not authorize this token POST. This
-request is a proposal only; no renewal approval has been received or acted upon.
+Do not set `SSA_HELPSCOUT_ACCESS_TOKEN`, persist environment settings, enter secrets
+in chat or command arguments, or change execution policy. Wrong/combined modes and
+missing ownership fail before reading credentials. Configuration validation and
+startup are lazy and do not prove credential compatibility or live API acceptance.
+Stop on any path, lease, schema, identity or access error; do not bypass it.
 
-Required mocked acceptance cases before release: disabled mode/no credential access;
-correct declared flow; margin versus expiry; concurrent one-issuer behavior; cleanup
-ownership unconfirmed; malformed/denied/timeout/second-401 stops; 429 without renewal;
-no token/header leakage or file writes; fixed GET retry bound; and preservation of
-known/uncertain draft IDs with no automatic create retry.
+The bounded additional approval is:
+
+> Authorize one isolated Sales Assist session to read/decrypt the exact existing
+> approved connection and, using its source-confirmed client-credentials flow,
+> make at most one token replacement request after actual expiry or a qualifying
+> 401. Confirm cleanup and scheduled consumers are finished or their controlled
+> handoff is complete and Sales Assist is the sole renewal owner. Keep all tokens
+> in memory and write no credential files. Perform only the two fixed mailbox/user
+> GET checks first. No draft POST is included in this access check; any later
+> approved draft still requires its unchanged readiness and exact-copy gates.
+
+The shipped source needs no new grant or user-supplied OAuth choice. This approval
+is for actual credential use and token issuance, not further source development.
+It has not been received or executed as part of implementation. Live compatibility
+and current credential validity are untested until the separately approved check.
+
+Mocked acceptance covers default/lazy behavior, the source schema, ambiguous-grant
+rejection, margin versus expiry, one concurrent issuance, terminal failures, one
+GET retry, no automatic draft replay, and retained known/unknown-write outcomes.
+Windows synthetic tests verify same-process and cross-process lease exclusion and
+release on process death. Test counts and package identity are in the build handoff.

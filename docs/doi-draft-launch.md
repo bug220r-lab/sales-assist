@@ -61,7 +61,9 @@ Only after separate activation authorization may an operator set
 `allow_draft_create: true` and supply the existing process-only authentication
 settings described in [draft transfer](doi-draft-transfer.md). Both switches must
 permit transfer; missing auth configuration stops startup. Cached authentication
-remains lazy and never renews. Startup and GETs perform no Help Scout requests.
+remains lazy and never renews. The separate session-renewal mode is documented in
+[session authentication](doi-draft-transfer-auth-proposal.md), with explicit
+ownership and renewal opt-ins. Startup and page GETs perform no Help Scout requests.
 
 Configuration is a launch scope, not row approval. Recipient provenance, exact
 eligible rep, order status, factual acknowledgments, complete cart review, duplicate

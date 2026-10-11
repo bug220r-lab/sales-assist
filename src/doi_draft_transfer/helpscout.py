@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 
 from .contract import MAILBOX_ID, USER_ID, TransferError, encoded, rendered_body
 from .local_auth import CachedDPAPIToken, valid_token
+from .session_auth import MODE as SESSION_MODE, SessionClientCredentials
 
 HOST = "api.helpscout.net"
 MAX_RESPONSE = 512 * 1024
@@ -79,6 +80,12 @@ class HelpScoutDraftClient:
         token = os.environ.get("SSA_HELPSCOUT_ACCESS_TOKEN")
         mode = os.environ.get("SSA_HELPSCOUT_AUTH_MODE", "access-token")
         path = os.environ.get("SSA_HELPSCOUT_DPAPI_AUTH_PATH")
+        renewal = os.environ.get("SSA_HELPSCOUT_SESSION_RENEWAL")
+        ownership = os.environ.get("SSA_HELPSCOUT_RENEWAL_OWNERSHIP")
+        if mode == SESSION_MODE and token is None and renewal == "1":
+            return cls(token_provider=SessionClientCredentials(path, ownership=ownership))
+        if renewal is not None or ownership is not None:
+            raise TransferError("HELP_SCOUT_CONFIGURATION_REQUIRED", 503)
         if mode == "dpapi-cached-token" and token is None:
             return cls(token_provider=CachedDPAPIToken(path))
         if mode != "access-token" or path:
@@ -97,6 +104,24 @@ class HelpScoutDraftClient:
         bearer = self._token_provider() if self._token_provider else self._token
         if not valid_token(bearer):
             raise TransferError("HELP_SCOUT_LOCAL_AUTH_REQUIRED", 503)
+        result = self._send(method, path, payload, bearer)
+        provider = self._token_provider
+        if result[0] == 401 and isinstance(provider, SessionClientCredentials):
+            provider.note_unauthorized(bearer)
+            if method == "GET":
+                # One read retry only. A draft POST always returns its first outcome.
+                bearer = provider()
+                result = self._send(method, path, payload, bearer)
+                if result[0] == 401:
+                    provider.note_unauthorized(bearer)
+        return result
+
+    def close(self):
+        if isinstance(self._token_provider, SessionClientCredentials):
+            self._token_provider.close()
+
+    @staticmethod
+    def _send(method, path, payload, bearer):
         connection = http.client.HTTPSConnection(
             HOST, timeout=15, context=ssl.create_default_context()
         )

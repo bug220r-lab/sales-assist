@@ -203,6 +203,9 @@ class DraftOnlyRuntime:
     def close(self):
         if self.server is not None:
             self.server.server_close()
+            client = self.server.draft_transfer.client
+            if isinstance(client, HelpScoutDraftClient):
+                client.close()
             self.server = None
         if self.lease is not None:
             self.lease.release()
