@@ -14,13 +14,17 @@ REVIEWED_SOURCE_LITERALS = {
             "ef61cfcc7ef676f766237d5f3fcf76508fdd1a78eaedd3824036a786ebcb1461",
             "f4a26a3ba24711f8d5cb113bd3b2f3d152f06914f1305d63dd9b6e25ca736c4a",
             "fb9dd78ec5095a5fb4c80737956d07f3e60d8ce9449930d79138b127904cea32",
+
+            "606caa20d907d47f0affb9231011d4f1755eb86f2394ab63dc43e76c3ff857c7",
         )
     },
     "src/doi_csv_staging/alternate_drafts.py": {
         "non_localhost_url": ("f4a26a3ba24711f8d5cb113bd3b2f3d152f06914f1305d63dd9b6e25ca736c4a",)
     },
     "src/doi_draft_transfer/contract.py": {
-        "non_localhost_url": ("5384dc8562ffb9763f8b46b64a030924a2939a1defd6757f9b02050e7e4f322e",)
+        "non_localhost_url": ("5384dc8562ffb9763f8b46b64a030924a2939a1defd6757f9b02050e7e4f322e",
+            "2b2b15ff10dc867ce6229e3a306f12e853395b272075c2a5f51bfcba02c3332f",
+        )
     },
     "src/doi_draft_transfer/helpscout.py": {
         "non_localhost_url": ("ea228fe1dd15839b868e429f0538109a7867fcd429e1c024d74bdbb5e0f9c46e",)
@@ -66,5 +70,28 @@ REVIEWED_SOURCE_LITERALS = {
     },
     "tests/test_doi_review_marks.py": {
         "non_localhost_url": ("f1e2c7da767e6e0fc3eac0819fdd3a622967f18748c6f0a875c3a5b0a165031e",)
+    },
+    "docs/adr/0041-labeled-draft-links-and-rendered-approval.md": {
+        "non_localhost_url": (
+            "606caa20d907d47f0affb9231011d4f1755eb86f2394ab63dc43e76c3ff857c7",
+        ),
+    },
+    "docs/doi-draft-transfer-auth-proposal.md": {
+        "non_localhost_url": (
+            "481d14e8caf4fbf2c721a5ab15b8dadb5ff59e0fb2a04d10fa79aed0606c41e4",
+            "8da5330f436b9d6fa8126975f936b93f391c79645914671adaa7d0082f9bb46b",
+        ),
+    },
+    "tests/test_doi_draft_launch.py": {
+        "non_localhost_url": (
+            "e1faf374c194cd34e34c222ffe490c06a5c83cdb866195a6692bf12d6e436d51",
+        ),
+    },
+    "tests/test_doi_draft_transfer_links.py": {
+        "non_localhost_url": (
+            "2c66a6ed6fa7b8a5f78dbaa057672b20585c5a4b4918d46f777a1c078940091f",
+            "8d4c7d2187a07ff6b9dfb726c7b140120203d9b78f4005337f03dbffd5170fd8",
+            "d8c0a7de34ba33bbd330fd412f87b2550e3947349c8717827335df10c0557fbd",
+        ),
     },
 }

@@ -46,6 +46,9 @@ RUNTIME_FILES = frozenset(
         "docs/doi-v7/DAILY_README.md",
         "docs/doi-v7/PRIVATE_CONFIGURATION.md",
         "docs/doi-draft-transfer.md",
+        "docs/doi-draft-launch.md",
+        "docs/doi-draft-transfer-readiness.md",
+        "docs/doi-draft-transfer-auth-proposal.md",
     }
 )
 

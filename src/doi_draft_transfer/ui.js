@@ -73,7 +73,20 @@
     dirty = true;
     byId("transfer-exact-approval").checked = false;
     byId("transfer-body-preview").textContent = value("transfer-body");
+    byId("transfer-preview-status").textContent = "Unsaved copy. Save edits to refresh the exact preview.";
     controls();
+  }
+  function showSavedPreview(segments) {
+    const root = byId("transfer-body-preview"); root.replaceChildren();
+    for (const part of segments) {
+      const linked = typeof part.url === "string" && /^https?:\/\//.test(part.url);
+      const node = element(linked ? "a" : "span", part.text);
+      if (linked) {
+        node.href = part.url; node.target = "_blank"; node.rel = "noopener noreferrer";
+      }
+      root.append(node);
+    }
+    byId("transfer-preview-status").textContent = "Saved exact preview. Links open only when you click them.";
   }
   function inputCheck(parent, title, prior, withTime = false) {
     const group = element("div"); group.className = "draft-check";
@@ -124,7 +137,7 @@
     byId("transfer-recipient-provenance").value = review.recipient_provenance;
     byId("transfer-subject").textContent = row.subject;
     byId("transfer-body").value = row.selected_body_text;
-    byId("transfer-body-preview").textContent = row.selected_body_text;
+    showSavedPreview(selected.preview_segments);
     byId("transfer-original").textContent = row.preserved_original_body_text;
     byId("transfer-source").textContent = JSON.stringify(row, null, 2);
     byId("transfer-notes").value = row.reviewer_notes;
@@ -150,7 +163,7 @@
     for (const cart of Array.isArray(data) ? data : []) {
       const block = element("div"); block.className = "draft-cart";
       block.append(element("pre", JSON.stringify(cart, null, 2)));
-      // URLs remain visible text; the app never opens or fetches carts during review.
+      // Structured evidence stays text; preview links require a user click. No cart is fetched here.
       if (cart && typeof cart.option_id === "string") carts.set(cart.option_id, inputCheck(block,
         "Verified exact cart contents and quantities for " + cart.option_id,
         review.carts[cart.option_id] || {}, true));

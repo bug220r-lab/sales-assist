@@ -138,6 +138,24 @@ the explicit reviewed action. No real create was used for development verificati
 
 ## Secure setup and operation
 
+For an isolated CSV workflow without unrelated DOI daily exclusions, use the
+[disabled-by-default draft-only launcher](doi-draft-launch.md). Normal daily startup
+keeps its existing policy requirements. No private launch is activated by this change.
+
+Selected copy supports plain labeled HTTPS links in `[label](https://destination)`
+form, in addition to existing bare URLs and the standard CTA. Labels are plain text;
+HTML is escaped and general Markdown formatting is not interpreted. Source copy,
+hashes and URL values are not rewritten. Saved preview and outbound HTML share the
+same text/link segments. Unsaved edits must be saved before exact-preview approval.
+Readback verifies visible text plus each link's destination and text span. A changed
+renderer invalidates an older approval binding; explicit reapproval is required,
+and known draft IDs retain their no-repeat-create protection.
+
+See the [conditional-readiness audit](doi-draft-transfer-readiness.md) for the
+separate launch, factual, cart and customer-decision gates, and the
+[managed-authentication proposal](doi-draft-transfer-auth-proposal.md) for a future
+single-owner renewal design. That proposal is not implemented or activated.
+
 API transfer is off by default. After separate activation approval, an operator can
 enable `SSA_HELPSCOUT_DRAFT_TRANSFER=1` in the isolated app process and choose one mode:
 

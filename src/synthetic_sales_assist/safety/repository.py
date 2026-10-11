@@ -108,6 +108,7 @@ AUTHORED_M5_SCRIPT_PATHS = frozenset(
         "scripts/lifecycle-common.ps1",
         "scripts/reset-demo.ps1",
         "scripts/start.ps1",
+        "scripts/start-drafts.ps1",
         "scripts/status.ps1",
         "scripts/stop.ps1",
     }

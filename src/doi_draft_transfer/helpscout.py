@@ -200,6 +200,7 @@ class HelpScoutDraftClient:
             value = json.loads(raw)
             threads = value.get("_embedded", {}).get("threads", [])
             messages = [t for t in threads if t.get("type") == "message"]
+            expected_body = rendered_body(row["selected_body_text"])
             verified = (
                 value.get("id") == int(identifier)
                 and value.get("state") == "draft"
@@ -216,9 +217,9 @@ class HelpScoutDraftClient:
                 and not messages[0].get("bcc")
                 and not messages[0].get("scheduled")
                 and body_text(messages[0].get("body", ""))
-                == row["selected_body_text"].replace("\r\n", "\n").replace("\r", "\n")
+                == body_text(expected_body)
                 and body_links(messages[0].get("body", ""))
-                == body_links(rendered_body(row["selected_body_text"]))
+                == body_links(expected_body)
             )
             result["web_link"] = safe_web_link(
                 value.get("_links", {}).get("web", {}).get("href"), identifier
@@ -249,18 +250,37 @@ def body_text(body):
 
 
 def body_links(body):
-    """Visible copy alone cannot prove that the returned cart destinations match."""
+    """Bind each destination to its exact visible-text span, tolerating safe markup."""
 
     class Links(HTMLParser):
         def __init__(self):
             super().__init__(convert_charrefs=True)
             self.targets = []
+            self.position = 0
+            self.active = None
+            self.invalid = False
 
         def handle_starttag(self, tag, attrs):
-            if tag.lower() == "a":
+            if tag.lower() == "br":
+                self.position += 1
+            elif tag.lower() == "a":
+                if self.active is not None:
+                    self.invalid = True
                 values = [value for name, value in attrs if name == "href"]
-                self.targets.append(values)
+                self.active = [values, self.position, None]
+                self.targets.append(self.active)
+
+        def handle_data(self, data):
+            self.position += len(data)
+
+        def handle_endtag(self, tag):
+            if tag.lower() == "a":
+                if self.active is None:
+                    self.invalid = True
+                else:
+                    self.active[2] = self.position
+                    self.active = None
 
     parser = Links()
     parser.feed(body)
-    return parser.targets
+    return None if parser.invalid or parser.active is not None else parser.targets

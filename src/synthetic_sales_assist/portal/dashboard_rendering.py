@@ -1152,6 +1152,7 @@ def _page(
     csrf_token: str,
     presentation: bool,
     review_only: bool = False,
+    draft_only: bool = False,
 ) -> bytes:
     if _CSRF_TOKEN.fullmatch(csrf_token) is None:
         _fail("DASHBOARD_CSRF_TOKEN_INVALID")
@@ -1222,6 +1223,8 @@ def _page(
             ("doi-csv-review", "/doi-csv-review", "DOI split review"),
             ("doi-draft-transfer", "/doi-draft-transfer", "Draft transfer"),
         )
+        if draft_only:
+            nav_items = nav_items[1:]
         navigation = "".join(f'<a href="{path}">{label}</a>' for _, path, label in nav_items)
         banner = (
             '<div class="dashboard-synthetic-banner">Local draft review · '

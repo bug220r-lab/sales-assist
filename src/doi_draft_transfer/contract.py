@@ -70,6 +70,10 @@ SIGNATURE = "Thanks,\nJude Lewis - ECS Tuning / Turner Motorsport\nExt. 1234"
 HASH = re.compile(r"[0-9a-f]{64}\Z")
 EMAIL = re.compile(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}\Z")
 URL = re.compile(r"https?://[^\s<>\"\[\]()]+")
+BODY_LINK = re.compile(
+    r"(?<!!)(?<!\\)\[([^\[\]\r\n]+)\]\((https://[^\s<>\"\[\]()]+)\)"
+    + "|" + URL.pattern + "|" + re.escape(CTA_TEXT)
+)
 
 
 class TransferError(ValueError):
@@ -458,19 +462,33 @@ def row_holds(row):
     return sorted(set(holds))
 
 
-def rendered_body(body):
-    """Escape customer copy and link only its literal HTTPS URLs and exact CTA."""
+def body_segments(body):
+    """Shared text/link segments for the safe UI preview and outbound HTML."""
+    body = body.replace("\r\n", "\n").replace("\r", "\n")
     parts, offset = [], 0
-    for match in URL.finditer(body):
-        parts.append(html.escape(body[offset : match.start()]))
-        url = match.group()
-        parts.append(f'<a href="{html.escape(url, quote=True)}">{html.escape(url)}</a>')
+    for match in BODY_LINK.finditer(body):
+        if match.start() > offset:
+            parts.append({"text": body[offset : match.start()]})
+        label, url = match.group(1), match.group(2)
+        if label is None:
+            label = match.group()
+            url = CTA_URL if label == CTA_TEXT else label
+        parts.append({"text": label, "url": url})
         offset = match.end()
-    parts.append(html.escape(body[offset:]))
-    result = "".join(parts).replace("\r\n", "\n").replace("\r", "\n")
-    result = result.replace(
-        CTA_TEXT, f'<a href="{html.escape(CTA_URL, quote=True)}">{CTA_TEXT}</a>'
-    )
+    if offset < len(body):
+        parts.append({"text": body[offset:]})
+    return parts
+
+
+def rendered_body(body):
+    """Render plain labels/HTTPS links without changing stored copy or URL bytes."""
+    parts = []
+    for item in body_segments(body):
+        label = html.escape(item["text"])
+        if "url" in item:
+            label = f'<a href="{html.escape(item["url"], quote=True)}">{label}</a>'
+        parts.append(label)
+    result = "".join(parts)
     return "<div>" + result.replace("\n", "<br>") + "</div>"
 
 

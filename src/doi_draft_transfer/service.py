@@ -15,6 +15,7 @@ from .contract import (
     USER_ID,
     TransferError,
     approval_binding,
+    body_segments,
     digest,
     fresh_review,
     order_id,
@@ -65,7 +66,12 @@ class DraftTransferService:
     @staticmethod
     def summary(record):
         holds = review_holds(record["row"], record["review"])
-        approved = record["approval"] is not None and not holds
+        approved = (
+            type(record["approval"]) is dict
+            and record["approval"].get("binding")
+            == approval_binding(record["row"], record["version"], record["review"])
+            and not holds
+        )
         return {
             "order_id": record["order_id"],
             "version": record["version"],
@@ -91,6 +97,7 @@ class DraftTransferService:
                 record["row"], record["version"], record["review"]
             )
             result["html_preview"] = rendered_body(record["row"]["selected_body_text"])
+            result["preview_segments"] = body_segments(record["row"]["selected_body_text"])
             result["mailbox_id"], result["user_id"] = MAILBOX_ID, USER_ID
             # Return history metadata; original copy remains in the immutable row history.
             result["history"] = [
@@ -268,7 +275,7 @@ class DraftTransferService:
                 raise TransferError("UNRESOLVED_REVIEW_HOLDS", 409)
             if record["transfer"] and record["transfer"]["state"] in FINAL_WRITE_STATES:
                 raise TransferError("TRANSFER_ALREADY_RESERVED", 409)
-            if record["approval"] is not None:
+            if record["approval"] is not None and record["approval"]["binding"] == expected:
                 return {"approved": True, "binding": expected, "version": version}
             approval = {
                 "binding": expected,

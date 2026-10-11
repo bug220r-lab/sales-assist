@@ -60,3 +60,25 @@ class DOISourceBoundaryTests(unittest.TestCase):
             "unapproved_portal_asset",
             {f.category for f in scan_prohibited_repository_content(self.root)},
         )
+
+
+    def test_draft_launcher_registration_keeps_content_secret_and_unknown_script_checks(self):
+        target = self.root / "scripts/start-drafts.ps1"
+        target.parent.mkdir(parents=True)
+        marker = "# SYNTHETIC-SALES-ASSIST-AUTHORED-M5\n"
+        target.write_text(marker + "Write-Output SYN", encoding="utf-8")
+        self.assertEqual(scan_prohibited_repository_content(self.root), ())
+        canary = "g" + "hp_" + "A" * 36
+        target.write_text(marker + canary, encoding="utf-8")
+        self.assertIn("source_access_token", {f.category for f in scan_secret_material(self.root)})
+        target.write_text(marker + "canary@" + "private.invalid", encoding="utf-8")
+        self.assertIn(
+            "non_synthetic_email",
+            {f.category for f in scan_prohibited_repository_content(self.root)},
+        )
+        target.write_text(marker + "Write-Output SYN", encoding="utf-8")
+        target.rename(target.with_name("unreviewed-drafts.ps1"))
+        self.assertIn(
+            "unapproved_lifecycle_script",
+            {f.category for f in scan_prohibited_repository_content(self.root)},
+        )

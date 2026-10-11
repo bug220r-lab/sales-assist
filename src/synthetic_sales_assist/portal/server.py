@@ -539,6 +539,7 @@ class PortalHTTPServer(HTTPServer):
         csrf_token: str,
         shutdown_token: str,
         doi_csv_review_only: bool = False,
+        draft_transfer_only: bool = False,
         review_mark_store: ReviewMarkStore | None = None,
         alternate_draft_store: DraftStore | None = None,
         draft_transfer_store: DraftTransferStore | None = None,
@@ -552,7 +553,14 @@ class PortalHTTPServer(HTTPServer):
             or any(character not in "0123456789abcdef" for character in shutdown_token)
         ):
             raise PortalServerError("PORTAL_CONTROL_TOKEN_INVALID")
+        if draft_transfer_only and (
+            application is not None or doi_csv_review_only
+            or config.owner_confirmations != EMPTY_CONFIRMATIONS
+            or review_mark_store is not None or alternate_draft_store is not None
+        ):
+            raise PortalServerError("DRAFT_ONLY_SCOPE_CONFLICT")
         self.application = application
+        self.draft_transfer_only = draft_transfer_only
         self.doi_csv_review_only = doi_csv_review_only
         self.doi_review_session = DOIReviewSession(
             ttl_seconds=36000,
@@ -686,6 +694,12 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         try:
             path = self._validated_target()
             self._validate_common_headers()
+            if self.portal_server.draft_transfer_only and path not in (
+                _DRAFT_TRANSFER_GET_ROUTES
+                | {_DRAFT_TRANSFER_ACTION, "/api/v1/system/shutdown", "/static/ssa-dashboard.css"}
+            ):
+                self._safe_error(404, "ROUTE_NOT_FOUND")
+                return
             if self.portal_server.doi_csv_review_only and path not in (
                 _DOI_REVIEW_GET_ROUTES
                 | _DOI_REVIEW_POST_ROUTES
@@ -1103,7 +1117,9 @@ class PortalRequestHandler(BaseHTTPRequestHandler):
         if path == "/doi-draft-transfer":
             from doi_draft_transfer.ui import render_page
 
-            self._send_html(render_page(self.portal_server.csrf_token))
+            self._send_html(render_page(
+                self.portal_server.csrf_token, draft_only=self.portal_server.draft_transfer_only
+            ))
             return
         if path in {"/static/doi-draft-transfer.js", "/static/doi-draft-transfer.css"}:
             from doi_draft_transfer.ui import asset

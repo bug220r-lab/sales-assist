@@ -14,8 +14,10 @@ class Element {
   }
   set value(v) { this._value=this.tagName === "textarea" ? String(v).replace(/\r\n/g,"\n") : v; }
   get value() { return this._value; }
+  set textContent(v) { this._text=String(v); this.children=[]; }
+  get textContent() { return this._text+this.children.map(node=>node.textContent).join(""); }
   append(...nodes) { this.children.push(...nodes); }
-  replaceChildren(...nodes) { this.children=[...nodes]; }
+  replaceChildren(...nodes) { this._text=""; this.children=[...nodes]; }
   addEventListener(name, fn) { this.listeners.set(name, fn); }
   async click() { if (!this.disabled) return this.listeners.get("click")?.({preventDefault(){}}); }
   input() { this.listeners.get("input")?.({}); }
@@ -70,6 +72,13 @@ await open(1);
 check(el("transfer-body").value==="" && el("transfer-body").disabled,"Withheld row has no original fallback");
 check(el("transfer-create").disabled,"Held row transfer disabled");
 await open(0);
+check(el("transfer-body-preview").textContent===input.expected_preview,
+  "Saved preview shows exact visible labels without Markdown delimiters");
+const previewLinks=el("transfer-body-preview").children.filter(node=>node.tagName==="a");
+check(previewLinks.length===2 && previewLinks[0].textContent==="SYN bracket & washer",
+  "Cart and CTA each have one labeled anchor without nesting");
+check(previewLinks[0].href===input.expected_cart_url && previewLinks[0].target==="_blank"
+  && previewLinks[0].rel==="noopener noreferrer","Preview preserves URL with safe user-click navigation");
 check(!el("transfer-recipient-verified").checked,"Imported recipient verification never accepted as approval");
 check(el("transfer-create").disabled,"Imported approved claim cannot transfer");
 el("transfer-notes").value="SYN unsaved note";el("transfer-notes").input();await open(1);
@@ -106,7 +115,13 @@ el("transfer-exact-approval").checked=true;el("transfer-exact-approval").change(
 await el("transfer-approve").click();await settle();check(!el("transfer-create").disabled,"Exact version approval enables transfer");
 el("transfer-body").value += "\nSYN edited wording";el("transfer-body").input();
 check(el("transfer-create").disabled,"Dirty edit disables transfer immediately");
+check(el("transfer-preview-status").textContent.includes("Unsaved copy")
+  && el("transfer-body-preview").children.length===0,
+  "Unsaved edits clear saved link nodes and cannot masquerade as the exact approved preview");
 await el("transfer-save").click();await settle();
+check(el("transfer-preview-status").textContent.includes("Saved exact preview")
+  && el("transfer-body-preview").textContent.endsWith("SYN edited wording"),
+  "Saving refreshes the exact preview from server segments");
 check(el("transfer-create").disabled && el("transfer-holds").textContent.includes("REVIEW_IDENTITY"),
   "Saved edit invalidates approval and resets review");
 check(el("transfer-customer-decision").value==="unreviewed" && !el("transfer-customer-conditional").checked,

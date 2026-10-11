@@ -22,6 +22,8 @@ from doi_csv_staging.review_marks import ReviewMarkStore
 from synthetic_sales_assist.portal.server import PortalHTTPServer, PortalServerConfig
 from synthetic_sales_assist.persistence.paths import validate_local_path
 from tests.test_doi_draft_transfer import MockClient, csv_text, synthetic_row
+from tests.test_doi_draft_transfer_links import expected_html, labeled_row
+from doi_draft_transfer.helpscout import body_text
 from tests.test_doi_csv_review_ui import fictional_csvs
 
 
@@ -59,11 +61,7 @@ def main():
         }
     )
     original_marks = hashlib.sha256(marks.path.read_bytes()).hexdigest()
-    row = synthetic_row()
-    row["selected_body_text"] = (
-        "Would you like this synthetic alternate? Your decision is pending; "
-        "no order change has been made.\n\n" + row["selected_body_text"]
-    )
+    row = labeled_row()
     for name, hash_name in (
         ("selected_body_text", "selected_body_sha256"),
         ("preserved_original_body_text", "source_body_sha256"),
@@ -79,6 +77,8 @@ def main():
         "js": asset("ui.js").decode(),
         "csv_text": csv_text([row, held]),
         "selected_body": row["selected_body_text"],
+        "expected_preview": body_text(expected_html(row)),
+        "expected_cart_url": json.loads(row["cart_links_json"])[0]["url"],
         "report_path": str(output / "frontend-result.json"),
     }
     inp = output / "frontend-synthetic-input.json"
