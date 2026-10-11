@@ -65,6 +65,7 @@ class DraftTransferService:
     @staticmethod
     def summary(record):
         holds = review_holds(record["row"], record["review"])
+        approved = record["approval"] is not None and not holds
         return {
             "order_id": record["order_id"],
             "version": record["version"],
@@ -72,8 +73,8 @@ class DraftTransferService:
             "selected_body_sha256": record["row"]["selected_body_sha256"],
             "has_selected_copy": bool(record["row"]["selected_body_text"]),
             "holds": holds,
-            "approved": record["approval"] is not None,
-            "review_approval": "PENDING" if record["approval"] is None else "APPROVED",
+            "approved": approved,
+            "review_approval": "APPROVED" if approved else "PENDING",
             "transfer": record["transfer"],
             "send_ready": False,
         }

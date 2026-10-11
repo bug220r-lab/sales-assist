@@ -13,7 +13,12 @@ directory, or restart a working review to try this build without the owner's app
 3. Review the exact recipient, subject, selected copy, separate cart choices, original
    history, and all unresolved checks. Record recipient verification and its source.
    No customer/contact lookup is performed by the app. Imported claims are not approval.
-4. Save review evidence, including separate customer approval and exact cart contents.
+4. Save review evidence and exact cart contents. Choose the customer's decision:
+   **Pending: this draft asks for the customer's decision** permits conditional
+   outreach before customer approval exists. Record that the decision is pending and
+   confirm that the exact copy asks for consent without claiming approval or an order
+   change. Alternatively select **Customer approval is recorded in the evidence**
+   and supply that evidence. Neither choice changes an order or permits sending.
    Reconcile any prior Help Scout reference or draft ID. Those imported fields are
    claims only; an existing draft blocks creation of another. Body/recipient edits
    clear affected verification. Every edit invalidates approval.
@@ -23,6 +28,13 @@ directory, or restart a working review to try this build without the owner's app
 6. Read the per-row result and returned Help Scout link. An unknown write is locked;
    do not delete its journal or retry blindly. A known created ID can be rechecked with
    the read-only verification action. Auth/rate-limit rejection permits explicit retry.
+
+The customer-decision review is separate from Jude's exact-version draft approval.
+Identity, recipient verification, withheld copy, prohibited order statuses and complete
+listed-cart scope remain hard gates for both decision paths. Editing the copy resets
+the decision review; changing its decision or evidence invalidates prior approval.
+Older saved reviews with only a customer-approval checkbox require the new explicit
+choice. They are never silently interpreted as consent already received.
 
 ## CSV contract
 
@@ -144,6 +156,10 @@ Preserve it with its SQLite journal during operation; do not copy an open databa
 as a backup. It contains recipient/copy history and must never enter Git or a package.
 Use the same store for duplicate protection across restarts. Uncertain operations
 require human reconciliation; no automatic reset or forced-retry path is provided.
+Each read-only verification clears earlier verification before its GET. If the remote
+draft was published, changed or deleted, or the read fails, the current result becomes
+`CREATED_UNVERIFIED`. Its known ID and duplicate-create lock remain; no new draft is
+created to recover from a failed verification.
 
 For isolated checks, run the existing package lifecycle against a **new** absolute
 data directory and a free localhost port. Leave transfer disabled. Do not change the

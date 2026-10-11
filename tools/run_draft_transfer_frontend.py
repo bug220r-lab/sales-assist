@@ -60,6 +60,10 @@ def main():
     )
     original_marks = hashlib.sha256(marks.path.read_bytes()).hexdigest()
     row = synthetic_row()
+    row["selected_body_text"] = (
+        "Would you like this synthetic alternate? Your decision is pending; "
+        "no order change has been made.\n\n" + row["selected_body_text"]
+    )
     for name, hash_name in (
         ("selected_body_text", "selected_body_sha256"),
         ("preserved_original_body_text", "source_body_sha256"),

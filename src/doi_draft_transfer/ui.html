@@ -6,7 +6,7 @@
 <p id="transfer-message" role="status" aria-live="polite">Loading saved draft reviews…</p>
 <section class="dashboard-panel">
 <h2>Import draft CSV</h2>
-<p>UTF-8, up to 8 MiB and 500 orders. Import preserves local edits and reports conflicts.
+<p>UTF-8, up to 32 MiB and 500 orders. Import preserves local edits and reports conflicts.
 Blank selected copy stays blank. Imported approval and recipient claims require review here.</p>
 <a href="/api/v1/doi-draft-transfer/template">Download CSV header template</a>
 <label class="dashboard-field">Draft CSV <input id="transfer-file" type="file" accept=".csv,text/csv"></label>
@@ -48,6 +48,20 @@ Blank selected copy stays blank. Imported approval and recipient claims require 
 <details><summary>Original copy and imported review history</summary>
 <pre id="transfer-original" class="draft-copy"></pre><pre id="transfer-source" class="draft-copy"></pre></details>
 <fieldset><legend>Review each required check</legend><div id="transfer-checks"></div></fieldset>
+<fieldset><legend>Customer decision about an order change</legend>
+<p>You can prepare an email asking for approval while the customer's decision is pending.
+Your approval below covers this exact draft only. This app cannot change an order or send email.</p>
+<label class="dashboard-field">Customer decision
+<select id="transfer-customer-decision">
+<option value="unreviewed">Not reviewed</option>
+<option value="pending_conditional_outreach">Pending: this draft asks for the customer's decision</option>
+<option value="approval_recorded">Customer approval is recorded in the evidence</option>
+</select></label>
+<label><input type="checkbox" id="transfer-customer-conditional">
+I checked that the exact copy asks for the customer's decision and does not claim approval or an order change.</label>
+<label class="dashboard-field">Pending decision and conditional wording, or recorded approval evidence
+<textarea id="transfer-customer-evidence" rows="3" maxlength="2000"></textarea></label>
+</fieldset>
 <label><input type="checkbox" id="transfer-holds-reviewed"> I reviewed and resolved or acknowledged the imported holds</label>
 <label class="dashboard-field">Resolution / acknowledgment evidence
 <textarea id="transfer-holds-note" rows="3" maxlength="4000"></textarea></label>

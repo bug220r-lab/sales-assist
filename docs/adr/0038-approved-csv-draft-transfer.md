@@ -25,7 +25,9 @@ recipient verification. Original text, source quantities and rich-text runs are
 preserved in immutable versions. Withheld copy, blocked ownership, shipped/canceled
 orders, unknown identity, incomplete full-kit scope and missing carts stay held.
 Every required check and cart requires explicit reviewer evidence before approval.
-Customer approval has its own field; a price note cannot silently substitute for it.
+Customer decision has its own explicit review: pending conditional outreach or recorded
+approval with evidence. Pending outreach requires review of the exact conditional copy;
+it does not require customer consent before asking for it. See ADR 0039.
 
 The private `doi-draft-transfer.sqlite3` is separate from both prior review stores
 and the synthetic database. It lives under the existing owned data directory,
@@ -52,7 +54,9 @@ No generic request proxy exists. HTTPS host/path/method are closed, redirects an
 automatic retries are absent, and responses are bounded. Returned identifiers and
 web links are retained; readback checks draft state, recipient, destination, exact
 subject/body and author before reporting verified creation. A failed readback is
-CREATED_UNVERIFIED and still blocks another create. Readback never mutates status.
+CREATED_UNVERIFIED and still blocks another create. Every subsequent readback first
+clears earlier verification; a failed read or changed remote draft cannot retain a
+verified result. Readback never mutates remote status.
 
 Credentials are server-only and opt-in through existing operator-managed secret
 injection. No token/grant is installed by the code, tests, packaging, or this change.

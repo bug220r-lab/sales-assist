@@ -138,6 +138,11 @@ def verified_review():
     review["checks"] = {
         key: {"resolved": True, "evidence": "SYN reviewer evidence"} for key in CHECKS
     }
+    review["checks"]["customer_approval"] = {
+        "decision": "approval_recorded",
+        "conditional_copy_reviewed": False,
+        "evidence": "SYN recorded customer approval evidence",
+    }
     review["carts"] = {
         "SYN-OPTION-1": {
             "verified": True,
@@ -206,6 +211,63 @@ class MockClient:
 
 
 class ContractTests(unittest.TestCase):
+    def test_customer_decision_requires_explicit_path_and_conditional_copy_review(self):
+        row, review = synthetic_row(), verified_review()
+        customer = review["checks"]["customer_approval"]
+        customer.update(decision="pending_conditional_outreach", conditional_copy_reviewed=False)
+        self.assertIn("CONDITIONAL_OUTREACH_COPY_REVIEW_REQUIRED", review_holds(row, review))
+        customer.update(
+            conditional_copy_reviewed=True, evidence="SYN pending; exact copy asks for consent"
+        )
+        self.assertEqual(review_holds(row, review), [])
+        customer["evidence"] = ""
+        self.assertIn("CUSTOMER_DECISION_EVIDENCE_REQUIRED", review_holds(row, review))
+        review["checks"]["customer_approval"] = {"resolved": True, "evidence": "SYN old review"}
+        self.assertIn("REVIEW_CUSTOMER_DECISION_REQUIRED", review_holds(row, review))
+        with self.assertRaisesRegex(TransferError, "CUSTOMER_DECISION_REVIEW_INVALID"):
+            validate_review(review)
+        review["checks"]["customer_approval"] = {
+            "decision": "automatically_approved",
+            "evidence": "SYN",
+            "conditional_copy_reviewed": True,
+        }
+        with self.assertRaisesRegex(TransferError, "CUSTOMER_DECISION_REVIEW_INVALID"):
+            validate_review(review)
+
+    def test_pending_customer_decision_preserves_hard_gates(self):
+        row, review = synthetic_row(), verified_review()
+        review["checks"]["customer_approval"].update(
+            decision="pending_conditional_outreach",
+            conditional_copy_reviewed=True,
+            evidence="SYN pending customer choice; exact conditional wording reviewed",
+        )
+        cases = (
+            (
+                "identity",
+                lambda r, v: v["checks"]["identity"].update(resolved=False),
+                "REVIEW_IDENTITY",
+            ),
+            (
+                "recipient",
+                lambda r, v: v.update(recipient_verified=False),
+                "RECIPIENT_REVIEW_REQUIRED",
+            ),
+            ("blank recipient", lambda r, v: r.update(recipient_email=""), "RECIPIENT_REQUIRED"),
+            ("status", lambda r, v: r.update(current_order_status="Shipped"), "ORDER_STATUS_HELD"),
+            ("withheld", lambda r, v: r.update(draft_status="HELD"), "SOURCE_COPY_HELD"),
+            ("cart", lambda r, v: r.update(cart_links_json="[]"), "NO_VERIFIED_CART"),
+            (
+                "scope",
+                lambda r, v: v["checks"]["kit_scope"].update(resolved=False),
+                "REVIEW_KIT_SCOPE",
+            ),
+        )
+        for label, mutate, expected in cases:
+            with self.subTest(gate=label):
+                candidate, evidence = copy.deepcopy(row), copy.deepcopy(review)
+                mutate(candidate, evidence)
+                self.assertIn(expected, review_holds(candidate, evidence))
+
     def test_large_multiline_provenance_and_exact_body_hashes(self):
         row = synthetic_row()
         row["source_provenance_json"] = json.dumps(
@@ -511,6 +573,89 @@ class StoreTests(unittest.TestCase):
             self.service.commit_import(preview["preview_token"], 0)
         self.assertFalse(self.path.exists())
 
+    def test_conditional_outreach_approval_and_decision_edit_invalidation(self):
+        row = synthetic_row()
+        row["selected_body_text"] = (
+            "Would you like this synthetic alternate? Your decision is still pending; "
+            "no order change has been made.\n\n" + row["selected_body_text"]
+        )
+        row["selected_body_sha256"] = text_hash(row["selected_body_text"])
+        row["review_gate_state_json"] = '{"customer_order_change_approval":"PENDING"}'
+        item = self.imported(row)
+        review = verified_review()
+        review["checks"]["customer_approval"].update(
+            decision="pending_conditional_outreach",
+            conditional_copy_reviewed=True,
+            evidence=(
+                "SYN customer has not approved; exact copy asks for consent without changing order"
+            ),
+        )
+        fields = {
+            key: row[key] for key in ("selected_body_text", "recipient_email", "reviewer_notes")
+        }
+        self.service.edit(item["order_id"], item["version"], fields, review)
+        item = self.service.detail(item["order_id"])
+        with self.assertRaisesRegex(TransferError, "EXPLICIT_APPROVAL_REQUIRED"):
+            self.service.approve(item["order_id"], item["version"], item["approval_binding"], "")
+        self.service.approve(
+            item["order_id"],
+            item["version"],
+            item["approval_binding"],
+            "I_APPROVE_THIS_EXACT_HELP_SCOUT_DRAFT",
+        )
+        self.assertTrue(self.service.detail(item["order_id"])["approved"])
+        self.assertEqual(self.client.calls, [])
+        review["checks"]["customer_approval"].update(
+            decision="approval_recorded",
+            conditional_copy_reviewed=False,
+            evidence="SYN later customer consent recorded",
+        )
+        self.service.edit(item["order_id"], item["version"], fields, review)
+        changed = self.service.detail(item["order_id"])
+        self.assertFalse(changed["approved"])
+        self.assertNotEqual(changed["approval_binding"], item["approval_binding"])
+        with self.assertRaisesRegex(TransferError, "CURRENT_EXACT_APPROVAL_REQUIRED"):
+            self.service.transfer(
+                changed["order_id"], changed["version"], changed["approval_binding"]
+            )
+        self.assertEqual(self.client.calls, [])
+
+    def test_legacy_customer_checkbox_cannot_reuse_old_approval(self):
+        item = self.approved()
+        old = copy.deepcopy(item["review"])
+        old["checks"]["customer_approval"] = {"resolved": True, "evidence": "SYN legacy"}
+        with self.store.transaction(write=True) as con:
+            self.store.put(
+                con, item["order_id"], item["version"] + 1, item["row"], old, item["approval"]
+            )
+        legacy = self.service.detail(item["order_id"])
+        self.assertFalse(legacy["approved"])
+        self.assertIn("REVIEW_CUSTOMER_DECISION_REQUIRED", legacy["holds"])
+        with self.assertRaisesRegex(TransferError, "CURRENT_EXACT_APPROVAL_REQUIRED"):
+            self.service.transfer(legacy["order_id"], legacy["version"], legacy["approval_binding"])
+        self.assertEqual(self.client.calls, [])
+
+    def test_failed_reverification_persists_unverified_without_creating_again(self):
+        item = self.approved()
+        created = self.service.transfer(item["order_id"], item["version"], item["approval_binding"])
+        self.assertEqual(created["state"], "CREATED")
+        adapter = HelpScoutDraftClient("SYN-DUMMY-NOT-A-CREDENTIAL")
+        self.service.client = adapter
+        with patch.object(adapter, "_request", return_value=(404, {}, b"")) as requests:
+            outcome = self.service.verify_transfer(item["order_id"], item["version"])
+            self.assertEqual(outcome["state"], "CREATED_UNVERIFIED")
+            self.assertEqual(outcome["conversation_id"], created["conversation_id"])
+            self.assertFalse(outcome["retry_allowed"])
+            reopened = DraftTransferService(DraftTransferStore(self.path), adapter)
+            for retry in (False, True):
+                result = reopened.transfer(
+                    item["order_id"], item["version"], item["approval_binding"], retry
+                )
+                self.assertEqual(result["state"], "CREATED_UNVERIFIED")
+            self.assertEqual(requests.call_count, 1)
+            self.assertEqual(requests.call_args.args[0], "GET")
+        self.assertEqual(len(self.client.calls), 1)
+
     def test_import_claims_do_not_approve_or_contact_api(self):
         item = self.imported()
         self.assertFalse(item["approved"])
@@ -807,6 +952,73 @@ class AdapterTests(unittest.TestCase):
         replies[1] = (200, {}, json.dumps(result).encode())
         with patch.object(self.client, "_request", side_effect=replies):
             self.assertEqual(self.client.create_draft(self.row)["state"], "CREATED_UNVERIFIED")
+
+    def test_reverification_resets_prior_success_for_mismatch_published_deleted_and_errors(self):
+        good = {
+            "id": 99000001,
+            "state": "draft",
+            "mailboxId": MAILBOX_ID,
+            "subject": self.row["subject"],
+            "assignee": {"id": USER_ID},
+            "primaryCustomer": {"email": self.row["recipient_email"]},
+            "_embedded": {
+                "threads": [
+                    {
+                        "type": "message",
+                        "state": "draft",
+                        "createdBy": {"id": USER_ID},
+                        "to": [self.row["recipient_email"]],
+                        "body": rendered_body(self.row["selected_body_text"]),
+                    }
+                ]
+            },
+        }
+        published_conversation = copy.deepcopy(good)
+        published_conversation["state"] = "published"
+        published_message = copy.deepcopy(good)
+        published_message["_embedded"]["threads"][0]["state"] = "published"
+        changed = copy.deepcopy(good)
+        changed["_embedded"]["threads"][0]["body"] += "SYN changed body"
+        cases = [
+            (name, (200, {}, json.dumps(value).encode()))
+            for name, value in (
+                ("conversation published", published_conversation),
+                ("message published", published_message),
+                ("body changed", changed),
+            )
+        ]
+        cases += [
+            ("deleted", (404, {}, b"")),
+            ("server error", (500, {}, b"")),
+            ("malformed", (200, {}, b"not JSON")),
+            ("timeout", TimeoutError()),
+        ]
+        for name, later_response in cases:
+            with (
+                self.subTest(case=name),
+                patch.object(
+                    self.client,
+                    "_request",
+                    side_effect=[(200, {}, json.dumps(good).encode()), later_response],
+                ) as call,
+            ):
+                initial = {
+                    "conversation_id": "99000001",
+                    "operation_id": "SYN-OPERATION",
+                    "retry_allowed": False,
+                    "state": "CREATED_UNVERIFIED",
+                }
+                verified = self.client.verify_draft(self.row, initial)
+                self.assertEqual(verified["code"], "DRAFT_CREATED_VERIFIED")
+                current = self.client.verify_draft(self.row, verified)
+                self.assertEqual(current["state"], "CREATED_UNVERIFIED")
+                self.assertEqual(current["code"], "DRAFT_READBACK_REQUIRED")
+                self.assertEqual(current["conversation_id"], "99000001")
+                self.assertEqual(current["operation_id"], "SYN-OPERATION")
+                self.assertFalse(current["retry_allowed"])
+                self.assertEqual(verified["state"], "CREATED")
+                self.assertEqual(call.call_count, 2)
+                self.assertTrue(all(item.args[0] == "GET" for item in call.call_args_list))
 
     def test_no_token_in_auth_or_rate_limit_results(self):
         for status, state in (

@@ -81,6 +81,9 @@ function completeReview() {
   el("transfer-holds-reviewed").checked=true; el("transfer-holds-note").value="SYN reviewed source holds";
   el("transfer-duplicate-status").value="no_existing_draft";
   el("transfer-duplicate-evidence").value="SYN checked isolated fake records: no prior draft";
+  el("transfer-customer-decision").value="pending_conditional_outreach";
+  el("transfer-customer-evidence").value="SYN customer decision pending; exact copy asks for consent and claims no order change";
+  el("transfer-customer-conditional").checked=true;
   for(const group of el("transfer-checks").children) {
     group.children[0].children[0].checked=true;group.children[1].children[0].value="SYN explicit evidence";
   }
@@ -92,6 +95,10 @@ function completeReview() {
   el("transfer-holds-note").input();
 }
 completeReview(); await el("transfer-save").click(); await settle();
+const customerReview=calls.filter(c=>c.action==="edit").at(-1).payload.review.checks.customer_approval;
+check(customerReview.decision==="pending_conditional_outreach" && customerReview.conditional_copy_reviewed,
+  "Explicit pending decision permits conditional outreach without asserting customer consent");
+check(!("resolved" in customerReview),"Customer decision is separate from generic resolved checkboxes");
 check(calls.filter(c=>c.action==="edit").at(-1).payload.fields.selected_body_text===input.selected_body,
   "Saving checks preserves raw multiline selected copy");
 check(el("transfer-holds").textContent==="All review gates resolved.","All explicit checks resolve review");
@@ -102,6 +109,8 @@ check(el("transfer-create").disabled,"Dirty edit disables transfer immediately")
 await el("transfer-save").click();await settle();
 check(el("transfer-create").disabled && el("transfer-holds").textContent.includes("REVIEW_IDENTITY"),
   "Saved edit invalidates approval and resets review");
+check(el("transfer-customer-decision").value==="unreviewed" && !el("transfer-customer-conditional").checked,
+  "Changed copy resets conditional outreach review");
 completeReview();await el("transfer-save").click();await settle();
 el("transfer-exact-approval").checked=true;el("transfer-exact-approval").change();
 await el("transfer-approve").click();await settle();

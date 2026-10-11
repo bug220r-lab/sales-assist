@@ -489,10 +489,16 @@ def approval_binding(row, version, review):
 
 
 def fresh_review():
+    checks = {key: {"resolved": False, "evidence": ""} for key in CHECKS}
+    checks["customer_approval"] = {
+        "decision": "unreviewed",
+        "conditional_copy_reviewed": False,
+        "evidence": "",
+    }
     return {
         "recipient_provenance": "",
         "recipient_verified": False,
-        "checks": {key: {"resolved": False, "evidence": ""} for key in CHECKS},
+        "checks": checks,
         "holds_reviewed": False,
         "holds_review_note": "",
         "carts": {},
@@ -517,7 +523,19 @@ def validate_review(value):
     text(value["duplicate_evidence"], 2000, multiline=True)
     if type(value["checks"]) is not dict or set(value["checks"]) != set(CHECKS):
         raise TransferError("REVIEW_CHECKS_INVALID")
-    for check in value["checks"].values():
+    for key, check in value["checks"].items():
+        if key == "customer_approval":
+            if (
+                type(check) is not dict
+                or set(check) != {"decision", "conditional_copy_reviewed", "evidence"}
+                or type(check["decision"]) is not str
+                or check["decision"]
+                not in {"unreviewed", "pending_conditional_outreach", "approval_recorded"}
+                or type(check["conditional_copy_reviewed"]) is not bool
+            ):
+                raise TransferError("CUSTOMER_DECISION_REVIEW_INVALID")
+            text(check["evidence"], 2000, multiline=True)
+            continue
         if (
             type(check) is not dict
             or set(check) != {"resolved", "evidence"}
@@ -549,8 +567,19 @@ def review_holds(row, review):
     holds.extend(
         "REVIEW_" + key.upper()
         for key, check in review["checks"].items()
-        if not check["resolved"] or not check["evidence"].strip()
+        if key != "customer_approval" and (not check["resolved"] or not check["evidence"].strip())
     )
+    # Old resolved/evidence reviews do not imply recorded customer consent.
+    customer = review["checks"].get("customer_approval", {})
+    decision = customer.get("decision", "unreviewed")
+    if decision not in {"pending_conditional_outreach", "approval_recorded"}:
+        holds.append("REVIEW_CUSTOMER_DECISION_REQUIRED")
+    elif not customer.get("evidence", "").strip():
+        holds.append("CUSTOMER_DECISION_EVIDENCE_REQUIRED")
+    elif decision == "pending_conditional_outreach" and not customer.get(
+        "conditional_copy_reviewed", False
+    ):
+        holds.append("CONDITIONAL_OUTREACH_COPY_REVIEW_REQUIRED")
     if not review["holds_reviewed"] or not review["holds_review_note"].strip():
         holds.append("IMPORTED_HOLDS_REVIEW_REQUIRED")
     if (

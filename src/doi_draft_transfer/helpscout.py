@@ -177,6 +177,10 @@ class HelpScoutDraftClient:
         identifier = result.get("conversation_id", "")
         if not re.fullmatch(r"[1-9][0-9]{0,18}", identifier):
             raise TransferError("KNOWN_CONVERSATION_REQUIRED", 409)
+        # Prior verification describes an earlier read, never the current remote state.
+        result.update(
+            state="CREATED_UNVERIFIED", code="DRAFT_READBACK_REQUIRED", retry_allowed=False
+        )
         try:
             status, _, raw = self._request("GET", f"/v2/conversations/{identifier}?embed=threads")
             if status != 200:
@@ -234,6 +238,7 @@ def body_text(body):
 
 def body_links(body):
     """Visible copy alone cannot prove that the returned cart destinations match."""
+
     class Links(HTMLParser):
         def __init__(self):
             super().__init__(convert_charrefs=True)

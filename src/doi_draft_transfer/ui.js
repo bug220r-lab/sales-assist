@@ -37,6 +37,10 @@
     byId("transfer-check-connection").disabled = busy || !configured;
     byId("transfer-body").disabled = busy || !selected?.row.selected_body_text || frozen(selected);
     byId("transfer-recipient").disabled = busy || frozen(selected);
+    byId("transfer-customer-decision").disabled = busy || frozen(selected);
+    byId("transfer-customer-evidence").disabled = busy || frozen(selected);
+    byId("transfer-customer-conditional").disabled = busy || frozen(selected)
+      || value("transfer-customer-decision") !== "pending_conditional_outreach";
   }
   async function request(action, fields = {}) {
     const options = {cache: "no-store", credentials: "same-origin"};
@@ -133,8 +137,13 @@
     byId("transfer-duplicate-evidence").value = review.duplicate_evidence;
     byId("transfer-exact-approval").checked = false;
     const checkRoot = byId("transfer-checks"); checkRoot.replaceChildren(); checks.clear();
-    for (const [key, prior] of Object.entries(review.checks))
-      checks.set(key, inputCheck(checkRoot, key.replaceAll("_", " "), prior));
+    for (const [key, prior] of Object.entries(review.checks)) {
+      if (key !== "customer_approval") checks.set(key, inputCheck(checkRoot, key.replaceAll("_", " "), prior));
+    }
+    const customer = review.checks.customer_approval || {};
+    byId("transfer-customer-decision").value = customer.decision || "unreviewed";
+    byId("transfer-customer-conditional").checked = Boolean(customer.conditional_copy_reviewed);
+    byId("transfer-customer-evidence").value = customer.evidence || "";
     const cartRoot = byId("transfer-carts"); cartRoot.replaceChildren(); carts.clear();
     cartRoot.append(element("p", row.alternate_relationship + " · " + row.cart_validation_status));
     const data = JSON.parse(row.cart_links_json);
@@ -164,8 +173,11 @@
       holds_reviewed: checked("transfer-holds-reviewed"), holds_review_note: value("transfer-holds-note"),
       duplicate_status: value("transfer-duplicate-status"),
       duplicate_evidence: value("transfer-duplicate-evidence"),
-      checks: Object.fromEntries([...checks].map(([key, item]) => [key,
+      checks: {...Object.fromEntries([...checks].map(([key, item]) => [key,
         {resolved: item.box.checked, evidence: item.note.value}])),
+        customer_approval: {decision: value("transfer-customer-decision"),
+          conditional_copy_reviewed: checked("transfer-customer-conditional"),
+          evidence: value("transfer-customer-evidence")}},
       carts: Object.fromEntries([...carts].map(([key, item]) => [key,
         {verified: item.box.checked, evidence: item.note.value, observed_at_utc: item.observed.value}]))};
   }
@@ -233,9 +245,10 @@
     await request("check_destination"); message("Configured mailbox and Jude user access verified (read only).");
   }));
   for (const id of ["body", "recipient", "recipient-provenance", "holds-note", "notes",
-    "duplicate-evidence"])
+    "duplicate-evidence", "customer-evidence"])
     byId("transfer-" + id).addEventListener("input", markDirty);
-  for (const id of ["recipient-verified", "holds-reviewed", "duplicate-status"])
+  for (const id of ["recipient-verified", "holds-reviewed", "duplicate-status",
+    "customer-decision", "customer-conditional"])
     byId("transfer-" + id).addEventListener("change", markDirty);
   globalThis.addEventListener("beforeunload", event => {
     if (dirty) { event.preventDefault(); event.returnValue = ""; }
