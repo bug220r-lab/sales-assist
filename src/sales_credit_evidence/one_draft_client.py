@@ -200,7 +200,9 @@ class OneDraftClient(helpscout_module.HelpScoutDraftClient):
                 raise ValueError()
             if self._customer_id is not None:
                 expected["customer"] = {"id": self._customer_id}
-                expected["threads"][0]["customer"] = {"id": self._customer_id}  # type: ignore[index]
+                expected["threads"][0]["customer"] = {  # type: ignore[index]
+                    "id": self._customer_id,
+                }
             return expected
         except Exception:
             raise _error("ONE_DRAFT_PAYLOAD_MISMATCH") from None

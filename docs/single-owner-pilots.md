@@ -121,8 +121,9 @@ The normal durable transfer service reserves before the one POST. Success requir
 verified readback of the unsent draft. `UNKNOWN`, `IN_FLIGHT`, or
 `CREATED_UNVERIFIED` is a hold, never permission to retry. Preserve the ledger and
 known conversation ID for a separately authorized read-only reconciliation. No
-automatic retry, renewal, bulk transfer, customer creation, sending, or order
-mutation is available.
+automatic retry, renewal, bulk transfer, standalone customer-creation POST, sending,
+or order mutation is available. The separately authorized email-association mode
+disclosed above may create the underlying contact within its one approved draft POST.
 
 Safe output retains the credit coverage summary if the later draft step fails.
 `COMPLETE` requires both a complete credit read and verified draft result; it does

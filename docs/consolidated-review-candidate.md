@@ -7,6 +7,14 @@ is activated by installation.
 
 ## Included behavior
 
+The combined follow-up source adds [split-review discovery](split-review-discovery.md):
+held purchased-line ready/waiting patterns are visible as review leads with every original
+hold retained, while stock-counter clues remain separate. It also includes the reviewed
+draft customer-association change from PR7: no separate customer-creation POST is needed,
+and the explicitly authorized email mode discloses its possible implicit contact creation.
+Existing-ID transfer freshly verifies that exact customer and recipient. This isolated
+candidate does not change the installed daily app or activate a live connection.
+
 - DOI review accepts up to 1,000 joined orders, 5,000 records per CSV and 4 MiB per CSV.
   JSON requests are bounded to 16 MiB; review responses remain bounded to 4 MiB.
   The fixed review session remains ten hours. Capture facts and eligibility rules are unchanged.
@@ -69,10 +77,14 @@ after restart. Do not reset that journal to work around an unknown external outc
 
 ## Review stack and remaining gates
 
-The candidate is stacked on draft PR #5 (`codex/doi-approved-draft-transfer`, source commit
-`3eb1214f667618e3449bc4af494ecdb3b8a8ef30`). PR #5 itself depends on PR #4.
-This candidate adds the reviewed credit reader and single-owner coordinator, the tested DOI
-limit delta, and packaging documentation. It does not merge either dependency into the default branch.
+This combined follow-up is stacked on draft PR #7 (`codex/unsent-draft-email-association`,
+source commit `1e7a0fa9f809d3bfb9e358c8344e82ad9e576bc2`). PR #7 depends on draft PR #6
+(`codex/consolidated-review-candidate`, source commit `c6eb66fe794948e85c1c05b32cb423cf671cf45a`).
+PR #6 introduced the reviewed credit reader and single-owner coordinator, the tested DOI
+limit delta, and packaging documentation on top of draft PR #5
+(`codex/doi-approved-draft-transfer`, source commit `3eb1214f667618e3449bc4af494ecdb3b8a8ef30`).
+PR #5 itself depends on PR #4. These dependencies remain separate draft reviews; this
+candidate does not merge them into the default branch.
 
 Live Help Scout draft and credit pilots remain pending separate credential-owner coordination,
 activation approval and supported browser acceptance. No ownership attestation is inferred,

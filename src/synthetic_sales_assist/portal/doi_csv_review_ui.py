@@ -8,13 +8,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from synthetic_sales_assist.portal.dashboard_rendering import _page
-from synthetic_sales_assist.portal.alternate_draft_ui import ALTERNATE_DRAFT_PANEL
 from doi_csv_staging.review import (
     MAX_CSV_BYTES as DOI_REVIEW_CSV_BYTES,
+)
+from doi_csv_staging.review import (
     MAX_ORDERS as DOI_REVIEW_ORDERS,
+)
+from doi_csv_staging.review import (
     MAX_RESPONSE_BYTES as DOI_REVIEW_RESPONSE_BYTES,
 )
+from synthetic_sales_assist.portal.alternate_draft_ui import ALTERNATE_DRAFT_PANEL
+from synthetic_sales_assist.portal.dashboard_rendering import _page
 
 
 def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> bytes:
@@ -35,7 +39,7 @@ def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> 
             'scope">\n'
             "  <h2>Split-review worklist</h2>\n"
             "  <p>Full order totals provide captured order context, not split value or "
-            "a revenue forecast. Confirmed patterns remain human-review evidence; they "
+            "a revenue forecast. Apparent patterns remain human-review evidence; they "
             "do not authorize splitting or fulfillment.</p>\n"
             "  <details><summary>Evidence scope and limits</summary>\n"
             "  <p>An apparent split pattern requires distinct physical purchase "
@@ -50,12 +54,19 @@ def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> 
             "  <p>A snapshot older than 24 hours is marked stale as a review-refresh "
             "heuristic. This threshold is not an ECS business rule or a fulfillment "
             "service-level agreement.</p>\n"
-            "  <p>The default worklist includes only orders with an eligible captured "
-            "sales-rep scope. Confirmed other-rep assignments are excluded; missing, "
-            "conflicting or unmapped rep values are held for verification. DOI "
+            "  <p>The default worklist includes apparent patterns and held "
+            "ready/waiting review leads, with eligible or held captured sales-rep "
+            "scope. Confirmed other-rep assignments are excluded. Rep, capture and "
+            "currency holds remain in force; inclusion does not grant eligibility. DOI "
             "reviewer assignment is separate from the order-level ECS Sales Rep. Mixed "
             "and non-drop-ship orders remain supported. Rep scope does not determine "
             "fulfillment readiness, shipping dates or sales-credit entitlement.</p>\n"
+            "  <p>Held ready/waiting patterns are diagnostic purchased-line labels "
+            "with the assignment hold set aside only for finding review leads. "
+            "The original held status remains visible. Stock-counter clues have a "
+            "separate review group: captured on-hand stock below ordered quantity "
+            "does not establish remaining units, allocation or shipment readiness. "
+            "Hide reviewed applies to every group and rep scope.</p>\n"
             "  <p>Unknown fields remain unknown. Product ETA and current stock are "
             "distinct captured fields. Stock at order time and order date have not "
             "been verified or captured. Service/charge purchases are counted "
@@ -126,6 +137,7 @@ def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> 
             '  <div class="dashboard-filter doi-filters"><label '
             'class="dashboard-field"><span>Captured rep scope</span>\n'
             '    <select id="doi-rep-scope">\n'
+            '      <option value="review_leads">Eligible and held for verification</option>\n'
             '      <option value="eligible">Eligible for my review</option>\n'
             '      <option value="other">Excluded: confirmed other rep</option>\n'
             '      <option value="held">Held: verify rep assignment</option>\n'
@@ -133,6 +145,9 @@ def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> 
             "    </select>\n"
             '  </label><label class="dashboard-field"><span>Review group</span>\n'
             '    <select id="doi-group">\n'
+            '      <option value="review_leads">Apparent and held ready/waiting patterns</option>\n'
+            '      <option value="HELD_MIXED_LABELS">Held ready/waiting patterns</option>\n'
+            '      <option value="STOCK_COUNTER_CLUE">Stock-counter clues only</option>\n'
             '      <option value="APPARENT_SPLIT_CANDIDATE">Apparent ready/waiting '
             "pattern</option>\n"
             '      <option value="all">All split statuses</option>\n'
@@ -162,8 +177,8 @@ def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> 
             "    <table><caption>Captured order split-review worklist</caption>\n"
             '    <thead><tr><th scope="col">Order</th><th scope="col">Reviewed for split</th>'
             '<th scope="col">Full captured '
-            'total</th><th scope="col">Split status</th><th scope="col">Ready / '
-            'waiting</th><th scope="col">Next verification and '
+            'total</th><th scope="col">Split status and holds</th><th scope="col">Purchased-line '
+            'evidence</th><th scope="col">Next verification and '
             "evidence</th></tr></thead>\n"
             '    <tbody id="doi-orders"></tbody></table>\n'
             "  </div>\n"

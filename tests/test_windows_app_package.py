@@ -81,6 +81,9 @@ class WindowsApplicationPackageTests(unittest.TestCase):
             self.assertIn("docs/single-owner-pilots.md", inventory)
             self.assertIn("docs/adr/0046-single-owner-two-pilot-coordinator.md", inventory)
             self.assertIn("docs/adr/0048-coordinator-duplicate-preflight-binding.md", inventory)
+            self.assertIn("docs/adr/0049-email-customer-association.md", inventory)
+            self.assertIn("docs/adr/0050-advisory-split-review-discovery.md", inventory)
+            self.assertIn("docs/split-review-discovery.md", inventory)
             self.assertIn("docs/consolidated-review-candidate.md", inventory)
 
     def test_extracted_payload_verifies_and_detects_runtime_tampering(self) -> None:

@@ -410,7 +410,7 @@ class TriageEvidenceTests(unittest.TestCase):
         self.assertEqual(state['status'], 'error')
         self.assertEqual(state['error_code'], 'REVIEW_RESPONSE_LIMIT')
         self.assertEqual(state['orders'], [])
-        self.assertEqual(state['schema'], 'doi-csv-review/v5')
+        self.assertEqual(state['schema'], 'doi-csv-review/v6')
 
     def test_closed_response_rejects_forged_reference_ordinal_and_scope(self):
         session = DOIReviewSession(as_of=lambda: AS_OF)

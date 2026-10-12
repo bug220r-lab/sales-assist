@@ -1,19 +1,25 @@
 """Build synthetic-only frontend validation input; never launch a service."""
 
-import argparse, json, sys
+# Source and test import paths must be installed before local module imports.
+# ruff: noqa: E402
+
+import argparse
+import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 sys.path[:0] = [str(ROOT), str(ROOT / 'src'), str(ROOT / 'tests')]
-from tests.test_csv_staging_independent import summary, line, csv_text
-from doi_csv_staging import SUMMARY_HEADERS, LINE_HEADERS
+from tests.test_csv_staging_independent import csv_text, line, summary
+from tests.test_doi_discovery_frontend import discovery_fixture
+
+from doi_csv_staging import LINE_HEADERS, SUMMARY_HEADERS
 from doi_csv_staging.review import DOIReviewSession
 from synthetic_sales_assist.portal.doi_csv_review_ui import (
     DOI_CSV_REVIEW_JS,
     render_doi_csv_review_page,
 )
-from synthetic_sales_assist.portal.dashboard_rendering import render_doi_queue
 
 
 def pair(stamp='2026-10-05T10:00:00-04:00', waiting='Back Ordered'):
@@ -57,6 +63,9 @@ shell = {
     and 'value="currency_conflict"' in restricted,
     'currency_conflict_counter': 'id="doi-currency-summary"' in normal
     and 'id="doi-currency-summary"' in restricted,
+    'discovery_default_scopes': 'value="review_leads">Eligible and held for verification' in normal
+    and 'value="review_leads">Apparent and held ready/waiting patterns' in restricted,
+    'separate_stock_clues': 'value="STOCK_COUNTER_CLUE">Stock-counter clues only' in normal,
 }
 assert all(shell.values())
 payload = {
@@ -65,6 +74,7 @@ payload = {
     'empty': DOIReviewSession().snapshot(),
     'utc_cross_midnight': state('2026-10-06T00:30:00Z', 'Ships on Oct 5, 2026'),
     'shell_checks': shell,
+    'discovery': discovery_fixture(),
 }
 # Future capture would be held. Keep this synthetic clock after both captures.
 session = DOIReviewSession(as_of=lambda: '2026-10-06T01:00:00Z')
@@ -84,7 +94,7 @@ args.output.write_text(json.dumps(payload, ensure_ascii=True), encoding='utf-8')
 print(
     json.dumps(
         {
-            'synthetic_states': 3,
+            'synthetic_states': 4,
             'shell_render_checks': len(shell),
             'all_shell_checks_passed': True,
             'browser_launched': False,

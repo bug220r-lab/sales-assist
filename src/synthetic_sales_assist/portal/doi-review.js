@@ -32,6 +32,8 @@
   const scopeLabels = {OWNER:"Your rep assignment was captured",UNASSIGNED_WEB:"Captured unassigned web",OTHER_REP:"Excluded: another confirmed rep",FIELD_UNVERIFIED:"Held: rep field unverified",REP_MISSING:"Held: rep value missing",REP_UNMAPPED:"Held: rep value unmapped",REP_CONFLICT:"Held: conflicting rep observations",CAPTURE_UNVERIFIED:"Held: capture provenance unverified"};
   const eligibleScope = value => value === "OWNER" || value === "UNASSIGNED_WEB";
   const splitLabels = {CONFIRMED_SPLIT_CRITERIA:"Confirmed split criteria",APPARENT_SPLIT_CANDIDATE:"Apparent ready/waiting pattern",INSUFFICIENT_SPLIT_EVIDENCE:"Insufficient split evidence",NO_SPLIT_PATTERN:"No observed split pattern",CAPTURE_HELD:"Capture held"};
+  const discoveryLabels = {NONE:"",HELD_MIXED_LABELS:"Held ready/waiting pattern",STOCK_COUNTER_CLUE:"Stock-counter clue only"};
+  const discoveryBlockingHolds = new Set("STRUCTURAL_COVERAGE_INCOMPLETE LINE_STRUCTURE_CONFLICT LINE_STRUCTURE_UNRESOLVED MISSING_LINE_ID DUPLICATE_LINE_ID INVALID_COMPONENT_PARENT MISSING_COMPONENT_PARENT CONFLICTING_LINE DUPLICATE_SUMMARY CONFLICTING_SUMMARY SOURCE_JOIN_MISMATCH TIMESTAMP_MISMATCH TIMESTAMP_INVALID_OR_NAIVE TIMESTAMP_RANGE_UNSUPPORTED TIMEZONE_MISMATCH UTC_OFFSET_MISMATCH SUMMARY_LINE_COUNT_MISMATCH PAGINATION_COVERAGE_UNVERIFIED REVIEW_ASSIGNMENT_UNVERIFIED MISSING_HEADER DUPLICATE_HEADER MISSING_COLUMN UNEXPECTED_COLUMN MALFORMED_CSV MALFORMED_ROW_WIDTH INVALID_ORDER_ID CSV_INPUT_TYPE CSV_FORMULA_RISK GLOBAL_INPUT_HOLD ORDER_CAPTURE_INCOMPLETE DISPLAYED_ORDER_ID_UNVERIFIED".split(" "));
   const splitReasons = new Set("DISTINCT_READY_WAITING_LINES LABELS_ONLY NOT_CONFIRMED_FULL CAPTURE_COHERENCE_HOLD TERMINAL_ORDER_OBSERVED KNOWN_DS_EXCLUDED ZERO_REMAINING_EXCLUDED KIT_EVIDENCE_UNRESOLVED STOCK_LABEL_CONFLICT NO_DISTINCT_SPLIT_PATTERN TOTAL_INVALID TOTAL_MISMATCH TOTAL_UNKNOWN".split(" "));
   const splitMissing = new Set("ACTIVE_QUANTITY_UNVERIFIED FULL_ALLOCATION_NOT_CAPTURED DS_UNVERIFIED CURRENT_STOCK_UNVERIFIED KIT_COMPONENT_SCOPE_UNVERIFIED".split(" "));
   const currencySymbols = new Set(["$","US$","CA$","C$","A$","AU$","NZ$","USD","CAD","AUD","NZD","EUR","GBP","JPY","€","£","¥"]);
@@ -86,6 +88,33 @@
       &&t.ready_line_ordinals.every(n=>{const item=t.line_items.find(line=>line.record_ordinal===n);return item.ds!=="YES"&&["in stock","instock","ships today","shipstoday"].includes((item.current_stock||"").toLowerCase());})
       &&t.waiting_line_ordinals.every(n=>{const item=t.line_items.find(line=>line.record_ordinal===n);return item.ds!=="YES"&&waitingObserved(item.current_stock,order);});
   }
+  function validDiscovery(d,order,globalHeld=false) {
+    if(!exactKeys(d,["schema","category","ready_line_ordinals","waiting_line_ordinals","kit_dependent","stock_clues","quantity_verified","decision_eligible"])
+      ||d.schema!=="doi-split-discovery/v1"||typeof d.category!=="string"||!Object.hasOwn(discoveryLabels,d.category)
+      ||typeof d.kit_dependent!=="boolean"||d.quantity_verified!==false||d.decision_eligible!==false
+      ||![d.ready_line_ordinals,d.waiting_line_ordinals].every(references)
+      ||!Array.isArray(d.stock_clues)||d.stock_clues.length>5000)return false;
+    const items=new Map(order.split.line_items.map(item=>[item.record_ordinal,item]));
+    const physical=n=>natural(n)&&n>=2&&n<=5001&&items.has(n)&&items.get(n).ds!=="YES";
+    const sides=[...d.ready_line_ordinals,...d.waiting_line_ordinals];
+    if(sides.length>5000||new Set(sides).size!==sides.length||!sides.every(physical))return false;
+    const units=value=>{const [whole,fraction=""]=value.split(".");return BigInt(whole+fraction.padEnd(6,"0"));};
+    if(!d.stock_clues.every(clue=>exactKeys(clue,["record_ordinal","ordered","oh"])&&physical(clue.record_ordinal)
+      &&canonicalAmount(clue.ordered)===clue.ordered&&canonicalAmount(clue.oh)===clue.oh
+      &&clue.ordered!==null&&clue.oh!==null&&units(clue.oh)>0n&&units(clue.oh)<units(clue.ordered))
+      ||new Set(d.stock_clues.map(clue=>clue.record_ordinal)).size!==d.stock_clues.length)return false;
+    if(d.category==="NONE")return !sides.length&&!d.stock_clues.length&&!d.kit_dependent;
+    if(globalHeld||!order.visible_coverage_complete||order.holds.some(code=>discoveryBlockingHolds.has(code))
+      ||["UNVERIFIED","FUTURE_CAPTURE"].includes(order.evidence.snapshot_age_status)
+      ||order.split.reason_codes.includes("TERMINAL_ORDER_OBSERVED")||order.split.status==="APPARENT_SPLIT_CANDIDATE")return false;
+    if(d.category==="STOCK_COUNTER_CLUE")return !sides.length&&!d.kit_dependent&&d.stock_clues.length>0
+      &&order.split.status!=="APPARENT_SPLIT_CANDIDATE";
+    return d.ready_line_ordinals.length>0&&d.waiting_line_ordinals.length>0&&!d.stock_clues.length
+      &&order.split.status==="CAPTURE_HELD"&&order.visible_coverage_complete
+      &&order.holds.includes("SOURCE_ASSIGNMENT_CONFLICT_OR_UNKNOWN")
+      &&d.ready_line_ordinals.every(n=>["in stock","instock","ships today","shipstoday"].includes((items.get(n).current_stock||"").toLowerCase()))
+      &&d.waiting_line_ordinals.every(n=>waitingObserved(items.get(n).current_stock,order));
+  }
   const natural = value => Number.isSafeInteger(value) && value >= 0;
   const references = value => Array.isArray(value) && value.length <= 5000 && value.every(x => natural(x) && x >= 2);
   const codeList = value => Array.isArray(value) && value.length <= 256 && value.every(fixedCode);
@@ -106,7 +135,8 @@
     return sourceCompare(a,b);
   }
   function matchesRepScope(order,repFilter) {
-    return repFilter==="all"||repFilter==="eligible"&&eligibleScope(order.rep_scope)
+    return repFilter==="all"||repFilter==="review_leads"&&order.rep_scope!=="OTHER_REP"
+      ||repFilter==="eligible"&&eligibleScope(order.rep_scope)
       ||repFilter==="other"&&order.rep_scope==="OTHER_REP"
       ||repFilter==="held"&&!eligibleScope(order.rep_scope)&&order.rep_scope!=="OTHER_REP";
   }
@@ -117,7 +147,10 @@
   function worklistOrders(orders,repFilter,splitFilter,sortMode) {
     const picked=orders.filter(o=>matchesRepScope(o,repFilter)
       &&(repFilter!=="eligible"||o.currency[2]!=="CONFLICT"||splitFilter==="currency_conflict")
-      &&(splitFilter==="all"||o.split.status===splitFilter||splitFilter==="currency_conflict"&&o.currency[2]==="CONFLICT"||splitFilter==="missing_evidence"&&!o.evidence_complete
+      &&(splitFilter==="all"||o.split.status===splitFilter
+      ||splitFilter==="review_leads"&&(o.split.status==="APPARENT_SPLIT_CANDIDATE"||o.discovery.category==="HELD_MIXED_LABELS")
+      ||["HELD_MIXED_LABELS","STOCK_COUNTER_CLUE"].includes(splitFilter)&&o.discovery.category===splitFilter
+      ||splitFilter==="currency_conflict"&&o.currency[2]==="CONFLICT"||splitFilter==="missing_evidence"&&!o.evidence_complete
       ||splitFilter==="coverage_held"&&!o.visible_coverage_complete||splitFilter==="batch_quarantine"&&o.holds.includes("GLOBAL_INPUT_HOLD")));
     const ranks={APPARENT_SPLIT_CANDIDATE:0,INSUFFICIENT_SPLIT_EVIDENCE:1,NO_SPLIT_PATTERN:2,CAPTURE_HELD:3};
     return picked.sort(sortMode==="source"?sourceCompare:sortMode==="priority"?(a,b)=>ranks[a.split.status]-ranks[b.split.status]||totalCompare(a,b):totalCompare);
@@ -202,12 +235,12 @@
   }
   function validState(s) {
     return exactKeys(s,["schema", "revision", "status", "counts", "groups", "orders", "batch_holds", "error_code", "expires_in_seconds", "split_review", "ownership_review"])
-      && s.schema === "doi-csv-review/v5" && natural(s.revision) && statuses.has(s.status)
+      && s.schema === "doi-csv-review/v6" && natural(s.revision) && statuses.has(s.status)
       && natural(s.expires_in_seconds) && s.counts && Object.keys(countLabels).every(k => natural(s.counts[k]))
       && s.groups && natural(s.groups.review) && natural(s.groups.quarantined)
       && codeList(s.batch_holds) && (s.error_code === null || fixedCode(s.error_code))
       && Array.isArray(s.orders) && s.orders.length <= __DOI_ORDER_LIMIT__ && s.orders.every(o =>
-        exactKeys(o,["order_id", "rep_scope", "currency", "summary_record_ordinals", "line_record_ordinals", "visible_coverage_complete", "evidence_complete", "decision_eligible", "holds", "reviewer_assignment", "sales_credit_observed", "sales_credit_entitlement", "split", "evidence",...(o.rep_confirmation===undefined?[]:["rep_confirmation"])])
+        exactKeys(o,["order_id", "rep_scope", "currency", "summary_record_ordinals", "line_record_ordinals", "visible_coverage_complete", "evidence_complete", "decision_eligible", "holds", "reviewer_assignment", "sales_credit_observed", "sales_credit_entitlement", "split", "evidence", "discovery",...(o.rep_confirmation===undefined?[]:["rep_confirmation"])])
         && typeof o.rep_scope === "string" && Object.hasOwn(scopeLabels,o.rep_scope)
         && typeof o.order_id === "string" && /^[1-9][0-9]{0,127}$/.test(o.order_id)
         && references(o.summary_record_ordinals) && references(o.line_record_ordinals)
@@ -215,7 +248,7 @@
         && o.decision_eligible === false && codeList(o.holds)
         && (o.reviewer_assignment === "Jude" || o.reviewer_assignment === null)
         && ["OBSERVED", "UNKNOWN"].includes(o.sales_credit_observed)
-        && o.sales_credit_entitlement === "UNINTERPRETED" && validSplit(o.split,o) && validEvidence(o.evidence)
+        && o.sales_credit_entitlement === "UNINTERPRETED" && validSplit(o.split,o) && validEvidence(o.evidence) && validDiscovery(o.discovery,o,s.batch_holds.length>0)
         &&validCurrency(o.currency)&&(o.currency[2]==="CONFLICT")===o.holds.includes("CURRENCY_CONFLICT")&&validConfirmation(o,s.split_review?.as_of)
         && o.evidence.evidence_references.every(ref => (ref.scope === "summary" ? o.summary_record_ordinals : o.line_record_ordinals).includes(ref.record_ordinal)))
       && validContext(s.split_review, s.orders.length)
@@ -257,11 +290,15 @@
     return `${t.status.toLowerCase()}: ${t.displayed||"not captured"} (${code})`;
   }
   function nextCheck(order) {
-    if(!eligibleScope(order.rep_scope))return scopeLabels[order.rep_scope]+". Outside the default worklist; reconcile the captured rep field.";
-    if(order.split.status==="CAPTURE_HELD") return "Resolve capture conflicts before split review.";
-    if(order.split.status==="APPARENT_SPLIT_CANDIDATE") return "Verify outstanding quantity, DS scope and full allocation for each side.";
-    if(order.split.status==="INSUFFICIENT_SPLIT_EVIDENCE") return "Verify missing stock or kit evidence and outstanding quantities.";
-    return "Verify source scope; no distinct ready/waiting pattern is established.";
+    if(order.rep_scope==="OTHER_REP")return "Excluded: another confirmed rep. Reconciliation only; the assignment remains unchanged.";
+    const prefix=(!eligibleScope(order.rep_scope)?scopeLabels[order.rep_scope]+". Reconcile the captured rep field. ":"")
+      +(order.currency[2]==="CONFLICT"?"Currency conflict: review remains held. ":"");
+    if(order.discovery.category==="HELD_MIXED_LABELS")return prefix+"Diagnostic purchased-line labels only. Resolve capture holds and verify remaining units, allocation and drop-ship scope before any split decision.";
+    if(order.discovery.category==="STOCK_COUNTER_CLUE")return prefix+"Compare captured stock and ordered quantity with current line evidence. Remaining units and allocation are unknown; this is not a ready/waiting split pattern.";
+    if(order.split.status==="CAPTURE_HELD") return prefix+"Resolve capture conflicts before split review.";
+    if(order.split.status==="APPARENT_SPLIT_CANDIDATE") return prefix+"Verify outstanding quantity, DS scope and full allocation for each side.";
+    if(order.split.status==="INSUFFICIENT_SPLIT_EVIDENCE") return prefix+"Verify missing stock or kit evidence and outstanding quantities.";
+    return prefix+"Verify source scope; no distinct ready/waiting pattern is established.";
   }
   function renderEvidence(td, order) {
     const e=order.evidence, split=order.split;
@@ -278,6 +315,18 @@
     };
     side("Apparent ready — allocation unverified",split.ready_line_ordinals);
     side("Apparent waiting — verify current label",split.waiting_line_ordinals);
+    const discovery=order.discovery;
+    if(discovery.category==="HELD_MIXED_LABELS") {
+      add(details,"p","Held review lead only. These diagnostic labels set aside only the assignment hold; the original classification and every hold remain unchanged.");
+      side("Diagnostic ready purchased lines - not verified ready",discovery.ready_line_ordinals);
+      side("Diagnostic waiting purchased lines - holds remain",discovery.waiting_line_ordinals);
+      add(details,"p",discovery.kit_dependent?"Kit parent needed for this pattern. Verify the complete kit and component scope.":"The diagnostic pattern has independent non-kit purchased lines.");
+    }
+    if(discovery.category==="STOCK_COUNTER_CLUE") {
+      add(details,"h3","Stock-counter clues only - no allocation established");
+      const clues=add(details,"ul","");
+      for(const clue of discovery.stock_clues)add(clues,"li",`Lines record ${clue.record_ordinal}: captured OH ${clue.oh}; captured ordered quantity ${clue.ordered}. Remaining units, allocation and drop-ship scope remain unverified.`);
+    }
     if(split.unresolved_line_ordinals.length)side("Unresolved source records",split.unresolved_line_ordinals);
     const assigned=new Set([...split.ready_line_ordinals,...split.waiting_line_ordinals,...split.unresolved_line_ordinals]);
     const other=split.line_items.filter(item=>!assigned.has(item.record_ordinal)).map(item=>item.record_ordinal);
@@ -391,7 +440,12 @@
     for(const order of picked) {
       const tr=add(body,"tr","");tr.dataset.orderId=order.order_id;const orderCell=add(tr,"td",order.order_id),draftButton=add(orderCell,"button","Alternate email");draftButton.type="button";draftButton.addEventListener("click",()=>window.dispatchEvent(new CustomEvent("ssa-alternate-order",{detail:{order_id:order.order_id,revision}})));renderReviewed(add(tr,"td",""),order);add(tr,"td",totalLabel(order.split.total,order.currency));
       const statusCell=add(tr,"td","");add(statusCell,"span",splitLabels[order.split.status]).className="dashboard-state";
-      add(tr,"td",`${order.split.ready_line_ordinals.length} apparent ready / ${order.split.waiting_line_ordinals.length} apparent waiting${order.split.unresolved_line_ordinals.length?" / "+order.split.unresolved_line_ordinals.length+" unresolved":""}`);
+      add(statusCell,"p",scopeLabels[order.rep_scope]);
+      if(order.currency[2]==="CONFLICT")add(statusCell,"p","Currency conflict: review held").className="dashboard-warning";
+      if(order.discovery.category!=="NONE")add(statusCell,"p",discoveryLabels[order.discovery.category]+" - review lead only").className="dashboard-state";
+      const evidenceCell=add(tr,"td",`${order.split.ready_line_ordinals.length} apparent ready / ${order.split.waiting_line_ordinals.length} apparent waiting${order.split.unresolved_line_ordinals.length?" / "+order.split.unresolved_line_ordinals.length+" unresolved":""}`);
+      if(order.discovery.category==="HELD_MIXED_LABELS")add(evidenceCell,"p",`Diagnostic purchased-line labels: ${order.discovery.ready_line_ordinals.length} ready / ${order.discovery.waiting_line_ordinals.length} waiting; holds remain.${order.discovery.kit_dependent?" Kit-dependent pattern.":""}`);
+      if(order.discovery.category==="STOCK_COUNTER_CLUE")add(evidenceCell,"p",`${order.discovery.stock_clues.length} stock-counter clue${order.discovery.stock_clues.length===1?"":"s"}; allocation unverified.`);
       renderEvidence(add(tr,"td",""),order);
       if(expanded.has(order.order_id))tr.querySelector("details").open=true;
     }
