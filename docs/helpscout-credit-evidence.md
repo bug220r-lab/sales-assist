@@ -278,6 +278,10 @@ The reader has no persistent evidence store or raw body logging. Review output s
 contains sensitive source facts during an authorized live session; its caller must not
 serialize those facts into Git or general logs. It does not retrieve attachments, verify
 deleted/unavailable history, establish delivery, resolve every automated reply, or decide
-commercial relevance. There is no UI integration, automatic import, live activation,
-token issuance, or new persistent credential storage in this build. The explicit pilot
-bridge reads only an existing, approved snapshot after its ownership gates succeed.
+commercial relevance. The reader and cached-only pilot have no UI integration, automatic
+import, token issuance, or new persistent credential storage. The cached-only bridge reads
+an existing approved snapshot after its ownership gates succeed. The separate
+[single-owner coordinator](single-owner-pilots.md) adds source-only orchestration for two
+bounded pilots and an independently gated one-token issuance capability. Its default live
+path requires the original shared lock and explicit action-time authorization. Duplicate
+checks report their accessible mailbox scope rather than claiming global draft absence.
