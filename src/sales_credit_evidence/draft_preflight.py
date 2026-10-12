@@ -18,7 +18,7 @@ from datetime import UTC, datetime
 from typing import Any, Protocol
 from urllib.parse import urlsplit
 
-from .reader import EvidenceReader
+from .reader import Coverage, EvidenceReader, Issue, _url
 from .transport import (
     MAILBOX_ID,
     ReadClient,
@@ -44,10 +44,15 @@ DRAFT_PREFLIGHT_ERROR_CODES = frozenset(
         "draft_preflight_incomplete",
         "draft_existing_draft",
         "draft_existing_order_conversation",
+        "draft_customer_scope_invalid",
+        "draft_known_customer_identity_mismatch",
+        "draft_email_identity_ambiguous",
+        "draft_email_creation_not_authorized",
     }
 )
 _STATES = frozenset({"published", "draft", "deleted"})
 _STATUSES = frozenset({"active", "pending", "closed", "spam"})
+_EMAIL_CREATION_AUTHORITY = object()
 
 
 class DraftBundle(Protocol):
@@ -110,13 +115,14 @@ def _bundle_values(bundle: DraftBundle) -> tuple[str, str, str, str]:
 class DraftCustomerEvidence:
     """Only minted after complete checks; the proof contains no response bodies."""
 
-    customer_id: int
+    customer_id: int | None
     bundle_sha256: str
     recipient: str = field(repr=False)
     observed_at: datetime
     conversation_count: int
     thread_count: int
     _clock: Callable[[], datetime] = field(repr=False, compare=False)
+    _email_creation_authority: object = field(default=None, repr=False, compare=False)
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         raise ReadError("draft_evidence_not_verified")
@@ -125,6 +131,11 @@ class DraftCustomerEvidence:
         _, _, recipient, digest = _bundle_values(bundle)
         if recipient != self.recipient or digest != self.bundle_sha256:
             raise ReadError("draft_evidence_bundle_mismatch")
+        if (
+            self.customer_id is None
+            and self._email_creation_authority is not _EMAIL_CREATION_AUTHORITY
+        ):
+            raise ReadError("draft_email_creation_not_authorized")
         try:
             now = self._clock()
             if not _aware(now):
@@ -137,13 +148,54 @@ class DraftCustomerEvidence:
 
     def summary(self) -> dict[str, object]:
         return {
-            "identity_status": "EXACT",
+            "identity_status": "EXACT" if self.customer_id is not None else "APPROVED_EMAIL_ONLY",
             "complete": True,
-            "customer_count": 1,
+            "customer_count": int(self.customer_id is not None),
             "conversation_count": self.conversation_count,
             "thread_count": self.thread_count,
             "duplicate_check": "NO_MATCH_IN_ACCESSIBLE_MAILBOX_SNAPSHOT",
         }
+
+
+class _KnownCustomerReader(EvidenceReader):
+    """Resolve an explicitly selected ID through real GETs, without search rediscovery."""
+
+    def __init__(self, client: ReadClient, known_customer_id: int) -> None:
+        super().__init__(client, include_content=False, max_requests=50)
+        self.known_customer_id = known_customer_id
+        client.allow_customer(known_customer_id)
+
+    def _pages(
+        self, path: str, key: str, stage: str, record_id: int | None = None, **params: object
+    ) -> tuple[list[dict[str, Any]], bool]:
+        if path != "/v2/customers":
+            return super()._pages(path, key, stage, record_id, **params)
+        document = self._get(
+            _url(f"/v2/customers/{self.known_customer_id}"),
+            "known_customer_direct",
+            self.known_customer_id,
+        )
+        valid = (
+            document is not None
+            and type(document.get("id")) is int
+            and document["id"] == self.known_customer_id
+        )
+        if document is not None and not valid:
+            self._issues.append(
+                Issue("KNOWN_CUSTOMER_ID_MISMATCH", "known_customer_direct", self.known_customer_id)
+            )
+        self._coverage.append(
+            Coverage(
+                "known_customer_direct",
+                self.known_customer_id,
+                valid,
+                int(document is not None),
+                int(valid),
+                1,
+            )
+        )
+        # This is the actual direct customer document, not a synthetic search page.
+        return ([document], True) if document is not None and valid else ([], False)
 
 
 @dataclass(frozen=True)
@@ -230,8 +282,19 @@ def verify_customer_and_duplicates(
     *,
     transport: Transport | None = None,
     clock: Callable[[], datetime] = _now,
+    known_customer_id: int | None = None,
+    allow_email_customer: bool = False,
 ) -> DraftCustomerEvidence:
-    """Read one exact existing customer; fail closed before any draft side effect."""
+    """Verify one selected identity and complete duplicates before any draft side effect."""
+    if (
+        type(allow_email_customer) is not bool
+        or (
+            known_customer_id is not None
+            and (type(known_customer_id) is not int or not 1 <= known_customer_id < 2**63)
+        )
+        or (known_customer_id is not None and allow_email_customer)
+    ):
+        raise ReadError("draft_customer_scope_invalid")
     order_id, subject, recipient, digest = _bundle_values(bundle)
     observed_at = clock()
     if not _aware(observed_at):
@@ -245,9 +308,52 @@ def verify_customer_and_duplicates(
         max_attempts=1,
         expiry_margin_seconds=120,
     )
-    result = EvidenceReader(client, include_content=False, max_requests=50).read()
+    reader = (
+        _KnownCustomerReader(client, known_customer_id)
+        if known_customer_id is not None
+        else EvidenceReader(client, include_content=False, max_requests=50)
+    )
+    result = reader.read()
     if result.identity_status == "NO_EXACT_CUSTOMER":
-        raise ReadError("draft_existing_customer_missing")
+        if known_customer_id is not None:
+            raise ReadError("draft_known_customer_identity_mismatch")
+        if not allow_email_customer:
+            raise ReadError("draft_existing_customer_missing")
+        if not result.complete:
+            raise ReadError("draft_preflight_incomplete")
+        candidates, complete = reader._pages(
+            "/v2/conversations",
+            "conversations",
+            "email_duplicate_check",
+            mailbox=MAILBOX_ID,
+            status="all",
+            query=f'(email:"{recipient}")',
+        )
+        if not complete or reader._issues:
+            raise ReadError("draft_preflight_incomplete")
+        order_pattern = re.compile(rf"(?<![0-9]){re.escape(order_id)}(?![0-9])")
+        for metadata in client.metadata.values():
+            if metadata.state == "draft":
+                raise ReadError("draft_existing_draft")
+            if _subject(metadata.subject) == subject or order_pattern.search(metadata.subject):
+                raise ReadError("draft_existing_order_conversation")
+        if candidates:
+            # A conversation with an unresolved profile is an identity hold.
+            raise ReadError("draft_email_identity_ambiguous")
+        evidence = object.__new__(DraftCustomerEvidence)
+        for name, value in {
+            "customer_id": None,
+            "bundle_sha256": digest,
+            "recipient": recipient,
+            "observed_at": observed_at,
+            "conversation_count": 0,
+            "thread_count": 0,
+            "_clock": clock,
+            "_email_creation_authority": _EMAIL_CREATION_AUTHORITY,
+        }.items():
+            object.__setattr__(evidence, name, value)
+        evidence.assert_for(bundle)
+        return evidence
     if result.identity_status == "AMBIGUOUS":
         raise ReadError("draft_existing_customer_ambiguous")
     if result.identity_status != "EXACT" or not result.complete or len(result.customers) != 1:

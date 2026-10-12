@@ -173,7 +173,6 @@ def test_exact_identity_uses_dedicated_emails_and_casefold_not_search_hit():
         assert "Authorization" not in headers
         if parsed.path == "/v2/customers":
             assert query == {
-                "mailbox": [str(MAILBOX_ID)],
                 "query": [f'(email:"{EMAIL}")'],
                 "page": ["1"],
             }

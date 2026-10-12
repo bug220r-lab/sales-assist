@@ -155,7 +155,7 @@ general-purpose URL-fetch capability is exposed.
 
 | Stage | Request and evidence rule |
 |---|---|
-| Identity search | `GET /v2/customers?mailbox=166170&query=(email:"person@example.test")`. URL-encode query values; traverse all pages before declaring no exact match. |
+| Identity search | `GET /v2/customers?query=(email:"person@example.test")`. URL-encode query values; traverse all pages before declaring no exact match. |
 | Customer identity detail | `GET /v2/customers/{id}/emails` for every scoped search candidate. This endpoint is an unpaginated collection: no `page` query or metadata. Email objects use `id` and `value` under `_embedded.emails`. Missing/malformed collections or unexpected pagination leave identity coverage incomplete. |
 | Conversation discovery | `GET /v2/conversations?mailbox=166170&status=all&query=(customerIds:123)`. Proceed only with one unambiguous exact customer; deduplicate conversations and verify native customer identity and `mailboxId` before fetching threads. |
 | History | `GET /v2/conversations/{id}/threads`. Retrieve separate thread pages; embedded conversation threads are not a completeness proof. Retain native conversation and thread IDs. |
@@ -225,7 +225,7 @@ they do not authorize conclusions that require complete coverage.
 | Result condition | Permitted interpretation |
 |---|---|
 | Every required page succeeds, validates, and terminates | Complete traversal of currently accessible results in the stated scope. |
-| Exact identity search completes with zero exact matches | No exact customer identity found in this accessible mailbox search. |
+| Exact identity search completes with zero exact matches | No exact customer identity found in this accessible global email search. |
 | Verified identity and every conversation page complete with no conversations | No matching accessible conversations found for that identity and mailbox. |
 | Any page fails, loops, violates scope, or has contradictory metadata | Partial/failed coverage; never convert the failure into a negative finding. |
 | Multiple exact customer identities or conflicting identity facts | Ambiguous identity; preserve candidates and block dependent attribution. |

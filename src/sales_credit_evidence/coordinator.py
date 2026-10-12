@@ -35,6 +35,8 @@ class CoordinatorRequest:
     allow_draft: bool = False
     ownership: str = ""
     sole_owner_confirmed: bool = False
+    known_customer_id: int | None = field(default=None, repr=False)
+    allow_email_customer: bool = False
 
 
 def _now() -> datetime:
@@ -128,6 +130,13 @@ def _draft_summary(value: object) -> dict[str, object]:
     identifier = value.get("conversation_id")
     if type(identifier) is str and re.fullmatch(r"[1-9][0-9]{0,18}", identifier):
         result["conversation_id"] = identifier
+        if state == "CREATED" and code == "DRAFT_CREATED_VERIFIED":
+            from doi_draft_transfer import helpscout as helpscout_module
+
+            helper: Any = helpscout_module
+            link = helper.safe_web_link(value.get("web_link"), identifier)
+            if link is not None:
+                result["web_link"] = link
     return result
 
 
@@ -157,6 +166,18 @@ def run_coordinator(
         return _report("BLOCKED", "one_draft_authorization_required")
     if type(request.allow_issuance) is not bool:
         return _report("BLOCKED", "invalid_issuance_activation")
+    if (
+        type(request.allow_email_customer) is not bool
+        or (
+            request.known_customer_id is not None
+            and (
+                type(request.known_customer_id) is not int
+                or not 1 <= request.known_customer_id < 2**63
+            )
+        )
+        or (request.known_customer_id is not None and request.allow_email_customer)
+    ):
+        return _report("BLOCKED", "invalid_customer_scope")
     if type(request.ownership) is not str or request.ownership not in OWNERSHIP_STATES:
         return _report("BLOCKED", "ownership_required")
     if request.sole_owner_confirmed is not True:
@@ -197,7 +218,14 @@ def run_coordinator(
         return EvidenceReader(client, include_content=False, max_requests=50).read()
 
     def check_draft(bundle: Any, credential: SuppliedCredential) -> Any:
-        return verify_customer_and_duplicates(bundle, credential, transport=transport, clock=clock)
+        return verify_customer_and_duplicates(
+            bundle,
+            credential,
+            transport=transport,
+            clock=clock,
+            known_customer_id=request.known_customer_id,
+            allow_email_customer=request.allow_email_customer,
+        )
 
     # Imports are inert; all default resource construction below follows gates.
     leases: list[tuple[str, Any]] = []
@@ -338,7 +366,13 @@ def main(argv: list[str] | None = None) -> int:
         description="Single-owner pilots. Default off; fresh external handoff required.",
         allow_abbrev=False,
     )
-    for flag in ("live", "allow-one-issuance", "allow-one-draft", "confirm-sole-owner"):
+    for flag in (
+        "live",
+        "allow-one-issuance",
+        "allow-one-draft",
+        "confirm-sole-owner",
+        "allow-email-customer",
+    ):
         parser.add_argument("--" + flag, action="count", default=0)
     for flag in (
         "credit-email",
@@ -348,6 +382,7 @@ def main(argv: list[str] | None = None) -> int:
         "approval-bundle-sha256",
         "ledger-path",
         "ownership",
+        "known-customer-id",
     ):
         parser.add_argument("--" + flag, action="append")
     try:
@@ -356,6 +391,11 @@ def main(argv: list[str] | None = None) -> int:
             value > 1 if type(value) is int else len(value) != 1
             for value in args.values()
             if value is not None
+        ):
+            raise _ArgumentError
+        if (
+            args["known_customer_id"]
+            and re.fullmatch(r"[1-9][0-9]{0,18}", args["known_customer_id"][0]) is None
         ):
             raise _ArgumentError
         result = run_coordinator(
@@ -376,6 +416,10 @@ def main(argv: list[str] | None = None) -> int:
                 allow_issuance=bool(args["allow_one_issuance"]),
                 allow_draft=bool(args["allow_one_draft"]),
                 sole_owner_confirmed=bool(args["confirm_sole_owner"]),
+                known_customer_id=(
+                    int(args["known_customer_id"][0]) if args["known_customer_id"] else None
+                ),
+                allow_email_customer=bool(args["allow_email_customer"]),
             )
         )
     except _ArgumentError:

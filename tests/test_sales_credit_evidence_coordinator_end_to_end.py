@@ -69,7 +69,9 @@ class FakeLease:
 
 
 class Harness:
-    def __init__(self, tmp_path: Path, *, unknown_post: bool = False) -> None:
+    def __init__(
+        self, tmp_path: Path, *, unknown_post: bool = False, customer_mode: str = "existing"
+    ) -> None:
         self.row = synthetic_row()
         approved_document = make_approved_bundle(
             self.row, verified_review(), version=2, source_approval_ref="SYN-E2E-APPROVAL-001"
@@ -80,6 +82,7 @@ class Harness:
         self.bundle_hash = hashlib.sha256(raw).hexdigest()
         self.ledger_path = tmp_path / FILENAME
         self.unknown_post = unknown_post
+        self.customer_mode = customer_mode
         self.events: list[str] = []
         self.cleanup: FakeLease | None = None
         self.session: FakeLease | None = None
@@ -168,14 +171,23 @@ class Harness:
         self.read_calls.append((method, parsed.path, query))
         emails = {CREDIT_CUSTOMER: CREDIT_EMAIL, DRAFT_CUSTOMER: self.row["recipient_email"]}
         if parsed.path == "/v2/customers":
-            assert query["mailbox"] == [str(MAILBOX_ID)] and query["page"] == ["1"]
+            assert "mailbox" not in query and query["page"] == ["1"]
             matching = [
                 key for key, email in emails.items() if query["query"] == [f'(email:"{email}")']
             ]
             assert len(matching) == 1
             identifier = matching[0]
             self.events.append("credit.search" if identifier == CREDIT_CUSTOMER else "draft.search")
-            value = page("customers", [{"id": identifier}])
+            value = page(
+                "customers",
+                []
+                if identifier == DRAFT_CUSTOMER and self.customer_mode == "email"
+                else [{"id": identifier}],
+            )
+        elif parsed.path == f"/v2/customers/{DRAFT_CUSTOMER}":
+            assert self.customer_mode == "known" and not query
+            self.events.append("draft.direct")
+            value = {"id": DRAFT_CUSTOMER}
         elif parsed.path.endswith("/emails"):
             identifier = int(parsed.path.split("/")[-2])
             assert not query and identifier in emails
@@ -188,6 +200,7 @@ class Harness:
             assert query["query"] in (
                 [f"(customerIds:{CREDIT_CUSTOMER})"],
                 [f"(customerIds:{DRAFT_CUSTOMER})"],
+                [f'(email:"{self.row["recipient_email"]}")'],
             )
             self.events.append(
                 "credit.complete"
@@ -209,7 +222,7 @@ class Harness:
     ) -> OneDraftClient:
         self.assert_held()
         assert type(bundle) is ApprovedDraft and type(evidence) is DraftCustomerEvidence
-        assert evidence.customer_id == DRAFT_CUSTOMER
+        assert evidence.customer_id == (None if self.customer_mode == "email" else DRAFT_CUSTOMER)
         assert evidence.summary()["complete"] is True
         assert "credit.complete" in self.events and "draft.preflight.complete" in self.events
         self.credentials.append(credential)
@@ -251,8 +264,13 @@ class Harness:
             assert persisted["transfer"]["state"] == "IN_FLIGHT"
             assert persisted["transfer"]["attempt"] == 1
             assert sum(event["kind"] == "TRANSFER_RESERVED" for event in audit) == 1
-            assert payload["customer"] == {"id": DRAFT_CUSTOMER}
-            assert payload["threads"][0]["customer"] == {"id": DRAFT_CUSTOMER}
+            expected_customer = (
+                {"email": self.row["recipient_email"]}
+                if self.customer_mode == "email"
+                else {"id": DRAFT_CUSTOMER}
+            )
+            assert payload["customer"] == expected_customer
+            assert payload["threads"][0]["customer"] == expected_customer
             assert payload["threads"][0]["draft"] is True and payload["autoReply"] is False
             assert len(payload["threads"]) == 1
             assert payload["threads"][0]["text"] == contract.rendered_body(
@@ -362,3 +380,31 @@ def test_coordinator_remains_default_off_before_auth_or_ledger_access(tmp_path: 
     assert harness.events == [] and harness.auth_reads == 0
     assert harness.read_calls == [] and harness.post_payloads == []
     assert not harness.ledger_path.exists()
+
+
+@pytest.mark.parametrize("customer_mode", ["known", "email"])
+@pytest.mark.parametrize("unknown_post", [False, True])
+def test_selected_identity_modes_keep_one_session_and_durable_no_retry(
+    tmp_path: Path, customer_mode: str, unknown_post: bool
+) -> None:
+    harness = Harness(tmp_path, customer_mode=customer_mode, unknown_post=unknown_post)
+    request = replace(
+        harness.request(),
+        known_customer_id=DRAFT_CUSTOMER if customer_mode == "known" else None,
+        allow_email_customer=customer_mode == "email",
+    )
+    first = harness.run(request)
+    assert first["draft_result"]["state"] == ("UNKNOWN" if unknown_post else "CREATED")
+    assert first["draft_result"]["retry_allowed"] is False
+    assert harness.auth_reads == harness.decryptions == len(harness.owners) == 1
+    assert len(harness.post_payloads) == 1
+    stored, audit = harness.persisted()
+    assert stored["transfer"]["attempt"] == 1
+    assert sum(event["kind"] == "TRANSFER_RESERVED" for event in audit) == 1
+    if customer_mode == "known":
+        assert "draft.direct" in harness.events and "draft.search" not in harness.events
+    else:
+        assert "implicit_contact_creation_authorized" in stored["review"]["duplicate_evidence"]
+    second = harness.run(request)
+    assert second["draft_result"] == first["draft_result"]
+    assert len(harness.post_payloads) == 1
