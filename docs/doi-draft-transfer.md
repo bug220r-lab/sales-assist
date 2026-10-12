@@ -153,8 +153,8 @@ and known draft IDs retain their no-repeat-create protection.
 
 See the [conditional-readiness audit](doi-draft-transfer-readiness.md) for the
 separate launch, factual, cart and customer-decision gates, and the
-[managed-authentication proposal](doi-draft-transfer-auth-proposal.md) for a future
-single-owner renewal design. That proposal is not implemented or activated.
+[session-authentication design](doi-draft-transfer-auth-proposal.md) for the implemented,
+disabled-by-default single-owner renewal provider. Live activation remains separately gated.
 
 API transfer is off by default. After separate activation approval, an operator can
 enable `SSA_HELPSCOUT_DRAFT_TRANSFER=1` in the isolated app process and choose one mode:

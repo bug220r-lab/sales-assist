@@ -163,6 +163,14 @@ Historical manual acceptance remains pending until actually performed by the use
 release evidence separately records `AGENT_EXECUTED_ACCEPTANCE`, `HUMAN_MANUAL_ACCEPTANCE`, and
 `CLEAN_MACHINE_VALIDATION`; a browser capability gap is never converted into a manual PASS.
 
+The Help Scout credit evidence tests use pytest functions and parametrization. The legacy
+`tools/run_tests.py` unittest runner does not collect those functions. In an environment with
+the declared development dependencies, also run `python -m pytest -q tests/test_sales_credit_evidence_*.py`
+(expand matching files explicitly in shells without glob expansion), or run the whole
+repository with `python -m pytest -q`. Use synthetic inputs and mocked transports only.
+See [the consolidated review candidate](docs/consolidated-review-candidate.md) for the combined
+package, persistence scope and outstanding live gates.
+
 ## Milestone boundary
 
 Milestone 7 permits the local Control Center, privacy-safe current projection queries, immutable

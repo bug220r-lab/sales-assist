@@ -48,10 +48,12 @@ the sanitized package or permission to access private captures.
 
 The DOI review response limit is 4 MiB. The serializer, DOI state/load/clear HTTP
 responses and browser's streaming reader enforce the same bound. Other portal
-response limits remain unchanged. Input files are still at most 1 MiB and 5,000
-records each, with at most 500 joined orders. Very dense captures may still need
+response limits remain unchanged. Input files are at most 4 MiB and 5,000 records
+each, with at most 1,000 joined orders and a 16 MiB JSON request bound. The backend
+and browser file/order guards share these bounds. Very dense captures may still need
 smaller matching pairs. A rejected load clears only the transient displayed
-review; saved evidence-bound checkboxes remain in their separate store.
+review; saved evidence-bound checkboxes remain in their separate store. See ADR 0047
+for the bounded input update and its synthetic regression checks.
 # Alternate email drafts
 
 Use **Alternate email** beside a captured order to open the structured editor.

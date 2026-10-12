@@ -57,6 +57,7 @@ class WindowsApplicationPackageTests(unittest.TestCase):
         self.assertEqual(metadata["runtime_tier"], "WINDOWS_X64_BUNDLED_CPYTHON_3_12")
         self.assertEqual(metadata["codex_fallback"], "NONE")
         self.assertIn("campaigns", metadata["application_features"])
+        self.assertIn("sales_credit_evidence", metadata["application_features"])
         name = next(name for name in artifacts if name.endswith("-windows-x64.zip"))
         with zipfile.ZipFile(io.BytesIO(artifacts[name])) as archive:
             for launcher in LAUNCHERS:
@@ -74,6 +75,13 @@ class WindowsApplicationPackageTests(unittest.TestCase):
             self.assertIn("python/python.exe", inventory)
             self.assertIn("python-runtime.json", inventory)
             self.assertNotIn("release-payload.json", inventory)
+            self.assertIn("src/sales_credit_evidence/pilot.py", inventory)
+            self.assertIn("src/sales_credit_evidence/coordinator.py", inventory)
+            self.assertIn("docs/helpscout-credit-evidence.md", inventory)
+            self.assertIn("docs/single-owner-pilots.md", inventory)
+            self.assertIn("docs/adr/0046-single-owner-two-pilot-coordinator.md", inventory)
+            self.assertIn("docs/adr/0048-coordinator-duplicate-preflight-binding.md", inventory)
+            self.assertIn("docs/consolidated-review-candidate.md", inventory)
 
     def test_extracted_payload_verifies_and_detects_runtime_tampering(self) -> None:
         artifacts, _ = self.payloads()

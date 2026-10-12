@@ -1,9 +1,11 @@
 # Windows application scope
 
-This is a launchable local application for the current synthetic workflows. It has no
-production credentials, external messaging transport, customer-data ingestion or live
-Help Scout connection. The three independent Help Scout scripts and their data are outside
-this application's lifecycle.
+This is a launchable local review candidate with synthetic core workflows. Manually
+imported DOI CSVs, the unsent-draft adapter and the standalone read-only credit evidence
+reader retain their separate explicit review and activation gates. No production
+credentials or active Help Scout connection ship in the package. Existing independent
+Help Scout scripts and their data stay outside this application's lifecycle.
+See the packaged docs/consolidated-review-candidate.md for the combined scope and live gates.
 
 The optional **Campaign Replies** page can display an independently installed
 workstation review companion with an explicit opt-in on the fixed local origin.
@@ -31,6 +33,8 @@ of runtime independence, but is not a clean-machine test. Read the release's FIN
 Backups contain separate verified SQLite snapshots and a manifest. The existing order
 backup/restore UI still operates on the core database only. Workspace restore requires a
 separately verified, stopped-service maintenance procedure; no one-click restore is supplied.
+Saved DOI checks, alternate-draft JSON and the transfer journal require separate verified
+stopped-service copies and are not covered by the database backup manifest.
 RESET.cmd preserves campaign history and drafts while resetting the order demo. Removal
 retains the executing private runtime and unknown/modified files for manual cleanup after exit.
 
