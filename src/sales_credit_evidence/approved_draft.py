@@ -359,7 +359,7 @@ def _execution_approval(bundle: ApprovedDraft, evidence: Any) -> _ExecutionAppro
     # The caller has required exact sealed, fresh evidence before this function.
     document = bundle._document()
     review = document["review"]
-    if review["duplicate_status"] != "unresolved":
+    if review["duplicate_status"] != "unresolved" and evidence.customer_id is not None:
         return _ExecutionApproval(contract.encoded(review), bundle.binding)
     finding = {
         "schema": "coordinator-duplicate-preflight/v1",
@@ -371,6 +371,9 @@ def _execution_approval(bundle: ApprovedDraft, evidence: Any) -> _ExecutionAppro
         "mailbox_id": contract.MAILBOX_ID,
         "customer_id": evidence.customer_id,
     }
+    if evidence.customer_id is None:
+        finding["customer_association"] = "EMAIL_MAY_CREATE_CONTACT"
+        finding["implicit_contact_creation_authorized"] = True
     review["duplicate_status"] = "no_existing_draft"
     review["duplicate_evidence"] = contract.encoded(finding).decode("utf-8")
     contract.validate_review(review)

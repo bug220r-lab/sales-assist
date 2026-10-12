@@ -140,10 +140,11 @@ def _invalid_constant(_value: str) -> None:
 
 
 class ReadClient:
-    """One exact email, fixed inbox, and only source-discovered native IDs.
+    """One exact email, fixed conversation inbox, and bounded native IDs.
 
-    ``allow_customer`` and ``allow_conversation`` must be called only after the
-    evidence reader validates identities and inbox membership. There is no public
+    Customer IDs come from scoped search or an explicitly selected ID for fresh
+    direct verification. Conversation IDs require verified inbox membership.
+    There is no public
     request method accepting an HTTP verb, body, or arbitrary authorization header.
     """
 
@@ -225,9 +226,16 @@ class ReadClient:
             ):
                 raise ValueError("page")
             if parsed.path == "/v2/customers":
-                allowed = query == {"mailbox": str(MAILBOX_ID), "query": f'(email:"{self.email}")'}
+                allowed = query in (
+                    {"query": f'(email:"{self.email}")'},
+                    {"mailbox": str(MAILBOX_ID), "query": f'(email:"{self.email}")'},
+                )
             elif parsed.path == "/v2/conversations":
-                allowed = any(
+                allowed = query == {
+                    "mailbox": str(MAILBOX_ID),
+                    "status": "all",
+                    "query": f'(email:"{self.email}")',
+                } or any(
                     query
                     == {
                         "mailbox": str(MAILBOX_ID),
@@ -236,7 +244,7 @@ class ReadClient:
                     }
                     for customer_id in self._customer_ids
                 )
-            elif match := re.fullmatch(r"/v2/customers/([1-9][0-9]*)/emails", parsed.path):
+            elif match := re.fullmatch(r"/v2/customers/([1-9][0-9]*)(?:/emails)?", parsed.path):
                 allowed = "?" not in url and int(match[1]) in self._customer_ids
             elif match := re.fullmatch(r"/v2/conversations/([1-9][0-9]*)(/threads)?", parsed.path):
                 allowed = (

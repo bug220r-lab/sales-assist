@@ -411,7 +411,6 @@ class EvidenceReader:
             "/v2/customers",
             "customers",
             "customers",
-            mailbox=MAILBOX_ID,
             query=f'(email:"{self.client.email}")',
         )
         identities: list[CustomerIdentity] = []

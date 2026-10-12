@@ -1,4 +1,4 @@
-"""One approved unsent draft using one existing customer and expiring snapshot.
+"""One approved unsent draft using a sealed customer selection and expiring snapshot.
 
 The coordinator supplies the live/ownership gates and durable reservation. This
 client adds an independent one-POST limit and never renews, retries, or persists
@@ -66,7 +66,7 @@ class DraftBundle(Protocol):
 
 class CustomerEvidence(Protocol):
     @property
-    def customer_id(self) -> int: ...
+    def customer_id(self) -> int | None: ...
 
     def assert_for(self, bundle: DraftBundle) -> None: ...
 
@@ -93,9 +93,20 @@ class OneDraftClient(helpscout_module.HelpScoutDraftClient):
     ) -> None:
         try:
             customer_evidence.assert_for(bundle)
+            from .draft_preflight import DraftCustomerEvidence
+
             if (
-                type(customer_evidence.customer_id) is not int
-                or not 1 <= customer_evidence.customer_id <= 2**63 - 1
+                (
+                    customer_evidence.customer_id is None
+                    and type(customer_evidence) is not DraftCustomerEvidence
+                )
+                or (
+                    customer_evidence.customer_id is not None
+                    and (
+                        type(customer_evidence.customer_id) is not int
+                        or not 1 <= customer_evidence.customer_id <= 2**63 - 1
+                    )
+                )
                 or not isinstance(credential, SuppliedCredential)
             ):
                 raise ValueError()
@@ -187,8 +198,9 @@ class OneDraftClient(helpscout_module.HelpScoutDraftClient):
             candidate = legacy.payload_for(row)
             if legacy.encoded(candidate) != legacy.encoded(expected):
                 raise ValueError()
-            expected["customer"] = {"id": self._customer_id}
-            expected["threads"][0]["customer"] = {"id": self._customer_id}  # type: ignore[index]
+            if self._customer_id is not None:
+                expected["customer"] = {"id": self._customer_id}
+                expected["threads"][0]["customer"] = {"id": self._customer_id}  # type: ignore[index]
             return expected
         except Exception:
             raise _error("ONE_DRAFT_PAYLOAD_MISMATCH") from None
@@ -263,7 +275,11 @@ class OneDraftClient(helpscout_module.HelpScoutDraftClient):
                 ):
                     value = legacy.json.loads(raw, object_pairs_hook=_unique_object)
                     customer = value.get("primaryCustomer", {})
-                    if type(customer.get("id")) is not int or customer["id"] != self._customer_id:
+                    if (
+                        type(customer.get("id")) is not int
+                        or not 1 <= customer["id"] < 2**63
+                        or (self._customer_id is not None and customer["id"] != self._customer_id)
+                    ):
                         raise ValueError()
                 return status, headers, raw
             except Exception:

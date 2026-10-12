@@ -102,6 +102,21 @@ existing draft or matching-order conversation blocks creation. Manual user edits
 may still race a read; these are bounded non-atomic observations, not a guarantee
 that the inbox cannot change.
 
+For an explicitly selected existing customer, supply --known-customer-id with its
+verified native ID. The coordinator freshly reads that customer and its emails;
+normal complete fixed-mailbox conversation/thread duplicate checks still run.
+It does not rely on customer-search rediscovery and never falls back to creating
+a contact if the selected ID or email fails verification.
+
+For an approved new email identity, --allow-email-customer separately authorizes
+Help Scout to associate/create the underlying contact inside the one unsent
+conversation POST. Complete global exact-email verification and an empty complete
+fixed-mailbox email conversation snapshot are required. Existing/ambiguous email
+conversations, partial coverage or other review holds block. This flag is mutually
+exclusive with --known-customer-id and is scoped only to the supplied approved
+bundle. The transfer review discloses the contact side effect. No separate
+customer-creation POST or profile-management step is available.
+
 The normal durable transfer service reserves before the one POST. Success requires
 verified readback of the unsent draft. `UNKNOWN`, `IN_FLIGHT`, or
 `CREATED_UNVERIFIED` is a hold, never permission to retry. Preserve the ledger and
