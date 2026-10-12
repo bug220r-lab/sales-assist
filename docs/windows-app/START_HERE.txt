@@ -14,6 +14,8 @@ its 10-hour session is removed by Clear, expiry or service shutdown. Saved revie
 and local alternate drafts use separate persistent stores. See DAILY_README.md.
 The new CSV draft-transfer page has its own store, review gates and exact-version approval.
 Help Scout transfer is off by default. Read docs/doi-draft-transfer.md before configuring it.
+The separate read-only credit evidence module and cached snapshot bridge are also off by
+default. Read docs/helpscout-credit-evidence.md and docs/consolidated-review-candidate.md.
 Use a new data directory for validation; never restart an active review to try a new build.
 The Overview navigation opens Campaigns, Replies and Writing history. All data and
 actions on those sample screens are synthetic; simulated outreach does not send email
@@ -37,6 +39,8 @@ runtime files or point this installation at an unrelated database.
 BACKUP.cmd creates verified backups of both the order database and campaign workspace.
 The output identifies the backup manifest containing both file hashes. Campaign backups
 are separate SQLite snapshots; the manifest does not claim one cross-database transaction.
+These backups exclude saved DOI checks, alternate drafts and the transfer journal. Preserve
+those stores separately while the owned app is stopped; see the consolidated candidate guide.
 RESET.cmd resets only the Sales Credit/DOI sample records, after backup; it preserves
 campaign drafts and writing history. Use a newly extracted copy for a fresh whole-app demo.
 UPGRADE.cmd requires an explicit disposable data root and verified backups first.

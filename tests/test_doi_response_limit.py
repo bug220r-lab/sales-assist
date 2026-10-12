@@ -21,19 +21,19 @@ from tests.test_doi_review_marks import MemoryMarks
 def maximum_shape_csvs():
     summaries = []
     lines = []
-    for index in range(500):
+    for index in range(review.MAX_ORDERS):
         order = str(90000000 + index)
-        # Keep legitimate CSV bytes below 1 MiB while exercising both count maxima.
+        # Exercise 1,000 orders and 5,000 records within the bounded CSV bytes.
         summaries.append(
             summary(
                 order,
-                active_purchased_rows="10",
+                active_purchased_rows="5",
                 customer_info_email="",
                 queue_source_url="",
                 order_admin_url="",
             )
         )
-        for number in range(10):
+        for number in range(5):
             lines.append(
                 line(
                     order,
@@ -52,8 +52,8 @@ def maximum_shape_csvs():
 class DOIResponseLimitTests(unittest.TestCase):
     def test_limits_and_frontend_bound_are_consistent(self):
         self.assertEqual(review.MAX_RESPONSE_BYTES, 4 * 1024 * 1024)
-        self.assertEqual(review.MAX_CSV_BYTES, 1024 * 1024)
-        self.assertEqual((review.MAX_ORDERS, review.MAX_RECORDS), (500, 5000))
+        self.assertEqual(review.MAX_CSV_BYTES, 4 * 1024 * 1024)
+        self.assertEqual((review.MAX_ORDERS, review.MAX_RECORDS), (1000, 5000))
         self.assertEqual(server.MAX_RESPONSE_BODY_BYTES, 512 * 1024)
         self.assertEqual(server.DOI_REVIEW_MAX_RESPONSE_BYTES, review.MAX_RESPONSE_BYTES)
         self.assertIn("const maxReviewResponseBytes = 4194304;", DOI_CSV_REVIEW_JS)
@@ -63,7 +63,7 @@ class DOIResponseLimitTests(unittest.TestCase):
     def test_maximum_input_count_shape_fits_bounded_review(self):
         state = DOIReviewSession().load(*maximum_shape_csvs(), 0)
         self.assertNotEqual(state["status"], "error")
-        self.assertEqual((state["counts"]["orders"], state["counts"]["line_records"]), (500, 5000))
+        self.assertEqual((state["counts"]["orders"], state["counts"]["line_records"]), (1000, 5000))
         encoded = review_response_bytes(state)
         self.assertGreater(len(encoded), 512 * 1024)
         self.assertLessEqual(len(encoded), review.MAX_RESPONSE_BYTES)
@@ -109,16 +109,16 @@ class DOIResponseHTTPTests(unittest.TestCase):
 
     def test_large_valid_post_and_get_cross_both_server_boundaries(self):
         left, right = maximum_shape_csvs()
-        # Maximum-count input can exceed the small-fixture 3s socket timeout on Windows.
+        # The combined maximum can exceed 10s on Windows during parallel regression runs.
         code, _, body = self.request(
             "POST",
             "/api/v1/doi-csv-review/load",
             json.dumps(dict(revision=0, summary_csv=left, lines_csv=right)),
-            timeout=10,
+            timeout=30,
         )
         self.assertEqual(code, 200)
         self.assertGreater(len(body), 512 * 1024)
-        self.assertEqual(json.loads(body)["counts"]["orders"], 500)
+        self.assertEqual(json.loads(body)["counts"]["orders"], 1000)
         code, _, body = self.request("GET", "/api/v1/doi-csv-review/state")
         self.assertEqual(code, 200)
         self.assertGreater(len(body), 512 * 1024)

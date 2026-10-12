@@ -10,7 +10,11 @@ from pathlib import Path
 
 from synthetic_sales_assist.portal.dashboard_rendering import _page
 from synthetic_sales_assist.portal.alternate_draft_ui import ALTERNATE_DRAFT_PANEL
-from doi_csv_staging.review import MAX_RESPONSE_BYTES as DOI_REVIEW_RESPONSE_BYTES
+from doi_csv_staging.review import (
+    MAX_CSV_BYTES as DOI_REVIEW_CSV_BYTES,
+    MAX_ORDERS as DOI_REVIEW_ORDERS,
+    MAX_RESPONSE_BYTES as DOI_REVIEW_RESPONSE_BYTES,
+)
 
 
 def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> bytes:
@@ -95,8 +99,9 @@ def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> 
             '      <input type="file" id="doi-lines-file" accept=".csv,text/csv" '
             "disabled required>\n"
             "    </label>\n"
-            '    <p class="dashboard-field-hint">UTF-8 CSV only. Up to 1 MiB and 5,000 '
-            "records per file, with up to 500 joined order keys. "
+            '    <p class="dashboard-field-hint">UTF-8 CSV only. '
+            f"Up to {DOI_REVIEW_CSV_BYTES // (1024 * 1024)} MiB and 5,000 "
+            f"records per file, with up to {DOI_REVIEW_ORDERS:,} joined order keys. "
             f"Review data is limited to {DOI_REVIEW_RESPONSE_BYTES // (1024 * 1024)} MiB; "
             "unusually large pairs may need smaller batches. File names are not "
             "sent to the service.</p>\n"
@@ -174,4 +179,6 @@ def render_doi_csv_review_page(csrf_token: str, *, review_only: bool = True) -> 
 
 DOI_CSV_REVIEW_JS = (
     Path(__file__).with_name("doi-review.js").read_text(encoding="utf-8")
-).replace("__DOI_RESPONSE_LIMIT_BYTES__", str(DOI_REVIEW_RESPONSE_BYTES))
+).replace("__DOI_RESPONSE_LIMIT_BYTES__", str(DOI_REVIEW_RESPONSE_BYTES)).replace(
+    "__DOI_ORDER_LIMIT__", str(DOI_REVIEW_ORDERS)
+).replace("__DOI_CSV_LIMIT_BYTES__", str(DOI_REVIEW_CSV_BYTES))

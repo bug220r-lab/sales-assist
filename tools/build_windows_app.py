@@ -77,6 +77,7 @@ def build_application_payloads(
                 "writing_history",
                 "doi_csv_review",
                 "doi_draft_transfer",
+                "sales_credit_evidence",
             ],
         }
     )

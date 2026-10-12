@@ -43,12 +43,12 @@ from synthetic_sales_assist.domain.normalization import ascii_four_trim
 from synthetic_sales_assist.domain.timestamps import canonicalize_timestamp, parse_timestamp
 
 SCHEMA = "doi-csv-review/v5"
-MAX_CSV_BYTES = 1024 * 1024
-MAX_BODY_BYTES = 8 * 1024 * 1024
+MAX_CSV_BYTES = 4 * 1024 * 1024
+MAX_BODY_BYTES = 16 * 1024 * 1024
 # DOI-specific projection bound; CSV/order/record bounds remain independent.
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 MAX_RECORDS = 5000
-MAX_ORDERS = 500
+MAX_ORDERS = 1000
 GLOBAL_HOLDS = frozenset(
     {
         "MISSING_HEADER",

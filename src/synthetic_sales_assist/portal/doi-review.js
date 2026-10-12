@@ -206,7 +206,7 @@
       && natural(s.expires_in_seconds) && s.counts && Object.keys(countLabels).every(k => natural(s.counts[k]))
       && s.groups && natural(s.groups.review) && natural(s.groups.quarantined)
       && codeList(s.batch_holds) && (s.error_code === null || fixedCode(s.error_code))
-      && Array.isArray(s.orders) && s.orders.length <= 500 && s.orders.every(o =>
+      && Array.isArray(s.orders) && s.orders.length <= __DOI_ORDER_LIMIT__ && s.orders.every(o =>
         exactKeys(o,["order_id", "rep_scope", "currency", "summary_record_ordinals", "line_record_ordinals", "visible_coverage_complete", "evidence_complete", "decision_eligible", "holds", "reviewer_assignment", "sales_credit_observed", "sales_credit_entitlement", "split", "evidence",...(o.rep_confirmation===undefined?[]:["rep_confirmation"])])
         && typeof o.rep_scope === "string" && Object.hasOwn(scopeLabels,o.rep_scope)
         && typeof o.order_id === "string" && /^[1-9][0-9]{0,127}$/.test(o.order_id)
@@ -486,7 +486,7 @@
     const left = summary.files[0], right = lines.files[0]; controller = new AbortController();
     message.textContent = "Loading and checking this pair…";
     try {
-      if (left.size > 1048576 || right.size > 1048576) throw new Error("FILE_LIMIT");
+      if (left.size > __DOI_CSV_LIMIT_BYTES__ || right.size > __DOI_CSV_LIMIT_BYTES__) throw new Error("FILE_LIMIT");
       const decode = async file => new TextDecoder("utf-8", {fatal:true}).decode(await file.arrayBuffer());
       const [summary_csv, lines_csv] = await Promise.all([decode(left), decode(right)]);
       if (run !== epoch) return;
