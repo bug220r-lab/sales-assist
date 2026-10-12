@@ -10,6 +10,9 @@ The user explicitly approved this isolated implementation on 2026-10-12. That ap
 a bounded exception to the repository's synthetic-only source-adapter boundary, not a
 change to the synthetic rules engine or permission to activate live credentials. See
 [ADR 0044](adr/0044-isolated-helpscout-credit-evidence.md).
+The subsequently approved cached snapshot runner is described in
+[ADR 0045](adr/0045-cached-read-only-evidence-pilot.md). Its implementation and offline
+tests do not run a live pilot or authorize token issuance.
 
 ## Intended use and fixed scope
 
@@ -32,19 +35,23 @@ From the isolated checkout with the project installed in its local Python enviro
 
 ```powershell
 .\.venv\Scripts\python.exe -m sales_credit_evidence --demo
-.\.venv\Scripts\python.exe -m pytest tests/test_sales_credit_evidence_reader.py tests/test_sales_credit_evidence_transport.py tests/test_sales_credit_evidence_cli.py -q
+.\.venv\Scripts\python.exe -m pytest tests/test_sales_credit_evidence_reader.py tests/test_sales_credit_evidence_transport.py tests/test_sales_credit_evidence_cached_auth.py tests/test_sales_credit_evidence_pilot.py tests/test_sales_credit_evidence_cli.py tests/test_sales_credit_evidence_literals.py -q
 ```
 
-The CLI has no live mode, token argument, cache option, or customer-input importer. Its
-default invocation prints help; `--demo` uses a built-in synthetic in-memory transcript
-and prints counts and safe outcome codes. This Python API is the controlled entry point
-for a **separately authorized** future live pilot; the example is not run by setup/tests:
+The default invocation prints help; `--demo` uses a built-in synthetic in-memory transcript
+and prints counts and safe outcome codes. Neither path reads a connection or uses live HTTP.
+The CLI also provides the explicitly gated cached snapshot pilot described below. It has
+no token/secret argument, automatic credential discovery, or customer-input importer.
+
+The lower-level Python API accepts an already supplied, nonrenewing credential. This
+example describes the boundary and is not run by setup or tests:
 
 ```python
 from sales_credit_evidence import EvidenceReader, ReadClient, SuppliedCredential
 
 # These three values must be supplied by the authorized caller in memory.
-# Do not get them from the cleanup process, its files, or shell arguments.
+# Do not extract them from a cleanup process or put them in shell arguments.
+# The coordinated cached snapshot runner below is the supported cache bridge.
 credential = SuppliedCredential(authorized_token, authorized_expiry)
 client = ReadClient(source_proven_email, credential=credential, enable_live=True)
 result = EvidenceReader(client).read()
@@ -58,23 +65,87 @@ those as verified send times. Never log/serialize the full detailed result durin
 
 ## Authentication and a later authorized read
 
-Networking defaults to disabled. A later authorized caller must explicitly enable the
+Networking defaults to disabled. An authorized caller must explicitly enable the
 read transport with `enable_live=True` and supply a nonrenewing
 `SuppliedCredential(token, expires_at)`. The caller owns the credential's lifecycle and
-must supply a valid, timezone-aware expiry. The reader has no environment lookup, cache
+must supply a valid, timezone-aware expiry. The core reader has no environment lookup, cache
 loading/decryption, authentication-provider import, token issuance, or refresh behavior.
 An expired credential or HTTP 401 ends the read; HTTP 403 is an access failure, not an
 empty search. No automatic renewal or fallback connection is permitted.
 
 Keep tokens out of shell arguments, output, logs, fixtures, and saved evidence. Do not
-obtain a token by inspecting another process, a cleanup job, or its files. This reader
-does not coordinate or change that job's authentication. A credential owner must provide
-an authorized session independently before any live pilot. A transport constructed with
-live access disabled must fail before making a request.
+obtain a token by inspecting another process or a cleanup job. The core reader does not
+coordinate or change that job's authentication. A transport constructed with live access
+disabled must fail before making a request. The separate bridge below can read one
+explicitly approved cached snapshot only after the credential owner coordinates access.
 
 Help Scout documents bearer authentication and uses 401 for expired access. Its OAuth
 issuance/refresh endpoints are intentionally outside this reader's allowlist.
 [Official authentication reference](https://developer.helpscout.com/mailbox-api/overview/authentication/).
+
+## Coordinated cached snapshot pilot
+
+`pilot.py` is a minimal one-customer runner. Before it reads any connection bytes, require
+all of these explicit inputs:
+
+- `--live` to enable this invocation.
+- One `--email` containing an exact source-proven customer address.
+- One `--connection-path` naming the approved existing `.dpapi` connection; it is a
+  nonsecret path, not a token. There is no environment or default-path discovery.
+- `--ownership cleanup-complete` or `--ownership controlled-handoff-complete`, based on
+  the credential owner's actual coordination outside this runner.
+- `--confirm-sole-owner` to attest that all users of this connection have been coordinated.
+
+Do not assert an ownership state merely to make the command run. The runner does not
+inspect cleanup processes, infer that they finished, or independently verify the attestation.
+It acquires the existing fixed-user `SessionLease` before loading a snapshot, holds that
+lease throughout the read, and closes it on every exit path. This excludes cooperating
+session providers only; it cannot establish that unrelated consumers have stopped.
+
+The following is a **synthetic command example**, not a live test or a real approved path.
+For an authorized pilot, replace the example address and path with the exact approved
+scope only after the ownership statements are true. Do not put secrets on this command line.
+
+```powershell
+.\.venv\Scripts\python.exe -m sales_credit_evidence --live --email person@example.test --connection-path 'C:\approved-example\connection.dpapi' --ownership controlled-handoff-complete --confirm-sole-owner
+```
+
+`cached_auth.py` reuses stable-file and read-only DPAPI primitives without instantiating
+an issuing provider. It accepts the existing session-cache schema: `client_id`,
+`client_secret`, `access_token`, `expires_at`, and `user_id`, with optional `grant_type`
+and `token_type`. The fixed user must be `897275`. The snapshot's authoritative epoch
+`expires_at` is converted to UTC without changing it; no guessed TTL is substituted.
+Client credentials present in that schema are never used to issue a token. The decoded
+record and plaintext buffers/references are cleared after projection to the supplied
+credential. Do not interpret reference clearing as a guarantee of physical memory erasure.
+
+The runner enforces a 120-second expiry margin initially and before every GET through
+`ReadClient(expiry_margin_seconds=120)`. Near-expiry, stale, malformed, or missing cache
+data blocks the pilot. The snapshot is loaded only once: it is not held until stale,
+reloaded after failure, renewed, rewritten, or replaced by a fallback credential. A 401
+stops the read. Any token issuance is a separate action requiring credential-owner
+coordination and specific approval outside the reader; do not weaken the margin to proceed.
+
+Pilot limits are one exact email, mailbox `166170`, author `897275`, `max_requests=50`,
+`max_attempts=1`, and `include_content=False`. It returns counts and safe codes only;
+detailed customer facts and message bodies are not written to output or disk. No total
+wall-clock deadline is guaranteed: the transport timeout bounds individual socket
+operations, and traversal limits bound work. These tighter limits apply to the runner;
+the general reader's defaults are documented separately below.
+
+| Pilot status | Meaning |
+|---|---|
+| `DISABLED` | Live access was not explicitly enabled; no cache or API read occurred. |
+| `BLOCKED` | Required inputs, ownership, lease, or credential checks prevented a usable run. |
+| `INCOMPLETE` | Read coverage did not establish a complete successful scoped traversal. |
+| `COMPLETE` | The available scoped search/history traversal completed successfully. |
+
+The pilot's `credit_classification` is always `NOT_EVALUATED`. A complete read is not a
+credit decision or proof of personal sending; incomplete coverage is not a negative finding.
+The CLI exits with code `0` for `COMPLETE` and `2` for every unsuccessful pilot status;
+offline help and demo also exit with `0`. Invalid arguments produce a redacted code only.
+No live test, cache read, credential activation, lease acquisition, or external request is
+performed as part of this build's documentation and fake-HTTP verification.
 
 ## API contract verified on 2026-10-12
 
@@ -196,6 +267,10 @@ Focused fake-HTTP tests must cover exact/ambiguous identity, multiple emails, un
 mailbox exclusion, author versus assignee, outbound exclusions, incoming associations,
 timestamp precision, complete/looping/failed pagination, 401/403/429/5xx, expired credentials,
 disabled live access, redirect refusal, and absence of credential renewal or external writes.
+Runner tests additionally use fake snapshot/lease boundaries to prove that validation
+precedes cache access, the lease covers the snapshot and read and closes on every path,
+authoritative expiry and the 120-second margin are enforced, and summaries exclude secrets
+and customer content. DPAPI/file primitives are mocked; no real connection is loaded.
 Regression checks must establish that the existing DOI, draft-transfer, and Sales Credit
 behavior is unchanged. Passing synthetic tests does not establish live API readiness.
 
@@ -203,5 +278,6 @@ The reader has no persistent evidence store or raw body logging. Review output s
 contains sensitive source facts during an authorized live session; its caller must not
 serialize those facts into Git or general logs. It does not retrieve attachments, verify
 deleted/unavailable history, establish delivery, resolve every automated reply, or decide
-commercial relevance. There is no UI integration, automatic import, live activation, or
-new persistent credential access in this build.
+commercial relevance. There is no UI integration, automatic import, live activation,
+token issuance, or new persistent credential storage in this build. The explicit pilot
+bridge reads only an existing, approved snapshot after its ownership gates succeed.

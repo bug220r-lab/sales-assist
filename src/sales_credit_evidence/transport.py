@@ -157,12 +157,15 @@ class ReadClient:
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         sleeper: Callable[[float], None] = time.sleep,
         max_attempts: int = 3,
+        expiry_margin_seconds: int = 0,
     ) -> None:
         self._email = normalize_email(email)
         if type(max_attempts) is not int or not 1 <= max_attempts <= 3:
             raise ReadError("invalid_retry_limit")
         if type(enable_live) is not bool:
             raise ReadError("invalid_live_activation")
+        if type(expiry_margin_seconds) is not int or not 0 <= expiry_margin_seconds <= 120:
+            raise ReadError("invalid_expiry_margin")
         if credential is not None and not isinstance(credential, SuppliedCredential):
             raise ReadError("invalid_credential")
         self._credential = credential
@@ -173,6 +176,7 @@ class ReadClient:
         self._clock = clock
         self._sleeper = sleeper
         self._max_attempts = max_attempts
+        self._expiry_margin_seconds = expiry_margin_seconds
         self._customer_ids: set[int] = set()
         self._conversation_ids: set[int] = set()
 
@@ -255,7 +259,7 @@ class ReadClient:
             now = self._clock()
             if not _aware_datetime(now):
                 raise ReadError("invalid_clock", attempts=attempt - 1)
-            if now >= self._credential.expires_at:
+            if (self._credential.expires_at - now).total_seconds() <= self._expiry_margin_seconds:
                 raise ReadError("stale_credential", attempts=attempt - 1)
             headers["Authorization"] = f"Bearer {self._credential.token}"
         return headers

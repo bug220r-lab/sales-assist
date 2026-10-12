@@ -2,6 +2,10 @@
 
 Status: accepted for source implementation; live activation remains disabled.
 
+The later [ADR 0045](0045-cached-read-only-evidence-pilot.md) adds a separately gated,
+read-only cached snapshot runner. The core reader's supplied-credential boundary and
+the prohibition on token issuance/renewal remain unchanged.
+
 ## Context
 
 The user approved development of a read-only Help Scout search/history reader on

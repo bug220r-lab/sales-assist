@@ -429,3 +429,51 @@ def test_response_repr_omits_sensitive_fields() -> None:
     result = HttpResponse(200, {"Authorization": TOKEN}, EMAIL.encode())
     assert TOKEN not in repr(result)
     assert EMAIL not in repr(result)
+
+
+@pytest.mark.parametrize("margin", [-1, 121, True, 1.0, "120", None])
+def test_invalid_expiry_margin_is_rejected_before_transport(margin: object) -> None:
+    fake = FakeTransport()
+    with pytest.raises(ReadError, match="invalid_expiry_margin"):
+        ReadClient(EMAIL, transport=fake, expiry_margin_seconds=margin)  # type: ignore[arg-type]
+    assert fake.calls == []
+
+
+@pytest.mark.parametrize("remaining_seconds", [-1, 0, 119, 120])
+def test_expiry_margin_withholds_bearer_before_first_request(remaining_seconds: int) -> None:
+    fake = FakeTransport()
+    expiry = NOW + timedelta(seconds=remaining_seconds)
+    credential = SuppliedCredential(TOKEN, expiry)
+    client = ReadClient(
+        EMAIL,
+        credential=credential,
+        transport=fake,
+        clock=lambda: NOW,
+        expiry_margin_seconds=120,
+    )
+    with pytest.raises(ReadError, match="stale_credential") as caught:
+        client.get(customer_url())
+    assert caught.value.attempts == 0
+    assert fake.calls == []
+    assert credential.expires_at == expiry
+
+
+def test_expiry_margin_is_checked_for_each_request_without_changing_source_expiry() -> None:
+    fake = FakeTransport(response())
+    now = NOW
+    expiry = NOW + timedelta(seconds=121)
+    credential = SuppliedCredential(TOKEN, expiry)
+    client = ReadClient(
+        EMAIL,
+        credential=credential,
+        transport=fake,
+        clock=lambda: now,
+        expiry_margin_seconds=120,
+    )
+    assert client.get(customer_url()) == {"ok": True}
+    assert fake.calls[0][2]["Authorization"] == f"Bearer {TOKEN}"
+    now += timedelta(seconds=1)
+    with pytest.raises(ReadError, match="stale_credential"):
+        client.get(customer_url())
+    assert len(fake.calls) == 1
+    assert credential.expires_at == expiry
