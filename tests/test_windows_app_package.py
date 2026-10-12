@@ -76,7 +76,10 @@ class WindowsApplicationPackageTests(unittest.TestCase):
             self.assertIn("python-runtime.json", inventory)
             self.assertNotIn("release-payload.json", inventory)
             self.assertIn("src/sales_credit_evidence/pilot.py", inventory)
+            self.assertIn("src/sales_credit_evidence/coordinator.py", inventory)
             self.assertIn("docs/helpscout-credit-evidence.md", inventory)
+            self.assertIn("docs/single-owner-pilots.md", inventory)
+            self.assertIn("docs/adr/0046-single-owner-two-pilot-coordinator.md", inventory)
             self.assertIn("docs/consolidated-review-candidate.md", inventory)
 
     def test_extracted_payload_verifies_and_detects_runtime_tampering(self) -> None:

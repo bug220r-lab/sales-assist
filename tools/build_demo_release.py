@@ -50,8 +50,10 @@ RUNTIME_FILES = frozenset(
         "docs/doi-draft-transfer-readiness.md",
         "docs/doi-draft-transfer-auth-proposal.md",
         "docs/helpscout-credit-evidence.md",
+        "docs/single-owner-pilots.md",
         "docs/adr/0044-isolated-helpscout-credit-evidence.md",
         "docs/adr/0045-cached-read-only-evidence-pilot.md",
+        "docs/adr/0046-single-owner-two-pilot-coordinator.md",
         "docs/adr/0047-bounded-doi-combined-inputs.md",
         "docs/consolidated-review-candidate.md",
     }

@@ -1,8 +1,9 @@
 # Consolidated Sales Assist review candidate
 
 This candidate combines the existing DOI review, local saved state, approved CSV draft
-transfer, optional session renewal, and standalone read-only Help Scout credit evidence
-reader. It is a draft review build. No live connection is activated by installation.
+transfer, optional session renewal, standalone read-only Help Scout credit evidence
+reader, and single-owner pilot coordinator. It is a draft review build. No live connection
+is activated by installation.
 
 ## Included behavior
 
@@ -20,6 +21,11 @@ reader. It is a draft review build. No live connection is activated by installat
 - The standalone credit evidence reader and coordinated cached-snapshot bridge remain
   disabled by default. The reader only gathers scoped facts; credit is always NOT_EVALUATED.
   The bridge does not renew, rewrite or reload credentials.
+- The disabled single-owner coordinator holds the original owner lock and session lease,
+  passes one token/expiry snapshot to the reader first, checks the draft recipient and
+  accessible-mailbox duplicates, and binds one approved copy to the existing durable
+  transfer service. Unknown outcomes block retry. The separate one-issuance option is
+  available only with activation-time authorization and actual cached-token expiry.
 
 ## Isolated installation and review
 
@@ -61,17 +67,18 @@ after restart. Do not reset that journal to work around an unknown external outc
 
 The candidate is stacked on draft PR #5 (`codex/doi-approved-draft-transfer`, source commit
 `3eb1214f667618e3449bc4af494ecdb3b8a8ef30`). PR #5 itself depends on PR #4.
-This candidate adds the two reviewed credit-reader commits and the tested DOI limit delta,
-plus packaging documentation. It does not merge either dependency into the default branch.
+This candidate adds the reviewed credit reader and single-owner coordinator, the tested DOI
+limit delta, and packaging documentation. It does not merge either dependency into the default branch.
 
 Live Help Scout draft and credit pilots remain pending separate credential-owner coordination,
 activation approval and supported browser acceptance. No ownership attestation is inferred,
 no cache is accessed during installation/tests, and no cleanup process is changed.
+Automated cleanup is cancelled and must not be restarted by this release workflow.
 This candidate must not be described as production-ready. Human visual acceptance,
 clean-machine validation and live compatibility are separate outstanding gates.
 
-The combined single-owner live-pilot coordinator is also an outstanding source gate for
-this snapshot. It must provide the session-issued token and authoritative expiry handoff,
-recipient/duplicate prechecks, and durable binding to one approved copy. The existing
-cached-snapshot bridge is included; it does not establish that this combined coordinator
-has been completed or reviewed. Do not run a combined live pilot from this snapshot.
+The [single-owner coordinator](single-owner-pilots.md) is included from reviewed source
+commit `143e1d690c9de492528b6e8d3852a1e6d8f5db47`. Its source integration does not
+activate a live pilot. Original ownership, genuine private approval inputs, the preserved
+ledger, separate auth authorization and action-time gates remain required. Scoped duplicate
+checks do not prove global historical draft absence or prevent concurrent manual inbox edits.

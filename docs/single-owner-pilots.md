@@ -109,6 +109,8 @@ cover the six new source modules. Independent review found no blocking code issu
 Native lock compatibility was exercised only on a temporary dummy file, in both
 directions against the original byte-lock mechanism.
 
-The full repository suite is not certified: its sandbox run failed while collecting
-unrelated DOI registries; an elevated run progressed to 14% and then stalled and
-was stopped. These results do not establish a live API or credit-rule outcome.
+In the original coordinator handoff, the full repository suite was not certified:
+its sandbox run failed while collecting unrelated DOI registries; an elevated run
+progressed to 14% and stalled. Integrated release validation is recorded separately
+with the [consolidated candidate](consolidated-review-candidate.md). Neither source
+tests nor package acceptance establish a live API or credit-rule outcome.
