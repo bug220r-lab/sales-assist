@@ -26,6 +26,10 @@ is activated by installation.
   accessible-mailbox duplicates, and binds one approved copy to the existing durable
   transfer service. Unknown outcomes block retry. The separate one-issuance option is
   available only with activation-time authorization and actual cached-token expiry.
+- The coordinator's content bundle may preserve an unresolved duplicate check only when
+  every other hold is resolved. Sealed current preflight evidence completes a separate
+  execution review with source provenance; exact copy and ordinary durable approval rules
+  remain unchanged. Literal entity-bearing source URLs and missing factual evidence stay held.
 
 ## Isolated installation and review
 

@@ -29,12 +29,26 @@ unknown factual, recipient, duplicate, or cart checks into invented confirmation
 Use the existing approval reference and exact already-approved copy, preserving
 its link/rendering semantics. There is no need to reapprove unchanged copy.
 
-The approved-bundle helper packages these supplied inputs, validates all review
-holds, computes the canonical approval/body/rendering hashes, and reports the
+The approved-bundle helper packages these supplied inputs, validates every factual,
+identity, cart, link and copy hold, computes the approval/body/rendering hashes, and reports the
 SHA256 of the resulting file. A new ledger row uses version 2 because normal import
 creates version 1 and recording the review through normal edit creates version 2.
 An existing row requires its actual matching version and binding. No version is
 silently upgraded.
+
+Only an unresolved duplicate review may await the coordinator's actual GET preflight,
+and only when it is the sole remaining hold. Keep honest pending notes; do not claim a
+completed check. The source bundle retains that unresolved review and its original
+binding. A complete, fresh preflight produces a separate execution review/binding and
+records the source approval provenance in the private ledger before normal approval.
+The exact approved copy is unchanged. Existing-ledger mismatches, stale proof, observed
+duplicates and every non-duplicate hold still block. See
+[ADR 0048](adr/0048-coordinator-duplicate-preflight-binding.md).
+
+Plaintext/Markdown URLs must contain their actual URL bytes. HTML `href` entities are
+decoded once on readback; literal `&amp;` in source URLs is not silently decoded or repaired.
+An invalid approved target needs resolution against the genuine approval input or approval
+for a real copy change. Conditional copy approval does not resolve unknown factual checks.
 
 ```powershell
 python -m sales_credit_evidence.approved_draft --help

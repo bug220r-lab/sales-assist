@@ -2,7 +2,8 @@
 
 No import-time file, credential, network, or ledger access. This component accepts
 only a hash-bound approval document and a sealed coordinator preflight result.
-It never constructs a review, resolves a hold, or sends/publishes a message.
+Only the duplicate check may await preflight; factual reviews are never inferred.
+It never sends or publishes a message.
 """
 
 from __future__ import annotations
@@ -180,7 +181,11 @@ def _validate_document(value: object) -> dict[str, Any]:
         if contract.validate_row(row):
             raise ApprovedDraftError("APPROVED_ROW_INVALID")
         contract.validate_review(review)
-        if contract.review_holds(row, review):
+        holds = contract.review_holds(row, review)
+        if holds and not (
+            holds == ["DUPLICATE_RECONCILIATION_REQUIRED"]
+            and review["duplicate_status"] == "unresolved"
+        ):
             raise ApprovedDraftError("APPROVED_REVIEW_HOLDS")
     except ApprovedDraftError:
         raise
@@ -276,10 +281,11 @@ def make_approved_bundle(
     version: int,
     source_approval_ref: str,
 ) -> dict[str, Any]:
-    """Pure packaging of already-approved inputs; no inferred/fabricated review.
+    """Pure packaging of approved copy and supplied factual review.
 
     This does not grant approval or write a file. The caller supplies an existing
-    genuine approval; later activation requires the exact resulting file hash.
+    genuine approval; only an unresolved duplicate check may await coordinator
+    preflight. Later activation requires the exact resulting file hash.
     """
     try:
         if contract.validate_row(row):
@@ -337,7 +343,73 @@ def _require_customer_evidence(bundle: ApprovedDraft, evidence: object) -> None:
     evidence.assert_for(bundle)
 
 
-def _current_exact(service: Any, bundle: ApprovedDraft) -> dict[str, Any]:
+@dataclass(frozen=True, slots=True, repr=False)
+class _ExecutionApproval:
+    """Completed review separate from the immutable source approval document."""
+
+    review_bytes: bytes
+    binding: str
+    provenance_bytes: bytes | None = None
+
+    def review(self) -> dict[str, Any]:
+        return cast(dict[str, Any], contract.unique_json(self.review_bytes.decode("utf-8")))
+
+
+def _execution_approval(bundle: ApprovedDraft, evidence: Any) -> _ExecutionApproval:
+    # The caller has required exact sealed, fresh evidence before this function.
+    document = bundle._document()
+    review = document["review"]
+    if review["duplicate_status"] != "unresolved":
+        return _ExecutionApproval(contract.encoded(review), bundle.binding)
+    finding = {
+        "schema": "coordinator-duplicate-preflight/v1",
+        "source_bundle_sha256": bundle.bundle_sha256,
+        "source_approval_binding": bundle.binding,
+        "source_approval_ref": document["source_approval_ref"],
+        "duplicate_check": "NO_MATCH_IN_ACCESSIBLE_MAILBOX_SNAPSHOT",
+        "global_draft_absence_proved": False,
+        "mailbox_id": contract.MAILBOX_ID,
+        "customer_id": evidence.customer_id,
+    }
+    review["duplicate_status"] = "no_existing_draft"
+    review["duplicate_evidence"] = contract.encoded(finding).decode("utf-8")
+    contract.validate_review(review)
+    if contract.review_holds(document["row"], review):
+        raise ApprovedDraftError("APPROVED_REVIEW_HOLDS")
+    binding = cast(str, contract.approval_binding(document["row"], bundle.version, review))
+    # Dynamic snapshot metadata belongs in the original audit event, not the
+    # execution binding. Later fresh checks may reopen the identical approval
+    # and recover an uncertain result without changing it or posting again.
+    provenance = {
+        **finding,
+        "execution_approval_binding": binding,
+        "observed_at": evidence.observed_at.isoformat(),
+        "conversation_count": evidence.conversation_count,
+        "thread_count": evidence.thread_count,
+    }
+    return _ExecutionApproval(contract.encoded(review), binding, contract.encoded(provenance))
+
+
+def _matches_provenance(actual: object, expected: dict[str, Any]) -> bool:
+    if type(actual) is not dict or set(actual) != set(expected):
+        return False
+    snapshot_fields = {"observed_at", "conversation_count", "thread_count"}
+    return (
+        all(
+            type(actual[key]) is type(expected[key]) and actual[key] == expected[key]
+            for key in expected.keys() - snapshot_fields
+        )
+        and contract.timestamp(actual["observed_at"]) is not None
+        and all(
+            type(actual[key]) is int and actual[key] >= 0
+            for key in ("conversation_count", "thread_count")
+        )
+    )
+
+
+def _current_exact(
+    service: Any, bundle: ApprovedDraft, execution: _ExecutionApproval
+) -> dict[str, Any]:
     document = bundle._document()
     try:
         _private_path(service.store.path)
@@ -347,14 +419,14 @@ def _current_exact(service: Any, bundle: ApprovedDraft) -> dict[str, Any]:
     if (
         record["version"] != bundle.version
         or record["row"] != document["row"]
-        or record["review"] != document["review"]
-        or record["approval_binding"] != bundle.binding
+        or record["review"] != execution.review()
+        or record["approval_binding"] != execution.binding
     ):
         raise ApprovedDraftError("APPROVED_LEDGER_CONFLICT")
     approval = record["approval"]
     if approval is not None and (
         type(approval) is not dict
-        or approval.get("binding") != bundle.binding
+        or approval.get("binding") != execution.binding
         or approval.get("version") != bundle.version
         or approval.get("recipient_email") != bundle.recipient
         or approval.get("selected_body_sha256") != document["body_sha256"]
@@ -362,6 +434,18 @@ def _current_exact(service: Any, bundle: ApprovedDraft) -> dict[str, Any]:
         or approval.get("user_id") != contract.USER_ID
     ):
         raise ApprovedDraftError("APPROVED_LEDGER_APPROVAL_CONFLICT")
+    if execution.provenance_bytes is not None:
+        expected = contract.unique_json(execution.provenance_bytes.decode("utf-8"))
+        with service.store.transaction() as connection:
+            events = connection.execute("SELECT event_json FROM audit ORDER BY sequence")
+            if not any(
+                event.get("kind") == "COORDINATOR_DUPLICATE_PREFLIGHT"
+                and event.get("order_id") == bundle.order_id
+                and event.get("version") == bundle.version
+                and _matches_provenance(event.get("details"), expected)
+                for event in (contract.unique_json(row[0]) for row in events)
+            ):
+                raise ApprovedDraftError("APPROVED_LEDGER_APPROVAL_CONFLICT")
     return record
 
 
@@ -398,16 +482,23 @@ def _safe_result(value: object) -> dict[str, object]:
 class PreparedDraft:
     """Exact ledger binding and one service transfer invocation; repr is private."""
 
-    __slots__ = ("_bundle", "_evidence", "_executed", "_lock", "_result", "service")
+    __slots__ = ("_bundle", "_evidence", "_executed", "_execution", "_lock", "_result", "service")
 
     def __init__(
-        self, service: Any, bundle: ApprovedDraft, evidence: object, *, _authority: object
+        self,
+        service: Any,
+        bundle: ApprovedDraft,
+        evidence: object,
+        execution: _ExecutionApproval,
+        *,
+        _authority: object,
     ) -> None:
         if _authority is not _PREPARED_AUTHORITY:
             raise ApprovedDraftError("APPROVED_PREPARATION_REQUIRED")
         self.service = service
         self._bundle = bundle
         self._evidence = evidence
+        self._execution = execution
         self._executed = False
         self._lock = threading.Lock()
         self._result: dict[str, object] | None = None
@@ -421,6 +512,10 @@ class PreparedDraft:
 
     @property
     def binding(self) -> str:
+        return self._execution.binding
+
+    @property
+    def source_binding(self) -> str:
         return self._bundle.binding
 
     def execute_once(self) -> dict[str, object]:
@@ -433,7 +528,7 @@ class PreparedDraft:
                 raise ApprovedDraftError("APPROVED_COMMAND_ALREADY_USED")
             return dict(self._result)
         _require_customer_evidence(self._bundle, self._evidence)
-        record = _current_exact(self.service, self._bundle)
+        record = _current_exact(self.service, self._bundle, self._execution)
         if not record["approved"]:
             raise ApprovedDraftError("APPROVED_LEDGER_APPROVAL_REQUIRED")
         if record["transfer"] and record["transfer"]["state"] not in service_api.FINAL_WRITE_STATES:
@@ -457,13 +552,16 @@ def prepare_draft(
     """Use normal service commands after sealed live preflight; never overwrite a row.
 
     A new row must explicitly approve version 2: import makes version 1, and
-    recording the supplied real review through edit makes version 2. An existing
-    record must already match the approved row, review, version and binding.
+    recording the execution review through edit makes version 2. Only sealed
+    preflight may complete a pending duplicate check, with source provenance
+    recorded separately. An existing record must match the entire execution
+    review, version, binding and (when deferred) provenance without edits.
     """
     if type(bundle) is not ApprovedDraft:
         raise ApprovedDraftError("APPROVED_BUNDLE_AUTHORITY_REQUIRED")
     document = bundle._document()
     _require_customer_evidence(bundle, customer_evidence)
+    execution = _execution_approval(bundle, customer_evidence)
     if client is None or not callable(getattr(client, "create_draft", None)):
         raise ApprovedDraftError("APPROVED_DRAFT_CLIENT_REQUIRED")
     try:
@@ -494,19 +592,45 @@ def prepare_draft(
             bundle.order_id,
             1,
             {field: document["row"][field] for field in service_api.EDITABLE},
-            document["review"],
+            execution.review(),
         )
-    record = _current_exact(service, bundle)
+        if execution.provenance_bytes is not None:
+            with store.transaction(write=True) as connection:
+                record = store.load(connection, bundle.order_id)
+                if (
+                    record is None
+                    or record["version"] != bundle.version
+                    or record["row"] != document["row"]
+                    or record["review"] != execution.review()
+                    or record["transfer"] is not None
+                ):
+                    raise ApprovedDraftError("APPROVED_LEDGER_CONFLICT")
+                store.event(
+                    connection,
+                    "COORDINATOR_DUPLICATE_PREFLIGHT",
+                    bundle.order_id,
+                    bundle.version,
+                    contract.unique_json(execution.provenance_bytes.decode("utf-8")),
+                )
+                store.bump(connection)
+    record = _current_exact(service, bundle, execution)
     if record["transfer"]:
         if record["transfer"]["state"] not in service_api.FINAL_WRITE_STATES:
             raise ApprovedDraftError("APPROVED_PRIOR_ATTEMPT_BLOCKED")
         if not record["approved"]:
             raise ApprovedDraftError("APPROVED_LEDGER_APPROVAL_REQUIRED")
     elif record["approval"] is None:
+        if execution.provenance_bytes is not None:
+            _require_customer_evidence(bundle, customer_evidence)
         service.approve(
-            bundle.order_id, bundle.version, bundle.binding, "I_APPROVE_THIS_EXACT_HELP_SCOUT_DRAFT"
+            bundle.order_id,
+            bundle.version,
+            execution.binding,
+            "I_APPROVE_THIS_EXACT_HELP_SCOUT_DRAFT",
         )
-    return PreparedDraft(service, bundle, customer_evidence, _authority=_PREPARED_AUTHORITY)
+    return PreparedDraft(
+        service, bundle, customer_evidence, execution, _authority=_PREPARED_AUTHORITY
+    )
 
 
 def _read_component_json(path: str) -> dict[str, Any]:
@@ -566,12 +690,14 @@ class _PreparationParser(argparse.ArgumentParser):
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Package existing genuine approval only; no auth, lease, ledger or HTTP."""
+    """Package supplied content approval; no auth, lease, ledger or HTTP."""
     parser = _PreparationParser(
         description="Package one supplied approved draft; local files only.", allow_abbrev=False
     )
     parser.add_argument("--row-json", action="append", help="private complete DOI row JSON")
-    parser.add_argument("--review-json", action="append", help="private completed review JSON")
+    parser.add_argument(
+        "--review-json", action="append", help="private factual review; duplicate may be unresolved"
+    )
     parser.add_argument("--version", action="append", type=int, help="exact approved final version")
     parser.add_argument(
         "--source-approval-ref", action="append", help="existing approval reference"
