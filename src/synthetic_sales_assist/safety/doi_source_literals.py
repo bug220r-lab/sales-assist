@@ -4,6 +4,10 @@ ADR 0038: new or changed values still fail the repository scan. No runtime permi
 The independent credential scanner still examines every file.
 """
 
+from synthetic_sales_assist.safety.sales_credit_evidence_literals import (
+    REVIEWED_EVIDENCE_LITERALS,
+)
+
 REVIEWED_SOURCE_LITERALS = {
     "docs/doi-draft-transfer.md": {
         "non_localhost_url": (
@@ -95,3 +99,7 @@ REVIEWED_SOURCE_LITERALS = {
         ),
     },
 }
+
+# ADR 0044 uses the same exact-literal mechanism for the isolated evidence reader.
+# Scanner behavior, whole-file coverage, and runtime host policy remain unchanged.
+REVIEWED_SOURCE_LITERALS.update(REVIEWED_EVIDENCE_LITERALS)
