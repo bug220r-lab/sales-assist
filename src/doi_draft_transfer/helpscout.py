@@ -16,7 +16,8 @@ from urllib.parse import urlsplit
 
 from .contract import MAILBOX_ID, USER_ID, TransferError, encoded, rendered_body
 from .local_auth import CachedDPAPIToken, valid_token
-from .session_auth import MODE as SESSION_MODE, SessionClientCredentials
+from .session_auth import MODE as SESSION_MODE
+from .session_auth import SessionClientCredentials
 
 HOST = "api.helpscout.net"
 MAX_RESPONSE = 512 * 1024
@@ -62,6 +63,40 @@ def safe_web_link(value, conversation_id):
     return None
 
 
+def draft_recipient_matches(conversation, message, recipient):
+    """Bind an unsent reply to its documented customer, not a populated To header.
+
+    A populated To array must still match exactly. An empty/omitted array needs
+    matching native customer IDs and the approved email on both response objects.
+    Contradictory customer evidence never falls back to the header check.
+    """
+    if message.get("state") != "draft":
+        return False
+    primary = conversation.get("primaryCustomer")
+    if type(primary) is not dict or type(primary.get("email")) is not str:
+        return False
+    if primary["email"].casefold() != recipient.casefold():
+        return False
+    customer = message.get("customer")
+    association = False
+    if customer is not None:
+        if (
+            type(customer) is not dict
+            or type(primary.get("id")) is not int
+            or not 1 <= primary["id"] < 2**63
+            or type(customer.get("id")) is not int
+            or customer["id"] != primary["id"]
+            or type(customer.get("email")) is not str
+            or customer["email"].casefold() != recipient.casefold()
+        ):
+            return False
+        association = True
+    recipients = message.get("to", [])
+    return type(recipients) is list and (
+        recipients == [recipient] or (recipients == [] and association)
+    )
+
+
 class HelpScoutDraftClient:
     def __init__(self, token=None, *, token_provider=None):
         if token_provider is not None:
@@ -98,7 +133,7 @@ class HelpScoutDraftClient:
             f"/v2/users/{USER_ID}",
         } or re.fullmatch(r"/v2/conversations/[1-9][0-9]*\?embed=threads", path)
         if not (
-            method == "POST" and path == "/v2/conversations" or method == "GET" and allowed_get
+            (method == "POST" and path == "/v2/conversations") or (method == "GET" and allowed_get)
         ):
             raise TransferError("HELP_SCOUT_OPERATION_PROHIBITED", 403)
         bearer = self._token_provider() if self._token_provider else self._token
@@ -237,7 +272,7 @@ class HelpScoutDraftClient:
                 and len(messages) == 1
                 and messages[0].get("state") == "draft"
                 and messages[0].get("createdBy", {}).get("id") == USER_ID
-                and messages[0].get("to") == [row["recipient_email"]]
+                and draft_recipient_matches(value, messages[0], row["recipient_email"])
                 and not messages[0].get("cc")
                 and not messages[0].get("bcc")
                 and not messages[0].get("scheduled")

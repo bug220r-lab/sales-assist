@@ -115,7 +115,7 @@ or acknowledgment; no check is inferred from imported flags.
 
 ## API semantics verified against official documentation
 
-Reviewed 2026-10-11:
+Reviewed 2026-10-11; reply-recipient/readback contract rechecked 2026-10-13:
 
 - [Create Conversation](https://developer.helpscout.com/mailbox-api/endpoints/conversations/create/)
   documents a draft conversation using a `reply` thread with `draft: true`. The new
@@ -127,6 +127,13 @@ Reviewed 2026-10-11:
 - [Get Conversation](https://developer.helpscout.com/mailbox-api/endpoints/conversations/get/)
   and [List Threads](https://developer.helpscout.com/mailbox-api/endpoints/conversations/threads/list/)
   document draft state and thread content used for readback.
+- Reply recipient input is the required customer object; Create Reply does not
+  document a To input. An unsent message can return an empty/omitted To array.
+  Readback then requires the same positive customer ID and approved email on the
+  conversation and message customer objects. A populated To must still be the
+  exact single approved recipient; contradictory customer evidence always blocks.
+  See [ADR 0051](adr/0051-draft-reply-customer-readback.md). This is verification of
+  an unsent draft, not proof of email delivery or permission to send.
 - [Rate limits](https://developer.helpscout.com/mailbox-api/overview/rate-limiting/)
   specifies 429 and `X-RateLimit-Retry-After`; the UI requires an explicit retry after
   that delay. [Authentication](https://developer.helpscout.com/mailbox-api/overview/authentication/)

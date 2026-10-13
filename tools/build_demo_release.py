@@ -58,6 +58,7 @@ RUNTIME_FILES = frozenset(
         "docs/adr/0048-coordinator-duplicate-preflight-binding.md",
         "docs/adr/0049-email-customer-association.md",
         "docs/adr/0050-advisory-split-review-discovery.md",
+        "docs/adr/0051-draft-reply-customer-readback.md",
         "docs/split-review-discovery.md",
         "docs/consolidated-review-candidate.md",
     }

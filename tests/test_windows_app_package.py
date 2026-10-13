@@ -83,6 +83,7 @@ class WindowsApplicationPackageTests(unittest.TestCase):
             self.assertIn("docs/adr/0048-coordinator-duplicate-preflight-binding.md", inventory)
             self.assertIn("docs/adr/0049-email-customer-association.md", inventory)
             self.assertIn("docs/adr/0050-advisory-split-review-discovery.md", inventory)
+            self.assertIn("docs/adr/0051-draft-reply-customer-readback.md", inventory)
             self.assertIn("docs/split-review-discovery.md", inventory)
             self.assertIn("docs/consolidated-review-candidate.md", inventory)
 
