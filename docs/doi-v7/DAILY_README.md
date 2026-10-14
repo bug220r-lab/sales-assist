@@ -19,6 +19,11 @@ confirmed matching checks; ambiguous records or storage errors stay visible.
 The saved file contains hashes only, with no email, source text or raw order IDs.
 Use the same owned data directory when reopening to retain these checks.
 
+The broader review-leads view also exposes held ready/waiting observations while retaining
+their original rep/capture and fulfillment holds. Stock-counter clues have a separate filter
+and never establish allocation or partial-split eligibility. Keep Hide reviewed selected to
+exclude completed checks across these views. See [Finding additional orders to review](../split-review-discovery.md).
+
 The normal package builders now include the daily policy helper, setup recipe,
 required migrations and generic instructions. They generate fresh source identities
 and inventories from the requested commit. The private delivery's manifests and

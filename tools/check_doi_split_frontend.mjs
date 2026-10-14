@@ -9,8 +9,9 @@ let assertions=0;
 function check(value,description){assert.equal(value,true,description);assertions++;}
 const clone=value=>JSON.parse(JSON.stringify(value));
 new Function(input.js);check(true,'Complete UI JavaScript compiles without execution');
-check(validState(input.state),'Synthetic loaded v5 response');
-check(validState(input.empty),'Empty v5 response');
+check(validState(input.state),'Synthetic loaded v6 response');
+check(validState(input.empty),'Empty v6 response');
+check(validState(input.discovery.state),'Synthetic v6 held-pattern and stock-clue response');
 const order=input.state.orders[0];
 for(const [field,value] of [['decision_eligible',true],['quantity_verified',true],['status','CONFIRMED_SPLIT_CRITERIA']]){
   const changed=clone(order.split);changed[field]=value;check(!validSplit(changed,order),'Reject forged '+field);
@@ -85,6 +86,14 @@ check(worklistOrders(mixed,'all','currency_conflict','priority').at(-1).order_id
 check(currencyConflictCounts(scoped,'eligible').total===0&&currencyConflictCounts(scoped,'eligible').selected_scope===0,'No-conflict batch has zero currency counts');
 check(currencyConflictCounts([],'all').total===0&&worklistOrders([],'all','currency_conflict','total').length===0,'Empty session has no conflicts or rows');
 check(JSON.stringify(mixed)===mixedBefore,'Filters and counters preserve ownership, split classifications, evidence, totals and input order');
+const discoveryOrders=input.discovery.state.orders, discoveryBefore=JSON.stringify(discoveryOrders);
+const leads=worklistOrders(discoveryOrders,'review_leads','review_leads','source');
+check(leads.some(o=>o.discovery.category==='HELD_MIXED_LABELS'),'New default includes held purchased-line patterns');
+check(leads.some(o=>o.currency[2]==='CONFLICT'),'New default retains currency conflicts as held review leads');
+check(leads.every(o=>o.rep_scope!=='OTHER_REP'&&o.discovery.category!=='STOCK_COUNTER_CLUE'),'New default excludes other reps and stock-only clues');
+check(worklistOrders(discoveryOrders,'review_leads','STOCK_COUNTER_CLUE','source').length===2,'Stock-only clues have a separate explicit group');
+check(worklistOrders(discoveryOrders,'eligible','APPARENT_SPLIT_CANDIDATE','source').length===1,'Existing eligible filter retains its prior currency behavior');
+check(JSON.stringify(discoveryOrders)===discoveryBefore,'Discovery filtering preserves original evidence and classifications');
 const fakeProof=clone(input.state);fakeProof.orders[0].rep_confirmation={confirmed_at:'2026-10-05T15:00:00Z',evidence_reference:'SYN-OWNER-CONFIRMED'};
 check(!validState(fakeProof),'Owner confirmation cannot be attached to an eligible scope');
 check(totalCompare(unknown,scoped[1])>0,'Unknown total sorts after valid total');

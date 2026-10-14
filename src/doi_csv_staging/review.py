@@ -22,8 +22,12 @@ from .triage import (
     EVIDENCE_FIELDS,
     _safe_value,
     _date,
+    _APPARENT,
+    _GLOBAL,
+    _STRUCTURAL,
 )
-from .split_review import SPLIT_STATUSES, classify_split_order, validate_split_projection
+from .split_review import SPLIT_STATUSES, classify_split_order, validate_split_projection, _waiting
+from .split_discovery import classify_split_discovery, validate_discovery_projection
 from .ownership import (
     RepScopePolicy,
     DEFAULT_REP_POLICY,
@@ -42,7 +46,7 @@ from .review_policy import (
 from synthetic_sales_assist.domain.normalization import ascii_four_trim
 from synthetic_sales_assist.domain.timestamps import canonicalize_timestamp, parse_timestamp
 
-SCHEMA = "doi-csv-review/v5"
+SCHEMA = "doi-csv-review/v6"
 MAX_CSV_BYTES = 4 * 1024 * 1024
 MAX_BODY_BYTES = 16 * 1024 * 1024
 # DOI-specific projection bound; CSV/order/record bounds remain independent.
@@ -527,6 +531,9 @@ class DOIReviewSession:
                         for code in item["evidence"]["missing_fact_codes"]
                         if code != "CURRENCY_NOT_CONFIRMED"
                     ]
+                item["discovery"] = classify_split_discovery(
+                    order, as_of=as_of, global_input_held=bool(holds), split=item["split"]
+                )
                 orders.append(item)
             state["orders"] = sorted(orders, key=full_total_order_key)
             state["ownership_review"] = ownership_counts(orders)
@@ -709,6 +716,7 @@ def review_response_bytes(state: dict[str, object]) -> bytes:
             "decision_eligible",
             "holds",
             "split",
+            "discovery",
             "evidence",
         }
         if type(order) is not dict or set(order) not in (
@@ -768,6 +776,7 @@ def review_response_bytes(state: dict[str, object]) -> bytes:
             bad()
         try:
             validate_split_projection(order["split"])
+            validate_discovery_projection(order["discovery"])
             _validate_evidence(order["evidence"])
         except (ValueError, TypeError, KeyError):
             bad()
@@ -777,6 +786,54 @@ def review_response_bytes(state: dict[str, object]) -> bytes:
         ):
             bad()
         items = {item["record_ordinal"]: item for item in order["split"]["line_items"]}
+        discovery = order["discovery"]
+        category = discovery["category"]
+        if category != "NONE":
+            blocked = (
+                _GLOBAL
+                | _STRUCTURAL
+                | {"ORDER_CAPTURE_INCOMPLETE", "DISPLAYED_ORDER_ID_UNVERIFIED"}
+            ) - {"SOURCE_ASSIGNMENT_CONFLICT_OR_UNKNOWN"}
+            if (
+                state["batch_holds"]
+                or not order["visible_coverage_complete"]
+                or set(order["holds"]) & blocked
+                or "TERMINAL_ORDER_OBSERVED" in order["split"]["reason_codes"]
+                or order["evidence"]["snapshot_age_status"] in {"UNVERIFIED", "FUTURE_CAPTURE"}
+                or order["split"]["status"] == "APPARENT_SPLIT_CANDIDATE"
+            ):
+                bad()
+            references = (
+                discovery["ready_line_ordinals"]
+                + discovery["waiting_line_ordinals"]
+                + [clue["record_ordinal"] for clue in discovery["stock_clues"]]
+            )
+            if any(ordinal not in items or items[ordinal]["ds"] == "YES" for ordinal in references):
+                bad()
+            if category == "HELD_MIXED_LABELS":
+                if (
+                    order["split"]["status"] != "CAPTURE_HELD"
+                    or "SOURCE_ASSIGNMENT_CONFLICT_OR_UNKNOWN" not in order["holds"]
+                ):
+                    bad()
+                if any(
+                    (items[ordinal]["current_stock"] or "").lower() not in _APPARENT
+                    for ordinal in discovery["ready_line_ordinals"]
+                ):
+                    bad()
+                try:
+                    capture_date = (
+                        _time(order["evidence"]["capture_time"])
+                        .astimezone(ZoneInfo("America/New_York"))
+                        .date()
+                    )
+                    if any(
+                        not _waiting(items[ordinal]["current_stock"] or "", capture_date)
+                        for ordinal in discovery["waiting_line_ordinals"]
+                    ):
+                        bad()
+                except (ValueError, TypeError, OverflowError, AttributeError):
+                    bad()
         for ordinal in order["split"]["waiting_line_ordinals"]:
             dated = _date(items[ordinal]["current_stock"] or "")
             if dated is not None:
