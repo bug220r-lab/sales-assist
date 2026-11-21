@@ -1,0 +1,19 @@
+{
+  "status": "PASS_SCOPED_TESTS",
+  "tests_run": 114,
+  "original_tests": 76,
+  "integration_tests": 38,
+  "failures": 0,
+  "errors": 0,
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "tested_at": "2026-09-23T16:55:33.948197+00:00",
+  "base_commit": "dcf47074ce73b2886d8036423231e8612d2216b5",
+  "full_core_local_tests": "NOT_RUN_NO_FULL_CHECKOUT",
+  "windows_runtime": "NOT_RUN_LOCALLY",
+  "live_google_oauth": "NOT_RUN",
+  "live_workbook": "NOT_READ",
+  "order_admin_reads": 0,
+  "synthetic_database_writes": 0,
+  "vendored_script_sha256": "e0172417ae2820414eb8bdb01f27416f1a8edb6e9255a6dbaad965a194892f2b"
+}

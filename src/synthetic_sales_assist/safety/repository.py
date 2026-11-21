@@ -132,6 +132,16 @@ AUTHORED_M6_MARKER = "SYNTHETIC-SALES-ASSIST-AUTHORED-M6"
 AUTHORED_M6_EXTENSION_ROOT = "chrome_extension"
 AUTHORED_M6_EXTENSION_SUFFIXES = frozenset({".css", ".html", ".js", ".json", ".md", ".ps1", ".txt"})
 MAX_AUTHORED_M6_ASSET_BYTES = 512 * 1024
+REVIEWED_COMPANION_LAUNCHER_HASHES = {
+    # The optional manual DOI wrapper, with only Git's LF/CRLF checkout variants.
+    # Admission retains every subsequent content scan and grants no live access.
+    "DOI_INTAKE.cmd": frozenset(
+        {
+            "ad9aee461f51ab04eec4c4bdb33df7f183329434a895587ed34662461bdeb15a",
+            "bd8bb17e7c12e5509fb87b854650c0f0a263287a4b1506efb98226ab712c5d12",
+        }
+    ),
+}
 COMPANION_TEST_REFERENCE_HASHES = {
     "tests/fixtures/campaign_replies/companion-reference/replies-core.js": (
         "0c2107f51084c547721d168eac0055a61e53b34e3eacbefd8d239ab8b32cd577"
@@ -417,6 +427,12 @@ def scan_prohibited_repository_content(root: Path) -> tuple[RepositoryFinding, .
                 relative in AUTHORED_M8_SCRIPT_PATHS
                 and AUTHORED_M8_MARKER in text[:4096]
                 and path.stat().st_size <= MAX_AUTHORED_M5_ASSET_BYTES
+            )
+            or (
+                relative in REVIEWED_COMPANION_LAUNCHER_HASHES
+                and path.stat().st_size <= 4096
+                and hashlib.sha256(path.read_bytes()).hexdigest()
+                in REVIEWED_COMPANION_LAUNCHER_HASHES[relative]
             )
         )
         if suffix in {".cmd", ".bat"} and not approved_script:

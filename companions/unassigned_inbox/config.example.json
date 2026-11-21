@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "auth_path": "D:/sales-assist-private/helpscout-auth.dpapi",
+  "runtime_dir": "D:/sales-assist-private/runtime",
+  "expected_user_name": "Example Agent",
+  "user_id_hint": 1001,
+  "mailboxes": {
+    "ecs": {
+      "id": 2001,
+      "name": "Example Sales",
+      "email": "sales@example.test"
+    }
+  }
+}

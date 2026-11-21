@@ -100,6 +100,35 @@ class RepositoryScannerTests(unittest.TestCase):
             {"unapproved_lifecycle_script"},
         )
 
+    def test_reviewed_doi_launcher_admits_only_unchanged_lf_and_crlf_bytes(self) -> None:
+        source = (ROOT / "DOI_INTAKE.cmd").read_bytes().replace(b"\r\n", b"\n")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            launcher = root / "DOI_INTAKE.cmd"
+            for raw in (source, source.replace(b"\n", b"\r\n")):
+                with self.subTest(line_endings="CRLF" if b"\r\n" in raw else "LF"):
+                    launcher.write_bytes(raw)
+                    self.assertEqual(scan_prohibited_repository_content(root), ())
+
+    def test_reviewed_doi_launcher_rejects_changed_bytes_and_other_paths(self) -> None:
+        source = (ROOT / "DOI_INTAKE.cmd").read_bytes().replace(b"\r\n", b"\n")
+        variants = (
+            ("DOI_INTAKE.cmd", source + b"echo unreviewed-command\n"),
+            ("DOI_INTAKE.cmd", source.replace(b"companions.doi_intake", b"other.module")),
+            ("DOI_INTAKE.cmd", source.replace(b"%*", b"--enable-google %*")),
+            ("DOI_INTAKE.cmd", source.replace(b"\n", b"\r")),
+            ("OTHER.cmd", source),
+            ("unknown.cmd", b"@echo off\necho unknown\n"),
+        )
+        for name, raw in variants:
+            with self.subTest(name=name, raw=raw), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / name).write_bytes(raw)
+                findings = scan_prohibited_repository_content(root)
+                self.assertEqual(
+                    {item.category for item in findings}, {"unapproved_demo_launcher"}
+                )
+
     def test_extension_dashboard_connector_and_source_map_paths_stay_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
